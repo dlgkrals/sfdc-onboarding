@@ -1,0 +1,8 @@
+[긴급 접수]
+접수 번호: {!Case.CaseNumber}
+사업장: {!Case.CustomerSite__c}
+증상: {!Case.Subject}
+증상 유형: {!Case.SymptomType__c}
+서비스센터: {!Case.ServiceCenter__c}
+
+접수 보기: {!Case.Link}

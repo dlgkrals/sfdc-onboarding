@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomNotificationType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customNotifTypeName>HG Flow 오류 알림</customNotifTypeName>
+    <description>26-10-06 Flow 실패를 관리자에게 알림 by Edwin</description>
+    <desktop>true</desktop>
+    <masterLabel>HG Flow 오류 알림</masterLabel>
+    <mobile>false</mobile>
+    <slack>false</slack>
+</CustomNotificationType>

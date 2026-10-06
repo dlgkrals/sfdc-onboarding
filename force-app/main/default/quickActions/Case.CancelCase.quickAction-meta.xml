@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QuickAction xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>26-10-06 접수 취소 화면 Flow 실행 by Edwin</description>
+    <flowDefinition>Case_Screen_Cancel</flowDefinition>
+    <label>접수 취소</label>
+    <optionsCreateFeedItem>false</optionsCreateFeedItem>
+    <type>Flow</type>
+</QuickAction>
