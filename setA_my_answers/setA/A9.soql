@@ -1,0 +1,4 @@
+SELECT SalesChannel__c, COUNT(Id) assetCount,
+       MIN(InstallDate) firstInstall, MAX(InstallDate) lastInstall
+FROM Asset
+GROUP BY SalesChannel__c

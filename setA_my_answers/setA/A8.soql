@@ -1,0 +1,3 @@
+SELECT Name, SiteCode__c
+FROM CustomerSite__c
+WHERE Id IN (SELECT CustomerSite__c FROM Case)

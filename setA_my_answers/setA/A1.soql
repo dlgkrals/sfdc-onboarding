@@ -1,0 +1,5 @@
+select Name, SiteCode__c, Account__r.Name, Account__r.PaymentMethod__c
+FROM CustomerSite__c
+WHERE ServiceCenter__c = 'Seoul'
+AND UsageType__c IN ('Store',  'Office')
+ORDER BY Account__r.Name

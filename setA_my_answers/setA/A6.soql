@@ -1,0 +1,3 @@
+SELECT CaseNumber, Subject, Asset.SerialKey__c, Asset.CustomerSite__r.ServiceCenter__c
+FROM Case
+WHERE Asset.CustomerSite__r.UsageType__c = 'ServerRoom'

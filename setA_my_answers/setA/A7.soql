@@ -1,0 +1,5 @@
+SELECT 	ServiceCenter__c, COUNT(id)
+FROM Case
+WHERE CreatedDate = LAST_N_DAYS:7
+GROUP BY ServiceCenter__c
+HAVING COUNT(id) >= 5

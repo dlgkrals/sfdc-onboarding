@@ -1,0 +1,4 @@
+SELECT AssetId, Asset.Name, COUNT(id) caseCount
+FROM Case
+GROUP BY AssetId, Asset.Name
+HAVING COUNT(id) >= 2

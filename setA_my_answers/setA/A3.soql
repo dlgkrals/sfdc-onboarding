@@ -1,0 +1,4 @@
+SELECT Name,
+(SELECT Name, SerialKey__c, Status FROM Assets)
+FROM ACCOUNT
+WHERE RecordType.DeveloperName = 'Dealer'

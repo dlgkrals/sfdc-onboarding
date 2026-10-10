@@ -1,0 +1,4 @@
+SELECT CustomerGrade__c, COUNT(id) accountCount
+FROM Account
+GROUP BY CustomerGrade__c
+ORDER BY COUNT(id) DESC

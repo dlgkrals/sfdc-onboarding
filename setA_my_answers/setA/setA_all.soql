@@ -1,0 +1,55 @@
+// A1
+select Name, SiteCode__c, Account__r.Name, Account__r.PaymentMethod__c
+FROM CustomerSite__c
+WHERE ServiceCenter__c = 'Seoul'
+AND UsageType__c IN ('Store',  'Office')
+ORDER BY Account__r.Name
+
+// A2
+SELECT SerialKey__c, Name, InstallDate, CustomerSite__r.Name
+FROM Asset
+WHERE SalesChannel__c = 'Direct'
+AND InstallDate >= 2025-01-01
+AND HasExtendedWarranty__c = true
+ORDER BY InstallDate DESC
+
+// A3
+SELECT Name
+(SELECT Name, SerialKey__c, Status FROM Assets)
+FROM ACCOUNT
+WHERE RecordType.DeveloperName = 'Dealer'
+
+// A4
+SELECT COUNT(id) accountCount
+FROM Account
+GROUP BY CustomerGrade__c
+ORDER BY COUNT(id) DESC
+
+// A5
+SELECT AssetId, Asset.Name, COUNT(id) caseCount
+FROM Case
+GROUP BY AssetId, Asset.Name
+HAVING COUNT(id) >= 2
+
+// A6
+SELECT CaseNumber, Name, Asset.SerialKey__c, Asset.CustomerSite__r.ServiceCenter__c
+FROM Case
+WHERE Asset.CustomerSite__r.UsageType__c = 'ServerRoom'
+
+// A7
+SELECT 	ServiceCenter__c, COUNT(id)
+FROM Case
+WHERE CreatedDate = LAST_N_DAYS:7
+GROUP BY ServiceCenter__c
+HAVING COUNT(id) >= 5
+
+// A8
+SELECT Name, SiteCode__c
+FROM CustomerSite__c
+WHERE Id IN (SELECT CustomerSite__c FROM Case)
+
+// A9
+SELECT SalesChannel__c, COUNT(Id) assetCount,
+       MIN(InstallDate) firstInstall, MAX(InstallDate) lastInstall
+FROM Asset
+GROUP BY SalesChannel__c

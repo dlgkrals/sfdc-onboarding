@@ -1,0 +1,6 @@
+SELECT SerialKey__c, Name, InstallDate, CustomerSite__r.Name
+FROM Asset
+WHERE SalesChannel__c = 'Direct'
+AND InstallDate >= 2025-01-01
+AND HasExtendedWarranty__c = true
+ORDER BY InstallDate DESC

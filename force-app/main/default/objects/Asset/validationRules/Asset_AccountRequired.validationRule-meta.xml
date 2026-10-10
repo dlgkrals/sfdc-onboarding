@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Asset_AccountRequired</fullName>
+    <active>true</active>
+    <description>26-10-07 장비 고객사 필수(Asset 표준은 연락처만 있어도 저장되므로) by Edwin</description>
+    <errorConditionFormula>ISBLANK(AccountId)</errorConditionFormula>
+    <errorDisplayField>AccountId</errorDisplayField>
+    <errorMessage>장비의 고객사를 선택하세요. 설치처 확인 전 장비는 대리점을 고객사로 지정합니다.</errorMessage>
+</ValidationRule>

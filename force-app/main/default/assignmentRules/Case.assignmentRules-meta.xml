@@ -30,6 +30,15 @@
                 <value>Chungcheong</value>
             </criteriaItems>
         </ruleEntry>
+        <ruleEntry>
+            <assignedTo>HG_GyeonggiNorthCases</assignedTo>
+            <assignedToType>Queue</assignedToType>
+            <criteriaItems>
+                <field>Case.ServiceCenter__c</field>
+                <operation>equals</operation>
+                <value>GyeonggiNorth</value>
+            </criteriaItems>
+        </ruleEntry>
     </assignmentRule>
     <assignmentRule>
         <fullName>Standard</fullName>
