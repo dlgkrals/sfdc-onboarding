@@ -5,6 +5,12 @@
  * @date        2026-10-08
  * @see CaseTriggerHandler
  */
-trigger CaseTrigger on Case (before insert, after insert, after update, after delete, after undelete) {
-    new CaseTriggerHandler().run();
+trigger CaseTrigger on Case(
+  before insert,
+  after insert,
+  after update,
+  after delete,
+  after undelete
+) {
+  new CaseTriggerHandler().run();
 }

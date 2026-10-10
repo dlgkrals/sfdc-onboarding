@@ -5,6 +5,6 @@
  * @date        2026-10-08
  * @see ProductConsumedTriggerHandler
  */
-trigger ProductConsumedTrigger on ProductConsumed (before insert, before update) {
-    new ProductConsumedTriggerHandler().run();
+trigger ProductConsumedTrigger on ProductConsumed(before insert) {
+  new ProductConsumedTriggerHandler().run();
 }

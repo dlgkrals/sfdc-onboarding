@@ -14,64 +14,68 @@
  * @see CaseTrigger, CaseStatsService, TriggerHandler
  */
 public with sharing class CaseTriggerHandler extends TriggerHandler {
+  private static final String STATUS_CANCELED = 'Canceled';
 
-    private static final String STATUS_CANCELED = 'Canceled';
+  protected override void beforeInsert() {
+    CaseStatsService.applyRepeatFailureFlagsForInsert((List<Case>) Trigger.new);
+  }
 
-    protected override void beforeInsert() {
-        CaseStatsService.applyRepeatFailureFlagsForInsert((List<Case>) Trigger.new);
+  protected override void afterInsert() {
+    recalculateAssets(collectAssetIds((List<Case>) Trigger.new));
+  }
+
+  protected override void afterUpdate() {
+    // DESC: 워크플로 필드 업데이트 등으로 같은 트랜잭션에서 다시 실행돼도 같은 접수는 한 번만 처리
+    List<Case> cases = (List<Case>) filterUnprocessed(
+      Trigger.new,
+      'afterUpdate'
+    );
+    Map<Id, Case> oldCasesById = (Map<Id, Case>) Trigger.oldMap;
+
+    Set<Id> assetIds = new Set<Id>();
+    for (Case newCase : cases) {
+      Case oldCase = oldCasesById.get(newCase.Id);
+      Boolean assetChanged = newCase.AssetId != oldCase.AssetId;
+      Boolean cancelChanged =
+        (newCase.Status == STATUS_CANCELED) !=
+        (oldCase.Status == STATUS_CANCELED);
+      // DESC: 제목·우선순위·반복 고장 표시 등 다른 수정은 누적 수에 영향이 없으므로 재계산하지 않음
+      if (!assetChanged && !cancelChanged) {
+        continue;
+      }
+      // DESC: 장비가 바뀌면 이전 장비와 새 장비 둘 다 재계산
+      if (oldCase.AssetId != null) {
+        assetIds.add(oldCase.AssetId);
+      }
+      if (newCase.AssetId != null) {
+        assetIds.add(newCase.AssetId);
+      }
     }
+    recalculateAssets(assetIds);
+  }
 
-    protected override void afterInsert() {
-        recalculateAssets(collectAssetIds((List<Case>) Trigger.new));
+  protected override void afterDelete() {
+    recalculateAssets(collectAssetIds((List<Case>) Trigger.old));
+  }
+
+  protected override void afterUndelete() {
+    recalculateAssets(collectAssetIds((List<Case>) Trigger.new));
+  }
+
+  private static Set<Id> collectAssetIds(List<Case> cases) {
+    Set<Id> assetIds = new Set<Id>();
+    for (Case c : cases) {
+      if (c.AssetId != null) {
+        assetIds.add(c.AssetId);
+      }
     }
+    return assetIds;
+  }
 
-    protected override void afterUpdate() {
-        // DESC: 워크플로 필드 업데이트 등으로 같은 트랜잭션에서 다시 실행돼도 같은 접수는 한 번만 처리
-        List<Case> cases = (List<Case>) filterUnprocessed(Trigger.new, 'afterUpdate');
-        Map<Id, Case> oldCasesById = (Map<Id, Case>) Trigger.oldMap;
-
-        Set<Id> assetIds = new Set<Id>();
-        for (Case newCase : cases) {
-            Case oldCase = oldCasesById.get(newCase.Id);
-            Boolean assetChanged = newCase.AssetId != oldCase.AssetId;
-            Boolean cancelChanged = (newCase.Status == STATUS_CANCELED) != (oldCase.Status == STATUS_CANCELED);
-            // DESC: 제목·우선순위·반복 고장 표시 등 다른 수정은 누적 수에 영향이 없으므로 재계산하지 않음
-            if (!assetChanged && !cancelChanged) {
-                continue;
-            }
-            // DESC: 장비가 바뀌면 이전 장비와 새 장비 둘 다 재계산
-            if (oldCase.AssetId != null) {
-                assetIds.add(oldCase.AssetId);
-            }
-            if (newCase.AssetId != null) {
-                assetIds.add(newCase.AssetId);
-            }
-        }
-        recalculateAssets(assetIds);
+  // PERF: 집계 쿼리 1회 + Asset update DML 1회 (CaseStatsService 안에서)
+  private static void recalculateAssets(Set<Id> assetIds) {
+    if (!assetIds.isEmpty()) {
+      CaseStatsService.recalculateAssetCaseStats(assetIds);
     }
-
-    protected override void afterDelete() {
-        recalculateAssets(collectAssetIds((List<Case>) Trigger.old));
-    }
-
-    protected override void afterUndelete() {
-        recalculateAssets(collectAssetIds((List<Case>) Trigger.new));
-    }
-
-    private static Set<Id> collectAssetIds(List<Case> cases) {
-        Set<Id> assetIds = new Set<Id>();
-        for (Case c : cases) {
-            if (c.AssetId != null) {
-                assetIds.add(c.AssetId);
-            }
-        }
-        return assetIds;
-    }
-
-    // PERF: 집계 쿼리 1회 + Asset update DML 1회 (CaseStatsService 안에서)
-    private static void recalculateAssets(Set<Id> assetIds) {
-        if (!assetIds.isEmpty()) {
-            CaseStatsService.recalculateAssetCaseStats(assetIds);
-        }
-    }
+  }
 }
