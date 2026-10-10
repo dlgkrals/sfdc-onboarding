@@ -3,6 +3,7 @@
  *              ① 설치 2년 차 장비: 압축기 무상·일반 부품 유상 ② 보증 미확정 → 유상
  *              ③ 최종 판정을 사람이 정하면 덮어쓰지 않음 ④ 200건 벌크
  *              + 연장보증 장비의 일반 부품은 연장 만료일 기준 무상
+ *              불허: 사유 없는 판정 변경 거부, 200건 중 사유 없는 건만 거부
  *              기준값은 Custom Metadata 기본값(기본 12·압축기 36·연장 24개월)에 의존
  * @testTarget  WarrantyService, ProductConsumedTriggerHandler
  * @layer       Test
@@ -12,6 +13,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-08    Edwin     최초 작성 (D5 테스트 초안)
+ * 1.1    2026-10-11    Edwin     불허 케이스 2개 추가 (사유 없는 판정 변경 거부, 벌크 일부 거부)
  * ----------------------------------------------------------------------------
  * @see WarrantyService
  */
@@ -308,6 +310,70 @@ private class WarrantyServiceTest {
       asset.fmExtendedWarrantyEndDate__c,
       saved.WarrantyEndDateAtJudgment__c,
       '연장 만료일 기준'
+    );
+  }
+
+  // 불허 ① 자동 판정(무상)과 다르게 유상으로 확정하면서 사유가 없으면 저장 거부 (Validation Rule OverrideReason_Required)
+  //       트리거가 Validation Rule보다 먼저 자동 판정을 채우므로 규칙이 비교할 값이 있어야 함
+  @isTest
+  static void overrideWithoutReasonIsRejected() {
+    WorkOrder workOrder = getWorkOrder(ASSET_TWO_YEAR);
+    ProductConsumed part = newPart(
+      workOrder.Id,
+      getProductItemId('Compressor')
+    );
+    part.ChargeType__c = WarrantyService.CHARGE_PAID;
+
+    Test.startTest();
+    DmlException caught;
+    try {
+      insert part;
+    } catch (DmlException e) {
+      caught = e;
+    }
+    Test.stopTest();
+
+    Assert.isNotNull(caught, '사유 없는 판정 변경은 저장되면 안 됨');
+    Assert.isTrue(
+      caught.getMessage().contains('사유'),
+      '판정 변경 사유 오류 메시지: ' + caught.getMessage()
+    );
+    Assert.areEqual(
+      0,
+      [SELECT COUNT() FROM ProductConsumed],
+      '저장된 사용 부품 없음'
+    );
+  }
+
+  // 불허 ② 200건 중 사유 없이 유상 확정한 100건만 거부, 나머지 100건은 무상으로 저장
+  @isTest
+  static void bulkPartialRejectWithoutReason() {
+    WorkOrder workOrder = getWorkOrder(ASSET_TWO_YEAR);
+    Id compressorItemId = getProductItemId('Compressor');
+    List<ProductConsumed> parts = new List<ProductConsumed>();
+    for (Integer i = 0; i < 200; i++) {
+      ProductConsumed part = newPart(workOrder.Id, compressorItemId);
+      if (Math.mod(i, 2) == 1) {
+        part.ChargeType__c = WarrantyService.CHARGE_PAID;
+      }
+      parts.add(part);
+    }
+
+    Test.startTest();
+    List<Database.SaveResult> results = Database.insert(parts, false);
+    Test.stopTest();
+
+    Integer failed = 0;
+    for (Database.SaveResult result : results) {
+      if (!result.isSuccess()) {
+        failed++;
+      }
+    }
+    Assert.areEqual(100, failed, '사유 없는 유상 확정 100건 거부');
+    Assert.areEqual(
+      100,
+      [SELECT COUNT() FROM ProductConsumed WHERE ChargeType__c = 'Free'],
+      '나머지 100건은 자동 판정(무상)으로 저장'
     );
   }
 

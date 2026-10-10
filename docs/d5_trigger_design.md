@@ -43,6 +43,9 @@
 - 스위치 판단: `TriggerSetting__mdt.getInstance(오브젝트명)` (SOQL 한도 미사용)
 - 테스트·스크립트용 정적 우회: `public static Set<String> bypassedHandlers` (핸들러 이름을 넣으면 건너뜀)
 - 재귀 방지: 핸들러별 `static Set<Id> processedIds` 또는 처리 단계별 static Boolean. 같은 트랜잭션에서 같은 레코드를 같은 단계로 두 번 처리하지 않게.
+  - **주의 (2026-10-11, 200건 update 벌크에서 발견)**: Id만으로 막으면 같은 트랜잭션의 **별도 update**(예: 제목 수정 → 장비 변경 → 취소)까지 건너뛰어 재계산이 빠짐.
+    → 접수 after update는 **접수별 마지막 처리 상태(장비 Id + 취소 여부)**로 막음: 같은 상태면 건너뛰고(워크플로 재실행), 상태가 바뀌면 다시 처리.
+    `TriggerHandler.filterUnprocessed`(Id 기준)는 한 트랜잭션에서 의미 있는 변경이 한 번뿐인 경우에만 사용.
 - 주석: 사내 헤더 형식(@description, @layer : TriggerHandler, 변경 이력)
 
 ### 2-3. 트리거 파일 원칙

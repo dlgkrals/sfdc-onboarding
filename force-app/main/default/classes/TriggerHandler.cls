@@ -11,6 +11,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-08    Edwin     최초 작성 (D5 실습: 핸들러 패턴 공통 부모)
+ * 1.1    2026-10-11    Edwin     filterUnprocessed 사용 주의 추가 (같은 트랜잭션의 별도 DML도 건너뜀)
  * ----------------------------------------------------------------------------
  * @see CaseTriggerHandler, ProductConsumedTriggerHandler, TriggerSetting__mdt
  */
@@ -96,6 +97,8 @@ public virtual class TriggerHandler {
   /**
    * @description 아직 이 단계에서 처리하지 않은 레코드만 돌려주고, 돌려준 레코드는 처리됨으로 기록
    *              Id가 없는 레코드(before insert)는 항상 포함
+   *              WARN: 같은 트랜잭션의 "별도 DML"도 건너뜀. 한 트랜잭션에서 같은 레코드가 여러 번 의미 있게 바뀔 수 있으면
+   *              (예: 접수 장비 변경 후 취소) 이 메서드 대신 상태 기준으로 막을 것 (CaseTriggerHandler 1.1 참고)
    * @param records 후보 레코드
    * @param stage   처리 단계 이름 (예: 'afterUpdate')
    * @return 처리해야 할 레코드

@@ -1,8 +1,8 @@
 # D5 200건 벌크 검증 결과
 
-- 실행일: 2026-10-10 · org: devorg · 실행: `sf apex run` (Anonymous Apex)
-- 스크립트: `scripts/apex/d5_bulk_case.apex`, `scripts/apex/d5_bulk_parts.apex`, 정리 `scripts/apex/d5_cleanup.apex`
-- 판정 기준(설계 5-4): insert 구간의 SOQL·DML **횟수**가 20건과 200건에서 같고 행 수만 늘면 통과
+- 실행일: 2026-10-10 (insert), 2026-10-11 (update) · org: devorg · 실행: `sf apex run` (Anonymous Apex)
+- 스크립트: `scripts/apex/d5_bulk_case.apex`, `scripts/apex/d5_bulk_parts.apex`, `scripts/apex/d5_bulk_case_update.apex`, 정리 `scripts/apex/d5_cleanup.apex`
+- 판정 기준(설계 5-4): insert·update 구간의 SOQL·DML **횟수**가 20건과 200건에서 같고 행 수만 늘면 통과
 - 조건: 냉동창고·서버실 사업장 장비 제외(긴급 메일 방지), 테스트 데이터 표시 제목 `[BULK5]`, 위치 `BULK5 차량`
 - 원본 로그: `logs/` (커밋 제외)
 
@@ -74,31 +74,63 @@ insert 구간 SOQL·DML 내역
 | General / Free    | 5    | 53    |
 | General / Paid    | 7    | 79    |
 
-## 3. 결론
+## 3. 접수 update (`d5_bulk_case_update.apex`, 2026-10-11)
 
-- 두 트리거 모두 20건 → 200건에서 **SOQL·DML 횟수가 같고 행 수만 증가** → 루프 안 SOQL/DML 없음, 벌크 안전.
-- 한도 여유: 200건 기준 SOQL 9/100, DML 4/150, CPU 1,056/10,000 ms.
+준비(측정 구간 밖)로 접수 N건 insert 후, update 3종을 각각 DML 1회로 실행.
+
+| 구간                              | 20건 SOQL / DML / 행 | 200건 SOQL / DML / 행 | 기대 동작                                                                     |
+| --------------------------------- | -------------------- | --------------------- | ----------------------------------------------------------------------------- |
+| ① 제목만 수정                     | **0 / 1** / 20       | **0 / 1** / 200       | 재계산 없음. 저장 전 Flow도 AssetId가 안 바뀌어 미실행                        |
+| ② 장비 변경                       | **3 / 2** / 41       | **3 / 2** / 247       | Flow 2(장비·사업장 재조회) + after update 집계 1 / Case update + Asset update |
+| ③ 취소로 전환                     | **1 / 2** / 40       | **1 / 2** / 247       | after update 집계 1 / Case update + Asset update                              |
+| 트랜잭션 전체 SOQL / DML / CPU    | 12 / 7 / 349 ms      | 12 / 7 / 980 ms       |                                                                               |
+| 누적 접수 합계 (전부 취소 후)     | 48 → 28 = 실제 28    | 228 → 28 = 실제 28    | 취소된 접수는 누적에서 제외                                                   |
+| 정리 후 남은 접수 / 재계산 불일치 | 0 / 0대              | 0 / 0대               |                                                                               |
+| **판정**                          | **통과**             | **통과**              |                                                                               |
+
+**발견한 결함과 리팩터링** (커리큘럼 "위반 시 리팩터링")
+
+- 첫 실행(CaseTriggerHandler 1.0): ② 장비 변경 SOQL +2, ③ 취소 SOQL +0 → **after update 재계산이 전혀 실행되지 않음**. 누적 합계 48 → 48 (실제 28과 불일치).
+- 원인: 재귀 방지 `TriggerHandler.filterUnprocessed`가 **Id 기준**이라, ① 제목 수정 때 "처리 완료"로 기록된 접수를 같은 트랜잭션의 ②·③ update에서도 건너뜀.
+- 수정(CaseTriggerHandler 1.1): 접수별 **마지막 처리 상태(장비 Id + 취소 여부)**로 막도록 변경. 같은 상태가 다시 오면(워크플로 재실행) 건너뛰고, 상태가 바뀌면 처리. 회귀 테스트 `consecutiveUpdatesInSameTransactionRecalculate` 추가.
+- 수정 후 위 표대로 통과. 결함 실행 로그는 덮어써져 남지 않음(이 문서와 채팅 기록이 근거).
+
+## 4. 결론
+
+- 두 트리거 모두 20건 → 200건에서 insert·update 구간별 **SOQL·DML 횟수가 같고 행 수만 증가** → 루프 안 SOQL/DML 없음, 벌크 안전.
+- 한도 여유: 200건 기준 최대 SOQL 12/100, DML 7/150, CPU 1,056/10,000 ms.
+- update 벌크에서 재귀 방지 결함을 찾아 수정. 재계산이 필요한 수정(장비 변경·취소 전환)만 Asset DML을 만들고, 그 외 수정은 Asset DML 0.
 - 정리 스크립트로 테스트 데이터 전부 삭제, 남은 건수 0 확인.
 
-## 4. 테스트 초안 결과 (`sf apex run test`, 2026-10-11, CaseStatsService 1.3·ProductConsumedTriggerHandler 1.1 반영)
+## 5. 테스트 초안 결과 (`sf apex run test`, 2026-10-11)
 
-| 클래스                 | 메서드                                                                                                                                                                                                  | 결과     |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| CaseTriggerHandlerTest | thirdCaseOnSameAssetIsRepeatFailure / sameAssetThreeInOneBatchFlagsOnlyThird / bulkInsertUpdatesAssetTotals / deleteDecrementsAssetTotal / switchOffSkipsAllLogic / updateRecalculatesOldNewAndCanceled | 6/6 Pass |
-| WarrantyServiceTest    | twoYearAssetCompressorFreeGeneralPaid / unknownWarrantyIsPaid / manualChargeTypeIsNotOverwritten / bulkInsertJudgesAll / extendedWarrantyGeneralIsFree                                                  | 5/5 Pass |
+| 클래스                 | 메서드                                                                                                                        | 구분                                             | 결과           |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | -------------- |
+| CaseTriggerHandlerTest | thirdCaseOnSameAssetIsRepeatFailure, sameAssetThreeInOneBatchFlagsOnlyThird                                                   | 정상                                             | Pass           |
+|                        | updateRecalculatesOldNewAndCanceled, deleteDecrementsAssetTotal, switchOffSkipsAllLogic                                       | 정상                                             | Pass           |
+|                        | consecutiveUpdatesInSameTransactionRecalculate                                                                                | 회귀(update 결함)                                | Pass           |
+|                        | caseWithoutAssetIsRejected                                                                                                    | **불허**                                         | Pass           |
+|                        | bulkInsertUpdatesAssetTotals                                                                                                  | 벌크 200                                         | Pass           |
+|                        | bulkPartialRejectKeepsValidTotals                                                                                             | **불허 + 벌크 200** (20건 거부, 180건 저장·집계) | Pass           |
+| WarrantyServiceTest    | twoYearAssetCompressorFreeGeneralPaid, unknownWarrantyIsPaid, extendedWarrantyGeneralIsFree, manualChargeTypeIsNotOverwritten | 정상                                             | Pass           |
+|                        | overrideWithoutReasonIsRejected                                                                                               | **불허** (사유 없는 판정 변경)                   | Pass           |
+|                        | bulkInsertJudgesAll                                                                                                           | 벌크 200                                         | Pass           |
+|                        | bulkPartialRejectWithoutReason                                                                                                | **불허 + 벌크 200** (100건 거부, 100건 저장)     | Pass           |
+| **합계**               |                                                                                                                               |                                                  | **16/16 Pass** |
 
 | 클래스·트리거                 | 커버리지 | 빠진 부분 (D6 보강)                                                                                                  |
 | ----------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
 | CaseTrigger                   | 100%     |                                                                                                                      |
 | ProductConsumedTrigger        | 100%     |                                                                                                                      |
-| ProductConsumedTriggerHandler | 100%     | (1.1에서 before update 재판정 제거)                                                                                  |
-| CaseTriggerHandler            | 92%      | afterUndelete, 재계산 대상이 아닌 수정(제목 등)을 건너뛰는 분기                                                      |
+| ProductConsumedTriggerHandler | 100%     |                                                                                                                      |
+| CaseTriggerHandler            | 93%      | afterUndelete, 같은 상태 재실행 건너뛰기(워크플로 재실행 상황)                                                       |
 | WarrantyService               | 89%      | 빈 입력, Product2Id 직접 지정 경로, 접수 없는 출동(오늘 기준), 장비 없는 출동, 압축기·연장 만료일 둘 다 있을 때 비교 |
-| TriggerHandler                | 76%      | 우회(bypassedHandlers), 쓰지 않는 가상 이벤트                                                                        |
-| CaseStatsService              | 68%      | D4 메서드 `applyRepeatFailureFlags`·`markRepeatFailures` (트리거 미사용, D6에서 정리)                                |
-| Org 전체                      | 77%      | 목표 85% (D6)                                                                                                        |
+| TriggerHandler                | 55%      | `filterUnprocessed`(CaseTriggerHandler 1.1부터 미사용), 우회(bypassedHandlers), 쓰지 않는 가상 이벤트                |
+| CaseStatsService              | 69%      | D4 메서드 `applyRepeatFailureFlags`·`markRepeatFailures` (트리거 미사용, D6에서 정리)                                |
+| Org 전체                      | 74%      | 목표 85% (D6). TriggerHandler 미사용 메서드 때문에 77% → 74%                                                         |
 
-## 5. 후속 변경과 이 검증의 관계 (2026-10-11)
+## 6. 후속 변경과 이 검증의 관계 (2026-10-11)
 
-- **CaseStatsService 1.3**: 묶음 안에서는 `Trigger.new` 순서대로 세어 기준 횟수째부터만 반복 고장 표시. 1절의 벌크 실행은 1.2 기준이라 "반복 고장 표시 200/200"은 1.3에서는 달라짐(장비별 3번째 접수부터 표시). **쿼리·DML 구조는 같으므로 SOQL·DML 횟수 비교 결과(통과)는 그대로 유효**.
+- **CaseStatsService 1.3**: 묶음 안에서는 `Trigger.new` 순서대로 세어 기준 횟수째부터만 반복 고장 표시. 1절의 insert 벌크 실행은 1.2 기준이라 "반복 고장 표시 200/200"은 1.3에서는 달라짐(장비별 3번째 접수부터 표시). **쿼리·DML 구조는 같으므로 SOQL·DML 횟수 비교 결과(통과)는 그대로 유효**.
 - **ProductConsumedTriggerHandler 1.1**: before update 재판정 제거(출동·제품 항목·부품은 생성 후 수정 불가). 2절은 insert만 측정했으므로 영향 없음.
+- **CaseTriggerHandler 1.1**: after update 재귀 방지를 상태 기준으로 변경(3절). insert·delete 경로는 바뀌지 않아 1절 결과 유효.

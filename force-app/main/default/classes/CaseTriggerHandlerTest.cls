@@ -2,7 +2,8 @@
  * @description CaseTriggerHandler 동작을 검증하는 테스트 클래스 (D5 초안, D6에서 확장)
  *              ① 같은 장비 접수 3건 → 3번째 반복 고장 (차례로 / 한 번에) ② 200건 insert 후 장비 누적 수 정확
  *              ③ 접수 삭제 시 누적 수 감소 ④ 스위치를 끄면 아무 처리 안 함
- *              + 장비 변경·취소 전환 시 재계산 (after update)
+ *              + 장비 변경·취소 전환 시 재계산 (after update), 같은 트랜잭션 연속 update 회귀
+ *              불허: 장비 없는 접수 거부, 200건 중 일부 거부 시 저장된 건만 집계
  *              기준값은 Custom Metadata 기본값(최근 90일·3건)에 의존
  * @testTarget  CaseTriggerHandler, CaseStatsService, TriggerHandler
  * @layer       Test
@@ -13,6 +14,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-08    Edwin     최초 작성 (D5 테스트 초안)
  * 1.1    2026-10-11    Edwin     묶음 내 순서 판정 반영(200건 기대값 190), 같은 장비 3건 한 번에 insert 케이스 추가
+ * 1.2    2026-10-11    Edwin     불허 케이스 2개(장비 없음 거부, 벌크 일부 거부), 같은 트랜잭션 연속 update 회귀 케이스 추가
  * ----------------------------------------------------------------------------
  * @see CaseTriggerHandler
  */
@@ -228,6 +230,103 @@ private class CaseTriggerHandlerTest {
       [SELECT TotalCaseCount__c FROM Asset WHERE Id = :assetB.Id]
       .TotalCaseCount__c,
       '새 장비는 옮겨 온 1건만 (취소 제외)'
+    );
+  }
+
+  // 불허 ① 장비 없는 접수 → Validation Rule(Asset_Required)로 저장 거부, 트리거 처리 흔적 없음
+  @isTest
+  static void caseWithoutAssetIsRejected() {
+    Case noAsset = new Case(
+      Subject = '장비 없는 접수',
+      Status = 'New',
+      Origin = 'Phone'
+    );
+
+    Test.startTest();
+    DmlException caught;
+    try {
+      insert noAsset;
+    } catch (DmlException e) {
+      caught = e;
+    }
+    Test.stopTest();
+
+    Assert.isNotNull(caught, '장비 없는 접수는 저장되면 안 됨');
+    Assert.isTrue(
+      caught.getMessage().contains('장비'),
+      '장비 필수 오류 메시지: ' + caught.getMessage()
+    );
+    Assert.areEqual(0, [SELECT COUNT() FROM Case], '저장된 접수 없음');
+  }
+
+  // 불허 ② 200건 중 20건이 거부(장비 없음)돼도 나머지 180건은 저장되고 장비 집계는 저장된 건만 반영
+  @isTest
+  static void bulkPartialRejectKeepsValidTotals() {
+    List<Asset> assets = [SELECT Id FROM Asset ORDER BY SerialKey__c];
+    List<Case> cases = new List<Case>();
+    for (Integer i = 0; i < 200; i++) {
+      // DESC: 10건마다 1건은 장비를 비워 Validation Rule에 걸리게 함
+      Id assetId = (Math.mod(i, 10) == 9)
+        ? null
+        : assets[Math.mod(i, assets.size())].Id;
+      cases.add(newCase(assetId, i));
+    }
+
+    Test.startTest();
+    List<Database.SaveResult> results = Database.insert(cases, false);
+    Test.stopTest();
+
+    Integer failed = 0;
+    for (Database.SaveResult result : results) {
+      if (!result.isSuccess()) {
+        failed++;
+      }
+    }
+    Assert.areEqual(20, failed, '장비 없는 20건만 거부');
+    Assert.areEqual(180, [SELECT COUNT() FROM Case], '나머지 180건 저장');
+    AggregateResult total = [SELECT SUM(TotalCaseCount__c) total FROM Asset];
+    Assert.areEqual(
+      180,
+      ((Decimal) total.get('total')).intValue(),
+      '장비 누적 합계 = 저장된 접수 수'
+    );
+  }
+
+  // 회귀: 같은 트랜잭션에서 장비 변경 → 취소를 연달아 해도 두 번 모두 재계산 (200건 update 벌크에서 발견한 결함)
+  @isTest
+  static void consecutiveUpdatesInSameTransactionRecalculate() {
+    Asset assetA = getAsset(0);
+    Asset assetB = getAsset(1);
+    Case target = newCase(assetA.Id, 1);
+    insert target;
+
+    Test.startTest();
+    target.Subject = '제목만 수정';
+    update target;
+    target.AssetId = assetB.Id;
+    update target;
+    Assert.areEqual(
+      1,
+      [SELECT TotalCaseCount__c FROM Asset WHERE Id = :assetB.Id]
+      .TotalCaseCount__c,
+      '장비 변경 후 새 장비 1건'
+    );
+    target.Status = 'Canceled';
+    target.CancelReason__c = '고객 요청으로 취소';
+    update target;
+    Test.stopTest();
+
+    Assert.areEqual(
+      0,
+      [SELECT TotalCaseCount__c FROM Asset WHERE Id = :assetA.Id]
+      .TotalCaseCount__c,
+      '이전 장비 0건'
+    );
+    Assert.areEqual(
+      0,
+      [SELECT TotalCaseCount__c FROM Asset WHERE Id = :assetB.Id]
+      .TotalCaseCount__c,
+      '취소 후 새 장비도 0건'
     );
   }
 
