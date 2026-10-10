@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>IsActive__c</fullName>
+    <defaultValue>true</defaultValue>
+    <description>26-10-08 false면 해당 오브젝트의 트리거 로직 전체를 건너뜀 (데이터 이관·장애 대응용) by Edwin</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>활성</label>
+    <type>Checkbox</type>
+</CustomField>

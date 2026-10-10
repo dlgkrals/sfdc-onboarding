@@ -11,8 +11,10 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-07    Edwin     최초 작성 (D4 실습: 벌크 안전 집계·일괄 처리)
  * 1.1    2026-10-08    Edwin     markRepeatFailures 대상에서 종결·취소 접수 제외 (Case.Closed_Lock 충돌 방지)
+ * 1.2    2026-10-08    Edwin     before insert용 반복 고장 판정(묶음 내 건수 포함) applyRepeatFailureFlagsForInsert 추가,
+ *                                최근 접수 집계를 countRecentCasesByAsset로 분리
  * ----------------------------------------------------------------------------
- * @see CaseTriggerHandler (D5 예정: after insert/update/delete/undelete에서 호출)
+ * @see CaseTriggerHandler (before insert: applyRepeatFailureFlagsForInsert / after 이벤트: recalculateAssetCaseStats)
  */
 // DESC: 집계는 실행 사용자의 공유 범위와 상관없이 장비의 "전체" 접수를 세야 정확하므로 without sharing
 public without sharing class CaseStatsService {
@@ -83,39 +85,65 @@ public without sharing class CaseStatsService {
             return changedCases;
         }
 
-        // DESC: Custom Metadata getInstance()는 SOQL 한도를 쓰지 않음
-        Integer days = getSettingInt('RepeatFailureDays', DEFAULT_REPEAT_DAYS);
         Integer threshold = getSettingInt('RepeatFailureCount', DEFAULT_REPEAT_COUNT);
-        // DESC: LAST_N_DAYS 리터럴에는 변수를 넣을 수 없어 기준 시각을 계산해 바인드
-        Datetime since = System.now().addDays(-days);
-
         Set<Id> assetIds = new Set<Id>();
         for (Case c : cases) {
             if (c.AssetId != null) {
                 assetIds.add(c.AssetId);
             }
         }
+        // PERF: 집계 쿼리 1회
+        Map<Id, Integer> recentCountsByAsset = countRecentCasesByAsset(assetIds);
 
-        Map<Id, Integer> recentCountsByAsset = new Map<Id, Integer>();
-        if (!assetIds.isEmpty()) {
-            // PERF: 집계 쿼리 1회
-            for (AggregateResult ar : [
-                SELECT AssetId assetId, COUNT(Id) cnt
-                FROM Case
-                WHERE AssetId IN :assetIds
-                  AND CreatedDate >= :since
-                  AND Status != :STATUS_CANCELED
-                GROUP BY AssetId
-            ]) {
-                recentCountsByAsset.put((Id) ar.get('assetId'), (Integer) ar.get('cnt'));
-            }
-        }
-
-        // WARN: before insert에서 호출하면 새 접수는 아직 DB에 없어 집계에 빠짐 → D5에서 이번 묶음의 같은 장비 건수를 더해야 정확
+        // WARN: before insert에서는 새 접수가 아직 DB에 없어 집계에 빠지므로 applyRepeatFailureFlagsForInsert를 사용
         for (Case c : cases) {
             Integer recentCount = (c.AssetId != null && recentCountsByAsset.containsKey(c.AssetId))
                 ? recentCountsByAsset.get(c.AssetId) : 0;
             Boolean isRepeat = recentCount >= threshold;
+            if (c.RepeatFailure__c != isRepeat) {
+                c.RepeatFailure__c = isRepeat;
+                changedCases.add(c);
+            }
+        }
+        return changedCases;
+    }
+
+    /**
+     * @description before insert용 반복 고장 판정 (DML 없음, 값만 세팅)
+     *              기준은 applyRepeatFailureFlags와 같음(최근 N일, 취소 제외, 기준 횟수)
+     *              새 접수는 아직 DB에 없으므로 "DB 집계 건수 + 이번 묶음에서 같은 장비의 새 접수 수"로 판정
+     *              예) DB에 최근 90일 2건 + 이번 묶음에 같은 장비 1건 → 3건 → 반복 고장
+     * @param newCases Trigger.new (before insert)
+     * @return 값이 실제로 바뀐 접수만 담은 리스트
+     */
+    public static List<Case> applyRepeatFailureFlagsForInsert(List<Case> newCases) {
+        List<Case> changedCases = new List<Case>();
+        if (newCases == null || newCases.isEmpty()) {
+            return changedCases;
+        }
+
+        Integer threshold = getSettingInt('RepeatFailureCount', DEFAULT_REPEAT_COUNT);
+
+        // DESC: 이번 묶음에서 장비별 새 접수 수 (취소 상태로 들어오는 접수는 건수에서 제외)
+        Map<Id, Integer> batchCountsByAsset = new Map<Id, Integer>();
+        for (Case c : newCases) {
+            if (c.AssetId == null || c.Status == STATUS_CANCELED) {
+                continue;
+            }
+            Integer current = batchCountsByAsset.containsKey(c.AssetId) ? batchCountsByAsset.get(c.AssetId) : 0;
+            batchCountsByAsset.put(c.AssetId, current + 1);
+        }
+
+        // PERF: 집계 쿼리 1회 (묶음 크기와 상관없이)
+        Map<Id, Integer> recentCountsByAsset = countRecentCasesByAsset(batchCountsByAsset.keySet());
+
+        for (Case c : newCases) {
+            Boolean isRepeat = false;
+            if (c.AssetId != null) {
+                Integer dbCount = recentCountsByAsset.containsKey(c.AssetId) ? recentCountsByAsset.get(c.AssetId) : 0;
+                Integer batchCount = batchCountsByAsset.containsKey(c.AssetId) ? batchCountsByAsset.get(c.AssetId) : 0;
+                isRepeat = (dbCount + batchCount) >= threshold;
+            }
             if (c.RepeatFailure__c != isRepeat) {
                 c.RepeatFailure__c = isRepeat;
                 changedCases.add(c);
@@ -148,6 +176,29 @@ public without sharing class CaseStatsService {
         }
         // PERF: 바뀐 것만 DML 1회
         return countSuccess(Database.update(changedCases, false), 'markRepeatFailures');
+    }
+
+    // DESC: 장비별 최근 N일(기준값) 접수 수 집계. 취소 제외. 집계 쿼리 1회
+    private static Map<Id, Integer> countRecentCasesByAsset(Set<Id> assetIds) {
+        Map<Id, Integer> recentCountsByAsset = new Map<Id, Integer>();
+        if (assetIds == null || assetIds.isEmpty()) {
+            return recentCountsByAsset;
+        }
+        // DESC: Custom Metadata getInstance()는 SOQL 한도를 쓰지 않음
+        Integer days = getSettingInt('RepeatFailureDays', DEFAULT_REPEAT_DAYS);
+        // DESC: LAST_N_DAYS 리터럴에는 변수를 넣을 수 없어 기준 시각을 계산해 바인드
+        Datetime since = System.now().addDays(-days);
+        for (AggregateResult ar : [
+            SELECT AssetId assetId, COUNT(Id) cnt
+            FROM Case
+            WHERE AssetId IN :assetIds
+              AND CreatedDate >= :since
+              AND Status != :STATUS_CANCELED
+            GROUP BY AssetId
+        ]) {
+            recentCountsByAsset.put((Id) ar.get('assetId'), (Integer) ar.get('cnt'));
+        }
+        return recentCountsByAsset;
     }
 
     // DESC: 기준값을 정수로 읽기. 레코드가 없으면 기본값

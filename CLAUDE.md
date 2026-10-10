@@ -34,7 +34,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - 승인 프로세스·트리거: 아직 없음 (D5 예정)
 
 ## 코딩 규칙 (사내 Naming Convention v3.0)
-- 클래스: <속성명>Service / Selector / TriggerHandler / Batch / Schedulable, 테스트는 <클래스명>_Test
+- 클래스: <속성명>Service / Selector / TriggerHandler / Batch / Schedulable, 테스트는 <클래스명>Test
 - 메서드 camelCase 동사+명사, Map 변수는 값By키(예: casesByAsset)
 - 파일 헤더 주석: @description, @layer, @author, @date, 변경 이력, @see / 줄 주석 태그 // DESC: // PERF: // WARN:
 - 메타데이터 설명: "YY-MM-DD 설명 by Edwin"
