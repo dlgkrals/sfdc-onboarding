@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PaymentMethod__c</fullName>
+    <label>결제 방식</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>MonthlyTaxInvoice</fullName>
+                <default>false</default>
+                <label>월말 세금계산서</label>
+            </value>
+            <value>
+                <fullName>OnSiteCard</fullName>
+                <default>false</default>
+                <label>현장 카드결제</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

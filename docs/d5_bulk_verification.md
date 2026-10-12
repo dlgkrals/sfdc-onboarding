@@ -140,4 +140,4 @@ insert 구간 SOQL·DML 내역
 - **200건 update(접수 → 취소)**: 3절 ③ "취소 전환"이 해당 검증(20건·200건 모두 SOQL 1 · DML 2, 전부 취소 후 누적 합계 = 실제 접수 수 28).
 - **불허 테스트 보완**: 종결 접수 수정 → `rejectClosedCaseUpdate`(상담원 사용자 runAs, Validation Rule `Case.Closed_Lock`), 판정 변경 사유 누락 → `rejectOverrideWithoutReason`(Validation Rule `ProductConsumed.OverrideReason_Required`). 두 규칙 모두 org에 있음. 결과는 `docs/d6_test_report.md`.
 - **CaseStatsService 1.4~1.5 영향**: after insert에서 최근 90일 집계 쿼리가 1회 늘어 접수 200건 insert 구간이 **SOQL 5 · DML 2**(1절의 4 · 2에서 +1). 20건·200건 횟수가 같다는 판정은 그대로. 재실행 로그 `logs/d6_case_200_v15.log`(반복 고장 표시 133/200, 정리 후 불일치 0대).
-- **D5 시점 결함(D6에서 발견·수정)**: 1~3절의 검증은 관리자로 실행. 상담원 사용자가 접수를 넣으면 장비 재계산이, 협력 기사가 사용 부품을 넣으면 판정 조회가 필드 권한으로 실패하고 있었음 → CaseStatsService 1.5 · WarrantyService 1.1에서 시스템 모드로 수정 (`docs/d6_test_report.md` 4절).
+- **D5 시점 결함(D6에서 발견·수정)**: 1~3절의 검증은 관리자로 실행. 상담원 사용자가 접수를 넣으면 장비 재계산이, 협력 기사가 사용 부품을 넣으면 판정 조회가 필드 권한으로 실패하고 있었음 → CaseStatsService 1.5 · WarrantyService 1.1에서 시스템 모드로 수정. 원인은 org 설정이 아니라 API 67.0의 기본 user mode (오류 원문·재확인: `docs/d6_test_report.md` 4-1절).

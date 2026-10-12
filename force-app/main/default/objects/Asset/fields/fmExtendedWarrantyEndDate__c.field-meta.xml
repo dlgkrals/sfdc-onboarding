@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>fmExtendedWarrantyEndDate__c</fullName>
+    <formula
+  >IF(AND(HasExtendedWarranty__c, ISPICKVAL(SalesChannel__c, &apos;Direct&apos;), NOT(ISBLANK(fmBasicWarrantyEndDate__c))), ADDMONTHS(fmBasicWarrantyEndDate__c + 1, $CustomMetadata.WarrantyPolicy__mdt.Extended.Months__c) - 1, NULL)</formula>
+    <label>연장 보증 만료일</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Date</type>
+</CustomField>

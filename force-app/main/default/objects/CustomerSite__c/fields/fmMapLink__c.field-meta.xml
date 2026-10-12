@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>fmMapLink__c</fullName>
+    <externalId>false</externalId>
+    <formula
+  >IF(ISBLANK(RoadAddress__c), &quot;&quot;, HYPERLINK(&quot;https://map.kakao.com/?q=&quot; &amp; SUBSTITUTE(RoadAddress__c, &quot; &quot;, &quot;%20&quot;), &quot;지도 보기&quot;, &quot;_blank&quot;))</formula>
+    <label>지도</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

@@ -14,13 +14,14 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-08    Edwin     최초 작성 (D5 실습: 유·무상 자동 판정)
- * 1.1    2026-10-12    Edwin     조회를 WITH SYSTEM_MODE로 명시 (협력 기사는 접수·장비 권한이 없어 출동의 CaseId·장비 보증 필드 조회가
- *                                "No such column" 오류로 실패, 사용 부품 저장이 막히던 결함)
+ * 1.1    2026-10-12    Edwin     조회를 WITH SYSTEM_MODE로 명시 (API 67.0 기본 user mode에서 협력 기사는 접수·장비 권한이 없어
+ *                                출동의 CaseId·장비 보증 필드 조회가 "No such column" 오류로 실패, 사용 부품 저장이 막히던 결함)
  * ----------------------------------------------------------------------------
  * @see ProductConsumedTriggerHandler, Asset.fmBasicWarrantyEndDate__c / fmCompressorWarrantyEndDate__c / fmExtendedWarrantyEndDate__c
  */
-// DESC: 트리거에서 호출되면 호출 쪽 공유 규칙을 따름(트리거는 시스템 모드).
-// WARN: 기사 화면 등 사용자 컨텍스트에서 직접 호출해 장비 보증 정보를 못 읽는 문제가 생기면 without sharing으로 바꾸고 이유를 남길 것
+// DESC: 호출 쪽 공유 규칙을 따름. 판정에 필요한 조회는 사용자 권한과 무관하게 시스템 모드로 명시
+// WARN: API 67.0부터 Apex 조회의 기본 모드가 user mode(66.0 이하는 system mode). 기사는 접수·장비 권한이 없어
+//       모드를 지정하지 않으면 출동의 CaseId·장비 보증 필드 조회가 "No such column 'CaseId'"로 실패 (1.1에서 수정)
 public inherited sharing class WarrantyService {
   public static final String CHARGE_FREE = 'Free';
   public static final String CHARGE_PAID = 'Paid';

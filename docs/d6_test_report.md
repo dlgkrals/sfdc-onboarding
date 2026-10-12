@@ -105,3 +105,18 @@ D5 대비: 74% → **94%**. TriggerHandler 55% → 78% (filterUnprocessed 삭제
 | Batch도 같은 위험                                                  | 새 필드는 관리자에게도 읽기 전용                                                                                               | Batch 조회 `WITH SYSTEM_MODE` + 서비스 1.5                                         |
 
 D4·D5의 테스트와 벌크 검증은 모두 관리자로 실행해 드러나지 않았고, D6에서 상담원·기사 사용자(`System.runAs`) 테스트를 추가하면서 발견.
+
+### 4-1. 수정 전 오류 원문과 원인 재확인 (2026-10-12)
+
+수정 전 코드(커밋 9070a35: CaseStatsService 1.3 `without sharing`, WarrantyService 1.0 `inherited sharing`)에는 `WITH USER_MODE`·`WITH SECURITY_ENFORCED`·`Security.stripInaccessible`·`AccessLevel.USER_MODE`가 **하나도 없음**. 그런데도 권한 오류가 난 이유를 가리기 위해, 수정 전과 같은 문장을 **API 67.0 클래스와 API 66.0 클래스**에 넣고 같은 사용자로 실행하는 임시 진단 테스트를 돌림(진단 클래스는 실행 후 org에서 삭제, 남은 것 0개. 원문 `logs/d6_diag/diag_mode.txt`, 커밋 제외).
+
+| 사용자 (권한 집합)        | 수정 전 코드 위치                                    | 실행한 문장                                                                                                      | API 67.0 결과 (오류 원문)                                                                                                                                                                         | API 66.0 결과        |
+| ------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| 상담원 (HG_CallCenter)    | CaseStatsService 1.3 `recalculateAssetCaseStats`     | `Database.update(assetsToUpdate, false)` (TotalCaseCount__c·LastCaseDate__c)                                     | `CANNOT_INSERT_UPDATE_ACTIVATE_ENTITY` · "Operation failed due to fields being inaccessible on Sobject Asset, check errors on Exception or Result! fieldNames: TotalCaseCount__c,LastCaseDate__c" | 성공                 |
+| 상담원 (HG_CallCenter)    | CaseStatsService 1.3 접수 집계 조회                  | `SELECT AssetId, COUNT(Id) … FROM Case … GROUP BY AssetId`                                                       | 오류 없이 **0건** (관리자 소유 접수가 상담원에게 안 보여 집계에서 빠짐)                                                                                                                           | —                    |
+| 협력 기사 (HG_Technician) | WarrantyService 1.0 `applyAutoChargeTypes` 출동 조회 | `SELECT Id, CaseId, Case.CreatedDate, AssetId, Asset.HasExtendedWarranty__c, Asset.fm…EndDate__c FROM WorkOrder` | `System.QueryException` · "No such column 'CaseId' on entity 'WorkOrder'. If you are attempting to use a custom field, be sure to append the '__c' after the custom field name."                  | 성공 (CaseId 조회됨) |
+
+- **원인: org 설정이 아니라 Apex 클래스 API 버전.** API 67.0부터 Apex의 조회·DML은 기본이 user mode(실행 사용자의 오브젝트·필드 권한과 공유 적용)이고, 66.0 이하는 system mode가 기본. 우리 클래스는 모두 `sourceApiVersion` 67.0이라 모드를 적지 않은 문장이 user mode로 실행됨. 같은 사용자·같은 문장이 66.0 클래스에서는 성공하므로 org 설정이 원인일 수 없음
+- 클래스의 `without sharing`은 이 동작을 바꾸지 않음(상담원 집계 조회 0건). 67.0에서는 `WITH SECURITY_ENFORCED`도 쓸 수 없고 `WITH USER_MODE` / `WITH SYSTEM_MODE`로 명시해야 함
+- 근거: Salesforce Apex Developer Guide "Apex Versioned Behavior Changes" (API 67.0: Apex runs in user context by default)
+- 결정(Edwin, 2026-10-12): 시스템이 계산하는 값(장비 집계·유·무상 판정·Batch)은 `WITH SYSTEM_MODE` / `AccessLevel.SYSTEM_MODE`로 명시 유지. 화면 컨트롤러(D7~)는 `WITH USER_MODE`로 명시. 모드를 적지 않은 조회·DML은 두지 않음

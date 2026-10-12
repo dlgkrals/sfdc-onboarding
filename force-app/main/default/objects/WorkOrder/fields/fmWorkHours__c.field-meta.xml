@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>fmWorkHours__c</fullName>
+    <externalId>false</externalId>
+    <formula
+  >IF(ISBLANK(CustomerSite__r.WorkAvailableStartTime__c), &quot;&quot;, LEFT(TEXT(CustomerSite__r.WorkAvailableStartTime__c), 5) &amp; &quot; ~ &quot; &amp; LEFT(TEXT(CustomerSite__r.WorkAvailableEndTime__c), 5))</formula>
+    <label>작업 가능 시간</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

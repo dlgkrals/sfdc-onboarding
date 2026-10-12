@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>fmAssetInfo__c</fullName>
+    <externalId>false</externalId>
+    <formula
+  >Asset.Product2.Name &amp; IF(ISBLANK(Asset.SerialNumber), &quot;&quot;, &quot; / S/N &quot; &amp; Asset.SerialNumber) &amp; IF(ISBLANK(Asset.InstallationLocation__c), &quot;&quot;, &quot; / &quot; &amp; Asset.InstallationLocation__c) &amp; IF(ISBLANK(TEXT(Asset.RefrigerantType__c)), &quot;&quot;, &quot; / &quot; &amp; TEXT(Asset.RefrigerantType__c))</formula>
+    <label>장비 정보</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

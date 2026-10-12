@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AccountStatus__c</fullName>
+    <label>거래 상태</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Normal</fullName>
+                <default>true</default>
+                <label>정상</label>
+            </value>
+            <value>
+                <fullName>PaymentWarning</fullName>
+                <default>false</default>
+                <label>미수 주의</label>
+            </value>
+            <value>
+                <fullName>Suspended</fullName>
+                <default>false</default>
+                <label>거래 중지</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

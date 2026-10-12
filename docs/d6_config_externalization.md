@@ -43,4 +43,7 @@
 ## 4. 남은 일
 
 - D7 LWC부터 화면 문구는 Custom Label로 (사내 규칙: `BTN_`, `MSG_`, `LABEL_`, `MISC_`)
-- 승인 프로세스(예외 무상·고액)에서 `ApprovalAmount` 500,000을 기준 조건에 사용할 때, 승인 프로세스 조건은 Custom Metadata를 직접 참조할 수 없어 수식 필드 등 우회 방법 검토 필요
+- 승인 기준(결정 2026-10-12): 승인 프로세스 조건은 Custom Metadata를 직접 참조할 수 없어 **WorkOrder 수식 체크박스 `fmNeedsApproval__c`(승인 필요)** 로 우회
+  - 수식: `OR(HasExceptionFree__c, fmTotalCharge__c > $CustomMetadata.ServiceSetting__mdt.ApprovalAmount.Value__c)` — 예외 무상 부품 포함 또는 총 청구액 > 500,000
+  - 승인 프로세스(아직 미생성)는 진입 조건을 `fmNeedsApproval__c = true` 하나로 두면 기준 금액을 바꿀 때 메타데이터 레코드만 고치면 됨
+  - 권한: 네 권한 집합 모두 읽기 전용(다른 fm 필드와 같게). devorg 배포 후 총 청구액 2,930,000 → true, 130,000 → false 확인

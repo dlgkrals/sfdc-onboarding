@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CustomerSite__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <label>사업장</label>
+    <referenceTo>CustomerSite__c</referenceTo>
+    <relationshipLabel>출동</relationshipLabel>
+    <relationshipName>CustomerSiteWorkOrders</relationshipName>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Lookup</type>
+</CustomField>

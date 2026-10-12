@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ruExceptionFreeCount__c</fullName>
+    <description
+  >26-10-07 예외 무상 부품 수(자동 판정 유상인데 최종 판정 무상) by Edwin</description>
+    <label>예외 무상 부품 수</label>
+    <summaryFilterItems>
+        <field>ProductConsumed.AutoChargeType__c</field>
+        <operation>equals</operation>
+        <value>Paid</value>
+    </summaryFilterItems>
+    <summaryFilterItems>
+        <field>ProductConsumed.ChargeType__c</field>
+        <operation>equals</operation>
+        <value>Free</value>
+    </summaryFilterItems>
+    <summaryForeignKey>ProductConsumed.WorkOrderId</summaryForeignKey>
+    <summaryOperation>count</summaryOperation>
+    <trackHistory>false</trackHistory>
+    <type>Summary</type>
+</CustomField>

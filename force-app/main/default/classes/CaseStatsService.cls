@@ -22,8 +22,10 @@
  *      AssetRepeatFailureBatch (매일 밤 recalculateAssetCaseStats)
  */
 // DESC: 집계는 실행 사용자의 공유 범위와 상관없이 장비의 "전체" 접수를 세야 정확하므로 without sharing
-// WARN: 장비 집계 필드는 사용자에게 읽기 전용(시스템이 계산). 이 org에서는 상담원 사용자로 실행되는 트리거의 Asset update가
-//       필드 권한 오류(fields being inaccessible)로 실패해 조회·저장을 WITH SYSTEM_MODE / AccessLevel.SYSTEM_MODE로 명시 (1.5)
+// WARN: API 67.0부터 Apex 조회·DML의 기본 모드가 user mode(실행 사용자의 오브젝트·필드 권한과 공유 적용, 66.0 이하는 system mode).
+//       장비 집계 필드는 사용자에게 읽기 전용이라 상담원으로 실행되는 트리거의 Asset update가 "fields being inaccessible"로 실패하고,
+//       접수 집계도 사용자에게 보이는 접수만 셈 → 조회·저장을 WITH SYSTEM_MODE / AccessLevel.SYSTEM_MODE로 명시 (1.5)
+//       (org 설정이 아니라 클래스 API 버전 동작. 같은 문장을 API 66.0 클래스에서 실행하면 성공, D6 진단으로 확인)
 public without sharing class CaseStatsService {
   private static final String STATUS_CANCELED = 'Canceled';
   private static final Integer DEFAULT_REPEAT_DAYS = 90;

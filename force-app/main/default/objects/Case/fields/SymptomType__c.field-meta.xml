@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SymptomType__c</fullName>
+    <label>증상 유형</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>NoCooling</fullName>
+                <default>false</default>
+                <label>냉방 불가</label>
+            </value>
+            <value>
+                <fullName>Noise</fullName>
+                <default>false</default>
+                <label>소음</label>
+            </value>
+            <value>
+                <fullName>Leak</fullName>
+                <default>false</default>
+                <label>누수</label>
+            </value>
+            <value>
+                <fullName>ErrorCode</fullName>
+                <default>false</default>
+                <label>에러코드</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>기타</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

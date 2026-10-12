@@ -36,16 +36,16 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - Validation Rule 다수(사업자번호 형식, 대리점 연장보증 불가, 보증 기준 일치, 장비 필수, 취소 사유 등)
 - Case.Closed_Lock: 종결·취소된 접수 수정 차단. 예외는 사용자 지정 권한 HG_BypassValidation(HG_Admin에만). Apex·트리거도 이 규칙의 영향을 받으므로 종결·취소 접수는 갱신 대상에서 제외하는 것이 원칙
 - Apex 서비스: CaseStatsService 1.5 (recalculateAssetCaseStats: 누적·최근 접수일·최근 N일 접수 수·반복 고장 장비 / applyRepeatFailureFlagsForInsert), WarrantyService 1.1 (사용 부품 유·무상 판정). markRepeatFailures·applyRepeatFailureFlags는 1.4에서 삭제
-- 시스템 모드: 이 org에서는 Apex 조회·저장이 실행 사용자 권한에 막힘(상담원 → 장비 집계 필드 읽기 전용, 기사 → 접수·장비 권한 없음). 시스템이 계산하는 값은 서비스에서 WITH SYSTEM_MODE / AccessLevel.SYSTEM_MODE로 명시(D6에서 발견)
+- 접근 모드: API 67.0부터 Apex 조회·DML 기본값이 user mode(실행 사용자 권한·공유 적용, 66.0 이하는 system mode). org 설정이 아니라 클래스 API 버전 동작(docs/d6_test_report.md 4-1). 모드를 적지 않으면 상담원 → 장비 집계 필드 저장 실패, 기사 → 접수·장비 조회 실패. 규칙: 모든 조회·DML에 모드 명시. 시스템 계산 값(서비스·Batch)은 WITH SYSTEM_MODE / AccessLevel.SYSTEM_MODE, 화면 컨트롤러는 WITH USER_MODE. WITH SECURITY_ENFORCED는 67.0에서 사용 불가
 - 반복 고장 판정(before insert): DB 최근 90일 건수 + 묶음 안에서 Trigger.new 순서대로 센 같은 장비 건수 ≥ 3 → 기준 횟수째 접수부터만 표시. 접수의 RepeatFailure__c는 접수 시점 스냅샷, 다시 판정하지 않음
-- 장비 단위 반복 고장(D6): Asset.RecentCaseCount__c(최근 90일 접수 수)·Asset.RepeatFailure__c(반복 고장 장비), 읽기 전용(상담원·센터장·관리자 읽기, 기사 없음). 접수 트리거와 매일 02:00 Batch(AssetRepeatFailureBatch ← AssetRepeatFailureSchedulable, 예약 이름 "HG 반복 고장 재계산", 범위 200)가 재계산. 대상: RecentCaseCount__c > 0 또는 RepeatFailure__c = true
+- 장비 단위 반복 고장(D6): Asset.RecentCaseCount__c(최근 90일 접수 수)·Asset.RepeatFailure__c(반복 고장 장비), 읽기 전용(상담원·센터장·관리자 읽기, 기사 없음. HG_Admin 읽기 유지 결정). 접수 트리거와 매일 02:00 Batch(devorg 예약 유지 결정, AssetRepeatFailureBatch ← AssetRepeatFailureSchedulable, 예약 이름 "HG 반복 고장 재계산", 범위 200)가 재계산. 대상: RecentCaseCount__c > 0 또는 RepeatFailure__c = true
 - 트리거(D5): CaseTrigger → CaseTriggerHandler (before insert 반복 고장, after insert/update/delete/undelete 장비 집계), ProductConsumedTrigger → ProductConsumedTriggerHandler 1.1 (before insert 판정만, before update 없음)
 - 재귀 방지: CaseTriggerHandler 1.1은 after update를 접수별 마지막 처리 상태(장비 Id + 취소 여부)로 막음. Id 기준 TriggerHandler.filterUnprocessed는 결함 원인이라 TriggerHandler 1.2(D6)에서 삭제
 - 트리거 공통: TriggerHandler 부모 클래스, 비활성화 스위치 TriggerSetting__mdt(IsActive__c, 레코드 Case·ProductConsumed, 없으면 활성)
 - ProductConsumed의 WorkOrderId·ProductItemId·Product2Id는 생성 후 수정 불가 → 판정은 insert 시점 스냅샷, 부품을 바꾸려면 삭제 후 재입력
 - 생성 방식: ProductConsumed는 ProductItemId 방식(표준 가격표 비활성). 필수 WorkOrderId, QuantityConsumed
-- 승인 프로세스: 아직 없음 (docs의 승인 상세 정의 기준으로 예정)
-- 설계 문서: docs/d5_trigger_design.md, docs/d5_flow_vs_trigger.md, docs/d6_screen_design.md(화면 초안, 검토 전), docs/d6_config_externalization.md / 검증 결과: docs/d5_bulk_verification.md, docs/d6_test_report.md (D4 벌크 검증 결과는 문서 없이 커밋 메시지·채팅으로만 남음)
+- 승인 프로세스: 아직 없음 (docs의 승인 상세 정의 기준으로 예정). 진입 조건용 WorkOrder.fmNeedsApproval__c(수식 체크박스: 예외 무상 포함 또는 fmTotalCharge__c > ServiceSetting ApprovalAmount) 준비됨(D6)
+- 설계 문서: docs/d5_trigger_design.md, docs/d5_flow_vs_trigger.md, docs/d6_screen_design.md(화면 설계, Edwin 결정 반영: 검색 고객사·사업장·시리얼, 기본 정렬 최근 접수일 내림차순 NULLS LAST, 페이지 20건, 장비 상세 최근 접수 5건 + 표준 관련 목록 모두 보기), docs/d6_config_externalization.md / 검증 결과: docs/d5_bulk_verification.md, docs/d6_test_report.md (D4 벌크 검증 결과는 문서 없이 커밋 메시지·채팅으로만 남음)
 - 테스트: TestDataFactory 공통 데이터, 메서드 이름 접두어 normal/reject/bulk, 상담원·기사는 System.runAs + 테스트 사용자(기사는 Field Service 권한 집합 라이선스 필요)
 - 벌크·정리 스크립트: scripts/apex/d4_bulk.apex(markRepeatFailures 부분은 1.4부터 주석)·d4_cleanup.apex, d5_bulk_case.apex·d5_bulk_case_update.apex·d5_bulk_parts.apex·d5_cleanup.apex (표시: 제목 [BULK5], 위치 BULK5 차량), d6_backfill.apex(새 필드 초기 적재 1회)·d6_run_batch.apex·d6_schedule.apex. 실행 로그는 logs/(커밋 제외)
 
@@ -75,3 +75,5 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - org에 이미 있는 구성과 문서가 다르면 org를 기준으로 하고, 차이를 보고
 - 설계 결정이 필요한 변경(필드 추가·이름 변경·로직 변경)은 먼저 묻기
 - picklist 값은 API 이름 사용, 실제 값은 org에서 확인
+- 예약 작업 "HG 반복 고장 재계산"이 있으면 Schedulable → Batch → CaseStatsService → WarrantyService(같은 의존 묶음) 배포가 "보류 중인 작업" 오류로 막힘. 배포 전 System.abortJob으로 해제 → 배포 → scripts/apex/d6_schedule.apex로 재예약 (설정의 "Apex 작업이 있어도 배포 허용"은 켜지 않음)
+- 저장소의 커스텀 필드 메타데이터: 권한 집합 FLS에 나오는 필드 전부를 2026-10-12 org에서 retrieve(objects/_/fields). 오브젝트 정의(_.object-meta.xml)·레이아웃 대부분·Global Value Set은 아직 저장소에 없음 → 배포는 폴더(-d objects) 말고 -m 메타데이터 이름으로

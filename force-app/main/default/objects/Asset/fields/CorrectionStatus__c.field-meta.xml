@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CorrectionStatus__c</fullName>
+    <description
+  >26-10-07 보증 기준일 정정 상태. 승인 프로세스와 Flow만 변경 by Edwin</description>
+    <label>정정 상태</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Requested</fullName>
+                <default>false</default>
+                <label>요청</label>
+            </value>
+            <value>
+                <fullName>Approved</fullName>
+                <default>false</default>
+                <label>승인</label>
+            </value>
+            <value>
+                <fullName>Rejected</fullName>
+                <default>false</default>
+                <label>반려</label>
+            </value>
+            <value>
+                <fullName>Applied</fullName>
+                <default>false</default>
+                <label>반영 완료</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
