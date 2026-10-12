@@ -134,3 +134,10 @@ insert 구간 SOQL·DML 내역
 - **CaseStatsService 1.3**: 묶음 안에서는 `Trigger.new` 순서대로 세어 기준 횟수째부터만 반복 고장 표시. 1절의 insert 벌크 실행은 1.2 기준이라 "반복 고장 표시 200/200"은 1.3에서는 달라짐(장비별 3번째 접수부터 표시). **쿼리·DML 구조는 같으므로 SOQL·DML 횟수 비교 결과(통과)는 그대로 유효**.
 - **ProductConsumedTriggerHandler 1.1**: before update 재판정 제거(출동·제품 항목·부품은 생성 후 수정 불가). 2절은 insert만 측정했으므로 영향 없음.
 - **CaseTriggerHandler 1.1**: after update 재귀 방지를 상태 기준으로 변경(3절). insert·delete 경로는 바뀌지 않아 1절 결과 유효.
+
+## 7. D6 보완과 변경 영향 (2026-10-12)
+
+- **200건 update(접수 → 취소)**: 3절 ③ "취소 전환"이 해당 검증(20건·200건 모두 SOQL 1 · DML 2, 전부 취소 후 누적 합계 = 실제 접수 수 28).
+- **불허 테스트 보완**: 종결 접수 수정 → `rejectClosedCaseUpdate`(상담원 사용자 runAs, Validation Rule `Case.Closed_Lock`), 판정 변경 사유 누락 → `rejectOverrideWithoutReason`(Validation Rule `ProductConsumed.OverrideReason_Required`). 두 규칙 모두 org에 있음. 결과는 `docs/d6_test_report.md`.
+- **CaseStatsService 1.4~1.5 영향**: after insert에서 최근 90일 집계 쿼리가 1회 늘어 접수 200건 insert 구간이 **SOQL 5 · DML 2**(1절의 4 · 2에서 +1). 20건·200건 횟수가 같다는 판정은 그대로. 재실행 로그 `logs/d6_case_200_v15.log`(반복 고장 표시 133/200, 정리 후 불일치 0대).
+- **D5 시점 결함(D6에서 발견·수정)**: 1~3절의 검증은 관리자로 실행. 상담원 사용자가 접수를 넣으면 장비 재계산이, 협력 기사가 사용 부품을 넣으면 판정 조회가 필드 권한으로 실패하고 있었음 → CaseStatsService 1.5 · WarrantyService 1.1에서 시스템 모드로 수정 (`docs/d6_test_report.md` 4절).

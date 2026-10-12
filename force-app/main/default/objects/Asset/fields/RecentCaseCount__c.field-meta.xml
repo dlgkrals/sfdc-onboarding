@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RecentCaseCount__c</fullName>
+    <description
+  >26-10-12 최근 N일(기준값) 취소 제외 접수 수, Apex가 계산 by Edwin</description>
+    <externalId>false</externalId>
+    <inlineHelpText
+  >최근 90일(ServiceSetting RepeatFailureDays) 안에 접수된 건수. 취소 제외. 접수 저장과 매일 밤 Batch가 계산합니다.</inlineHelpText>
+    <label>최근 90일 접수 수</label>
+    <precision>4</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <trackHistory>false</trackHistory>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RepeatFailure__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description
+  >26-10-12 최근 N일 접수가 기준 횟수 이상이면 true, 매일 밤 Batch가 재계산 by Edwin</description>
+    <inlineHelpText
+  >최근 90일 접수가 3건(ServiceSetting RepeatFailureCount) 이상이면 표시. 매일 밤 Batch가 다시 계산해 기간이 지나면 풀립니다.</inlineHelpText>
+    <label>반복 고장 장비</label>
+    <trackHistory>false</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

@@ -37,6 +37,8 @@ Integer updatedAssets = CaseStatsService.recalculateAssetCaseStats(assetIds);
 System.debug(LoggingLevel.WARN, '2.집계 후  갱신 장비=' + updatedAssets + '  SOQL=' + Limits.getQueries() + ' DML=' + Limits.getDmlStatements() + ' Rows=' + Limits.getDmlRows());
 
 // 3. 메서드 B: 반복 고장 일괄 표시
-Set<Id> caseIds = new Map<Id, Case>(newCases).keySet();
-Integer flagged = CaseStatsService.markRepeatFailures(caseIds);
-System.debug(LoggingLevel.WARN, '3.반복고장 후  표시 접수=' + flagged + '  SOQL=' + Limits.getQueries() + ' DML=' + Limits.getDmlStatements() + ' Rows=' + Limits.getDmlRows());
+// NOTE: D4 기록용, CaseStatsService 1.4부터 미지원 (markRepeatFailures 삭제: 접수 반복 고장은 접수 시점 스냅샷)
+//       이 스크립트를 다시 돌리려면 아래 3줄은 주석 상태로 둘 것. D4 실행 결과는 d4_실습 폴더의 로그 참고
+// Set<Id> caseIds = new Map<Id, Case>(newCases).keySet();
+// Integer flagged = CaseStatsService.markRepeatFailures(caseIds);
+// System.debug(LoggingLevel.WARN, '3.반복고장 후  표시 접수=' + flagged + '  SOQL=' + Limits.getQueries() + ' DML=' + Limits.getDmlStatements() + ' Rows=' + Limits.getDmlRows());

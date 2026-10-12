@@ -3,7 +3,7 @@
  *              1) 오브젝트별 비활성화 스위치(TriggerSetting__mdt) 확인
  *              2) Trigger.operationType으로 이벤트별 가상 메서드 분기
  *              3) 테스트·스크립트용 정적 우회(bypassedHandlers)
- *              4) 재귀 방지: 같은 트랜잭션에서 같은 레코드를 같은 단계로 두 번 처리하지 않게 함
+ *              재귀 방지는 핸들러별로 처리 (예: CaseTriggerHandler의 상태 기준 방지)
  * @layer       TriggerHandler
  * @author      Edwin
  * @date        2026-10-08
@@ -12,6 +12,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-08    Edwin     최초 작성 (D5 실습: 핸들러 패턴 공통 부모)
  * 1.1    2026-10-11    Edwin     filterUnprocessed 사용 주의 추가 (같은 트랜잭션의 별도 DML도 건너뜀)
+ * 1.2    2026-10-12    Edwin     filterUnprocessed 삭제 (Id 기준 재귀 방지가 같은 트랜잭션의 별도 update까지 막는 결함 원인, 사용처 없음)
  * ----------------------------------------------------------------------------
  * @see CaseTriggerHandler, ProductConsumedTriggerHandler, TriggerSetting__mdt
  */
@@ -22,9 +23,6 @@ public virtual class TriggerHandler {
   // DESC: 테스트에서는 Custom Metadata 레코드를 넣을 수 없으므로 스위치 값을 대신 지정
   @TestVisible
   private static Map<String, Boolean> activeOverridesByObject = new Map<String, Boolean>();
-
-  // DESC: 재귀 방지용. 키 = 핸들러 이름 + ':' + 단계, 값 = 이미 처리한 레코드 Id
-  private static Map<String, Set<Id>> processedIdsByKey = new Map<String, Set<Id>>();
 
   /**
    * @description 트리거 본문에서 호출하는 진입점. 스위치·우회 확인 후 이벤트별 메서드로 분기
@@ -92,36 +90,6 @@ public virtual class TriggerHandler {
     // DESC: Custom Metadata getInstance()는 SOQL 한도를 쓰지 않음
     TriggerSetting__mdt setting = TriggerSetting__mdt.getInstance(sObjectName);
     return setting == null || setting.IsActive__c;
-  }
-
-  /**
-   * @description 아직 이 단계에서 처리하지 않은 레코드만 돌려주고, 돌려준 레코드는 처리됨으로 기록
-   *              Id가 없는 레코드(before insert)는 항상 포함
-   *              WARN: 같은 트랜잭션의 "별도 DML"도 건너뜀. 한 트랜잭션에서 같은 레코드가 여러 번 의미 있게 바뀔 수 있으면
-   *              (예: 접수 장비 변경 후 취소) 이 메서드 대신 상태 기준으로 막을 것 (CaseTriggerHandler 1.1 참고)
-   * @param records 후보 레코드
-   * @param stage   처리 단계 이름 (예: 'afterUpdate')
-   * @return 처리해야 할 레코드
-   */
-  protected List<SObject> filterUnprocessed(
-    List<SObject> records,
-    String stage
-  ) {
-    String key = getHandlerName() + ':' + stage;
-    if (!processedIdsByKey.containsKey(key)) {
-      processedIdsByKey.put(key, new Set<Id>());
-    }
-    Set<Id> processedIds = processedIdsByKey.get(key);
-    List<SObject> result = new List<SObject>();
-    for (SObject record : records) {
-      if (record.Id == null) {
-        result.add(record);
-      } else if (!processedIds.contains(record.Id)) {
-        processedIds.add(record.Id);
-        result.add(record);
-      }
-    }
-    return result;
   }
 
   // DESC: 'CaseTriggerHandler:[...]' 형태의 문자열에서 클래스 이름만 추출

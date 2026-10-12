@@ -14,6 +14,8 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-08    Edwin     최초 작성 (D5 실습: 유·무상 자동 판정)
+ * 1.1    2026-10-12    Edwin     조회를 WITH SYSTEM_MODE로 명시 (협력 기사는 접수·장비 권한이 없어 출동의 CaseId·장비 보증 필드 조회가
+ *                                "No such column" 오류로 실패, 사용 부품 저장이 막히던 결함)
  * ----------------------------------------------------------------------------
  * @see ProductConsumedTriggerHandler, Asset.fmBasicWarrantyEndDate__c / fmCompressorWarrantyEndDate__c / fmExtendedWarrantyEndDate__c
  */
@@ -65,6 +67,7 @@ public inherited sharing class WarrantyService {
             Asset.fmExtendedWarrantyEndDate__c
           FROM WorkOrder
           WHERE Id IN :workOrderIds
+          WITH SYSTEM_MODE
         ]
       );
     }
@@ -76,6 +79,7 @@ public inherited sharing class WarrantyService {
         SELECT Id, Product2Id
         FROM ProductItem
         WHERE Id IN :productItemIds
+        WITH SYSTEM_MODE
       ]) {
         product2IdsByProductItem.put(item.Id, item.Product2Id);
         product2Ids.add(item.Product2Id);
@@ -90,6 +94,7 @@ public inherited sharing class WarrantyService {
           SELECT Id, Family, ErpUnitPrice__c
           FROM Product2
           WHERE Id IN :product2Ids
+          WITH SYSTEM_MODE
         ]
       );
     }

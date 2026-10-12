@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <applicationVisibilities>
         <application>HangyeolAS</application>
@@ -67,6 +67,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Asset.CorrectionReason__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Asset.CorrectionStatus__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Asset.CustomerSite__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -106,8 +116,28 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>Asset.RecentCaseCount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>Asset.RefrigerantType__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Asset.RepeatFailure__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Asset.RequestedDateSource__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Asset.RequestedInstallDate__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -477,6 +507,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>ProductConsumed.fmUnit__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>ProductItem.ErpStockKey__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -493,6 +528,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>WorkOrder.ApprovalRequestReason__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>WorkOrder.ApprovalStatus__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -548,6 +588,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>WorkOrder.EndDate</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>WorkOrder.HasExceptionFree__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -653,6 +698,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>WorkOrder.fmWorkHours__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>WorkOrder.ruExceptionFreeCount__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -790,6 +840,10 @@
         <tab>standard-WorkOrder</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <userPermissions>
+        <enabled>true</enabled>
+        <name>FieldServiceAccess</name>
+    </userPermissions>
     <userPermissions>
         <enabled>true</enabled>
         <name>LightningExperienceUser</name>
