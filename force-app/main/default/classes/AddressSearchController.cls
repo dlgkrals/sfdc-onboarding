@@ -87,6 +87,27 @@ public with sharing class AddressSearchController {
     return parseResponse(response.getBody(), page);
   }
 
+  /**
+   * @description 사업장 주소 저장 (상담원도 서비스센터 자동 반영, 직접 변경은 센터장·관리자만)
+   * @param siteId  사업장 Id
+   * @param address 선택·입력한 주소
+   * @return 저장된 서비스센터 API 값 (바뀌지 않았으면 null)
+   */
+  @AuraEnabled
+  public static String saveSiteAddress(
+    Id siteId,
+    CustomerSiteAddressService.SiteAddress address
+  ) {
+    try {
+      return CustomerSiteAddressService.save(siteId, address);
+    } catch (DmlException e) {
+      // DESC: 검증 규칙 메시지만 화면에 (첫 번째 오류)
+      throw newAuraException(e.getDmlMessage(0));
+    } catch (Exception e) {
+      throw newAuraException(e.getMessage());
+    }
+  }
+
   // DESC: 앞뒤 공백 제거, 거부 문자 제거, 길이 제한
   @TestVisible
   private static String cleanKeyword(String keyword) {

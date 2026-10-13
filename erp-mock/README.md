@@ -1,6 +1,6 @@
 # 한결공조 ERP Mock (Cloudflare Workers + D1)
 
-재고의 원본(마스터)인 ERP를 흉내 내는 작은 서버. 한결공조 AS(Salesforce)가 부품 사용(IF-03)·재고 이동(IF-04)을 알리면 위치(창고 `WAREHOUSE` / 기사 차량 `VAN`)별 재고를 줄이고 늘리며 이력을 남긴다.
+재고의 원본(마스터)인 ERP를 흉내 내는 작은 서버. 한결공조 AS(Salesforce)가 부품 사용(IF-03)·재고 이동(IF-06)을 알리면 위치(창고 `WAREHOUSE` / 기사 차량 `VAN`)별 재고를 줄이고 늘리며 이력을 남긴다.
 
 ## API
 
@@ -8,7 +8,7 @@
 | ------ | -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------ |
 | GET    | `/health`                  | 없음        | 상태 확인 (시연 전 깨우기용)                                                                                 |
 | GET    | `/`                        | 없음        | 위치별 재고·최근 이력 50건 화면 (읽기 전용, 30초마다 새로 고침)                                              |
-| GET    | `/api/stock?location=CODE` | `x-api-key` | 재고 조회                                                                                                    |
+| GET    | `/api/stock?location=CODE` | `x-api-key` | 재고 조회 (IF-04 창고 재고 조회와 같은 형식)                                                                 |
 | POST   | `/api/stock/consume`       | `x-api-key` | 사용 차감 `{ items: [{ refId, locationCode, partCode, quantity, workOrderNumber }] }` (최대 200건)           |
 | POST   | `/api/stock/transfer`      | `x-api-key` | 재고 이동 `{ items: [{ refId, fromLocationCode, toLocationCode, partCode, quantity, reference }] }`          |
 | POST   | `/api/admin/seed`          | `x-api-key` | 초기 재고 적재 `{ reset, locations: [{ code, name, type }], stock: [{ locationCode, partCode, quantity }] }` |

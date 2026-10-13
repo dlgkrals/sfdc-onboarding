@@ -6,9 +6,9 @@
  *
  * API (모두 x-api-key 헤더 필요, /health와 화면 제외)
  *   GET  /health                      깨우기·상태 확인
- *   GET  /api/stock?location=CODE     재고 조회 (location 없으면 전체)
+ *   GET  /api/stock?location=CODE     재고 조회 (location 없으면 전체)        IF-04
  *   POST /api/stock/consume           사용 차감 (여러 건 한 번에)          IF-03
- *   POST /api/stock/transfer          재고 이동 (창고 → 차량 등, 여러 건)  IF-04
+ *   POST /api/stock/transfer          재고 이동 (창고 → 차량 등, 여러 건)  IF-06
  *   POST /api/admin/seed              초기 재고 적재 (Salesforce 현재 재고)
  *   POST /api/admin/maintenance       시연용 장애 모드 켜기·끄기 (켜면 API가 503)
  *   GET  /                            위치별 재고·최근 이력 화면 (읽기 전용)
@@ -326,7 +326,7 @@ async function consume(request, env) {
   return json({ results });
 }
 
-// IF-04 재고 이동 (출발지 차감 → 도착지 증가)
+// IF-06 재고 이동 (출발지 차감 → 도착지 증가)
 async function transfer(request, env) {
   const items = await readItems(request);
   const results = [];
