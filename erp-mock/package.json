@@ -1,0 +1,15 @@
+{
+  "name": "hg-erp-mock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "한결공조 ERP Mock (Cloudflare Workers + D1)",
+  "scripts": {
+    "db:local": "wrangler d1 execute hg-erp-mock --local --file=schema.sql",
+    "db:remote": "wrangler d1 execute hg-erp-mock --remote --file=schema.sql",
+    "dev": "wrangler dev --local --port 8787",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

@@ -1,0 +1,11 @@
+# 한결공조 ERP Mock — Cloudflare Workers 설정
+# API 키는 여기에 쓰지 않음: 배포는 `npx wrangler secret put API_KEY`, 로컬은 .dev.vars (Git 제외)
+name = "hg-erp-mock"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "hg-erp-mock"
+# `npx wrangler d1 create hg-erp-mock` 결과의 database_id로 바꿀 것
+database_id = "00000000-0000-0000-0000-000000000000"
