@@ -24,6 +24,7 @@
     <tabs>standard-Case</tabs>
     <tabs>standard-WorkOrder</tabs>
     <tabs>standard-ProductItem</tabs>
+    <tabs>standard-ProductTransfer</tabs>
     <tabs>standard-Location</tabs>
     <tabs>standard-Product2</tabs>
     <uiType>Lightning</uiType>

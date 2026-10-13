@@ -479,6 +479,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>ProductConsumed.ErpRemainingQty__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>ProductConsumed.ErpRetryCount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>ProductConsumed.ErpSyncMessage__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -490,6 +500,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>ProductConsumed.ErpSyncedAt__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>ProductConsumed.InventoryMismatch__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -831,11 +846,11 @@
         <visible>true</visible>
     </recordTypeVisibilities>
     <tabSettings>
-        <tab>HG_AssetSearch</tab>
+        <tab>CustomerSite__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
-        <tab>CustomerSite__c</tab>
+        <tab>HG_AssetSearch</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>

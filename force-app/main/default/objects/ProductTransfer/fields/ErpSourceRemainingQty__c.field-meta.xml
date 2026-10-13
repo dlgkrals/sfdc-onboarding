@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ErpSourceRemainingQty__c</fullName>
+    <description
+  >26-10-13 ERP가 이동 후 돌려준 출발 위치 남은 수량 (기록만). Apex만 씀 by Edwin</description>
+    <externalId>false</externalId>
+    <label>ERP 출발지 남은 수량</label>
+    <precision>16</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

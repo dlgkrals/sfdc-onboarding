@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ErpSyncStatus__c</fullName>
+    <description
+  >26-10-13 ERP 재고 이동(IF-06) 전송 상태. 사용 부품과 같은 규칙. Apex만 씀 by Edwin</description>
+    <label>ERP 전송 상태</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Pending</fullName>
+                <default>false</default>
+                <label>대기</label>
+            </value>
+            <value>
+                <fullName>Synced</fullName>
+                <default>false</default>
+                <label>완료</label>
+            </value>
+            <value>
+                <fullName>Failed</fullName>
+                <default>false</default>
+                <label>실패</label>
+            </value>
+            <value>
+                <fullName>NeedsReview</fullName>
+                <default>false</default>
+                <label>확인 필요</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
