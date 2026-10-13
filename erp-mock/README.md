@@ -18,6 +18,11 @@
 - 같은 `refId`(Salesforce 레코드 Id)가 다시 오면 처음 결과를 그대로 돌려줌 (`duplicate: true`) → 재전송해도 두 번 차감되지 않음
 - HTTP: 업무 결과 200, 키 오류 401, 요청 형식 오류 400, 장애 모드 503, 서버 오류 500
 
+## 수량 단위
+
+- 재고·이력마다 단위를 저장 (초기 적재 때 Salesforce 제품 항목 단위 그대로: `Each`, `kg`). 재고 이동으로 새로 생기는 재고는 출발지 단위
+- API 응답(재고 조회, 차감·이동 결과)에 `unit` 포함. 화면 표기는 `Each` → 개, `kg` → kg (ERP 쪽 표기. Salesforce 표기는 Salesforce에서 따로 관리)
+
 ## 배포 (처음 한 번, 약 10분)
 
 `erp-mock` 폴더에서 PowerShell로 실행.
@@ -28,7 +33,7 @@ npm install                                    # 처음 한 번 (wrangler 설치
 
 npx wrangler login                             # 1. 브라우저가 열리면 Cloudflare 로그인 → 허용 (직접)
 npx wrangler d1 create hg-erp-mock             # 2. 출력의 database_id 를 wrangler.toml 에 붙여 넣기
-npx wrangler d1 execute hg-erp-mock --remote --file=schema.sql   # 3. 표 만들기
+npx wrangler d1 execute hg-erp-mock --remote --file=schema.sql --yes   # 3. 표 만들기 (원격은 확인 질문이 있어 --yes, 기존 데이터 지워짐)
 npx wrangler secret put API_KEY                # 4. API 키 입력 (화면에 보이지 않음, 직접 정한 긴 문자열)
 npx wrangler deploy                            # 5. 배포 → https://hg-erp-mock.<계정>.workers.dev
 ```

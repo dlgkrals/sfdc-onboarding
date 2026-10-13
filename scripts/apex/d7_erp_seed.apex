@@ -14,8 +14,10 @@ for (Schema.Location l : [SELECT Id, Name, LocationType, ErpLocationCode__c FROM
     locations.add(new Map<String, Object>{ 'code' => l.ErpLocationCode__c, 'name' => l.Name, 'type' => erpTypeByLocationType.get(l.LocationType) });
 }
 List<Map<String, Object>> stock = new List<Map<String, Object>>();
-for (ProductItem p : [SELECT Location.ErpLocationCode__c, Product2.ErpPartCode__c, QuantityOnHand FROM ProductItem WHERE LocationId IN :locationIds AND Product2.ErpPartCode__c != null]) {
-    stock.add(new Map<String, Object>{ 'locationCode' => p.Location.ErpLocationCode__c, 'partCode' => p.Product2.ErpPartCode__c, 'quantity' => p.QuantityOnHand });
+// DESC: 수량 단위는 제품 항목의 단위 그대로 (Each, kg). 비어 있으면 부품 단위
+for (ProductItem p : [SELECT Location.ErpLocationCode__c, Product2.ErpPartCode__c, Product2.QuantityUnitOfMeasure, QuantityOnHand, QuantityUnitOfMeasure FROM ProductItem WHERE LocationId IN :locationIds AND Product2.ErpPartCode__c != null]) {
+    String unit = String.isNotBlank(p.QuantityUnitOfMeasure) ? p.QuantityUnitOfMeasure : p.Product2.QuantityUnitOfMeasure;
+    stock.add(new Map<String, Object>{ 'locationCode' => p.Location.ErpLocationCode__c, 'partCode' => p.Product2.ErpPartCode__c, 'quantity' => p.QuantityOnHand, 'unit' => unit });
 }
 
 HttpRequest req = new HttpRequest();

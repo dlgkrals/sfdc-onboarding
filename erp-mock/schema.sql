@@ -19,6 +19,8 @@ CREATE TABLE stock (
   location_code TEXT NOT NULL REFERENCES locations(code),
   part_code TEXT NOT NULL,
   quantity REAL NOT NULL CHECK (quantity >= 0),
+  -- 수량 단위: Salesforce 제품 항목의 단위 그대로 (Each, kg). 화면 표기는 Each → 개
+  unit TEXT NOT NULL DEFAULT 'Each',
   updated_at TEXT NOT NULL,
   PRIMARY KEY (location_code, part_code)
 );
@@ -32,6 +34,7 @@ CREATE TABLE movements (
   part_code TEXT NOT NULL,
   quantity_change REAL NOT NULL,
   quantity_after REAL NOT NULL,
+  unit TEXT NOT NULL DEFAULT 'Each',
   reference TEXT,
   created_at TEXT NOT NULL
 );

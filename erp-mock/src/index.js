@@ -136,10 +136,10 @@ async function getStock(url, env) {
   const location = url.searchParams.get("location");
   const stmt = location
     ? env.DB.prepare(
-        "SELECT location_code, part_code, quantity, updated_at FROM stock WHERE location_code = ? ORDER BY part_code"
+        "SELECT location_code, part_code, quantity, unit, updated_at FROM stock WHERE location_code = ? ORDER BY part_code"
       ).bind(location)
     : env.DB.prepare(
-        "SELECT location_code, part_code, quantity, updated_at FROM stock ORDER BY location_code, part_code"
+        "SELECT location_code, part_code, quantity, unit, updated_at FROM stock ORDER BY location_code, part_code"
       );
   const { results } = await stmt.all();
   return json({
@@ -147,6 +147,7 @@ async function getStock(url, env) {
       locationCode: r.location_code,
       partCode: r.part_code,
       quantity: r.quantity,
+      unit: r.unit,
       updatedAt: r.updated_at
     }))
   });
@@ -199,12 +200,12 @@ async function decrease(
     return null;
   }
   const row = await env.DB.prepare(
-    "SELECT quantity FROM stock WHERE location_code = ? AND part_code = ?"
+    "SELECT quantity, unit FROM stock WHERE location_code = ? AND part_code = ?"
   )
     .bind(locationCode, partCode)
     .first();
   await env.DB.prepare(
-    "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, reference, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
   )
     .bind(
       refId,
@@ -213,11 +214,12 @@ async function decrease(
       partCode,
       -quantity,
       row.quantity,
+      row.unit,
       reference || null,
       stamp
     )
     .run();
-  return round(row.quantity);
+  return { quantity: round(row.quantity), unit: row.unit };
 }
 
 async function increase(
@@ -227,22 +229,23 @@ async function increase(
   locationCode,
   partCode,
   quantity,
+  unit,
   reference
 ) {
   const stamp = now();
   await env.DB.prepare(
-    "INSERT INTO stock (location_code, part_code, quantity, updated_at) VALUES (?, ?, ?, ?) " +
+    "INSERT INTO stock (location_code, part_code, quantity, unit, updated_at) VALUES (?, ?, ?, ?, ?) " +
       "ON CONFLICT(location_code, part_code) DO UPDATE SET quantity = ROUND(quantity + excluded.quantity, 2), updated_at = excluded.updated_at"
   )
-    .bind(locationCode, partCode, quantity, stamp)
+    .bind(locationCode, partCode, quantity, unit, stamp)
     .run();
   const row = await env.DB.prepare(
-    "SELECT quantity FROM stock WHERE location_code = ? AND part_code = ?"
+    "SELECT quantity, unit FROM stock WHERE location_code = ? AND part_code = ?"
   )
     .bind(locationCode, partCode)
     .first();
   await env.DB.prepare(
-    "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, reference, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
   )
     .bind(
       refId,
@@ -251,11 +254,12 @@ async function increase(
       partCode,
       quantity,
       row.quantity,
+      row.unit,
       reference || null,
       stamp
     )
     .run();
-  return round(row.quantity);
+  return { quantity: round(row.quantity), unit: row.unit };
 }
 
 function validQuantity(q) {
@@ -289,7 +293,7 @@ async function consume(request, env) {
       );
     } else {
       const stock = await env.DB.prepare(
-        "SELECT quantity FROM stock WHERE location_code = ? AND part_code = ?"
+        "SELECT quantity, unit FROM stock WHERE location_code = ? AND part_code = ?"
       )
         .bind(locationCode, partCode)
         .first();
@@ -314,10 +318,15 @@ async function consume(request, env) {
             ? rejected(
                 refId,
                 "INSUFFICIENT_STOCK",
-                `재고가 부족합니다. 현재 ${round(stock.quantity)}, 요청 ${quantity}`,
-                { availableQty: round(stock.quantity) }
+                `재고가 부족합니다. 현재 ${round(stock.quantity)}${unitLabel(stock.unit)}, 요청 ${quantity}${unitLabel(stock.unit)}`,
+                { availableQty: round(stock.quantity), unit: stock.unit }
               )
-            : { refId, status: "OK", remainingQty: remaining };
+            : {
+                refId,
+                status: "OK",
+                remainingQty: remaining.quantity,
+                unit: remaining.unit
+              };
       }
     }
     await saveResult(env, refId, "CONSUME", result);
@@ -365,7 +374,7 @@ async function transfer(request, env) {
       );
     } else {
       const stock = await env.DB.prepare(
-        "SELECT quantity FROM stock WHERE location_code = ? AND part_code = ?"
+        "SELECT quantity, unit FROM stock WHERE location_code = ? AND part_code = ?"
       )
         .bind(fromLocationCode, partCode)
         .first();
@@ -389,8 +398,8 @@ async function transfer(request, env) {
           result = rejected(
             refId,
             "INSUFFICIENT_STOCK",
-            `출발 위치 재고가 부족합니다. 현재 ${round(stock.quantity)}, 요청 ${quantity}`,
-            { availableQty: round(stock.quantity) }
+            `출발 위치 재고가 부족합니다. 현재 ${round(stock.quantity)}${unitLabel(stock.unit)}, 요청 ${quantity}${unitLabel(stock.unit)}`,
+            { availableQty: round(stock.quantity), unit: stock.unit }
           );
         } else {
           const destination = await increase(
@@ -400,13 +409,15 @@ async function transfer(request, env) {
             toLocationCode,
             partCode,
             quantity,
+            source.unit,
             reference
           );
           result = {
             refId,
             status: "OK",
-            sourceRemainingQty: source,
-            destinationRemainingQty: destination
+            sourceRemainingQty: source.quantity,
+            destinationRemainingQty: destination.quantity,
+            unit: source.unit
           };
         }
       }
@@ -456,12 +467,12 @@ async function seed(request, env) {
       throw new BadRequest(`재고 형식 오류: ${JSON.stringify(s)}`);
     }
     await env.DB.prepare(
-      "INSERT OR REPLACE INTO stock (location_code, part_code, quantity, updated_at) VALUES (?, ?, ?, ?)"
+      "INSERT OR REPLACE INTO stock (location_code, part_code, quantity, unit, updated_at) VALUES (?, ?, ?, ?, ?)"
     )
-      .bind(s.locationCode, s.partCode, s.quantity, stamp)
+      .bind(s.locationCode, s.partCode, s.quantity, s.unit || "Each", stamp)
       .run();
     await env.DB.prepare(
-      "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, reference, created_at) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?)"
     )
       .bind(
         "SEED",
@@ -469,6 +480,7 @@ async function seed(request, env) {
         s.partCode,
         s.quantity,
         s.quantity,
+        s.unit || "Each",
         "Salesforce 초기 적재",
         stamp
       )
@@ -485,6 +497,11 @@ function esc(s) {
 }
 
 const TYPE_LABEL = { WAREHOUSE: "창고", VAN: "기사 차량" };
+// DESC: 수량 단위 화면 표기 (Salesforce 제품 항목 단위 값 → 표시)
+const UNIT_LABEL = { Each: "개", kg: "kg" };
+function unitLabel(unit) {
+  return UNIT_LABEL[unit] || unit || "";
+}
 const MOVE_LABEL = {
   SEED: "초기 적재",
   CONSUME: "사용 차감",
@@ -504,10 +521,10 @@ async function renderPage(env) {
       "SELECT code, name, type FROM locations ORDER BY type DESC, code"
     ).all(),
     env.DB.prepare(
-      "SELECT location_code, part_code, quantity, updated_at FROM stock ORDER BY location_code, part_code"
+      "SELECT location_code, part_code, quantity, unit, updated_at FROM stock ORDER BY location_code, part_code"
     ).all(),
     env.DB.prepare(
-      "SELECT ref_id, type, location_code, part_code, quantity_change, quantity_after, reference, created_at FROM movements ORDER BY id DESC LIMIT 50"
+      "SELECT ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at FROM movements ORDER BY id DESC LIMIT 50"
     ).all(),
     getSetting(env, "maintenance")
   ]);
@@ -524,7 +541,7 @@ async function renderPage(env) {
         l
       ) => `<section class="card"><h2><span class="tag ${l.type}">${TYPE_LABEL[l.type]}</span>${esc(l.name)} <small>${esc(l.code)}</small></h2>
       <table><thead><tr><th>부품 코드</th><th class="num">수량</th><th>최종 변경</th></tr></thead><tbody>
-      ${(byLoc[l.code] || []).map((s) => `<tr><td>${esc(s.part_code)}</td><td class="num">${esc(s.quantity)}</td><td>${esc(fmt(s.updated_at))}</td></tr>`).join("") || '<tr><td colspan="3" class="muted">재고 없음</td></tr>'}
+      ${(byLoc[l.code] || []).map((s) => `<tr><td>${esc(s.part_code)}</td><td class="num">${esc(s.quantity)} ${esc(unitLabel(s.unit))}</td><td>${esc(fmt(s.updated_at))}</td></tr>`).join("") || '<tr><td colspan="3" class="muted">재고 없음</td></tr>'}
       </tbody></table></section>`
     )
     .join("");
@@ -533,7 +550,7 @@ async function renderPage(env) {
       (
         m
       ) => `<tr><td>${esc(fmt(m.created_at))}</td><td>${esc(MOVE_LABEL[m.type])}</td><td>${esc(m.location_code)}</td><td>${esc(m.part_code)}</td>
-      <td class="num ${m.quantity_change < 0 ? "minus" : "plus"}">${m.quantity_change > 0 ? "+" : ""}${esc(m.quantity_change)}</td><td class="num">${esc(m.quantity_after)}</td>
+      <td class="num ${m.quantity_change < 0 ? "minus" : "plus"}">${m.quantity_change > 0 ? "+" : ""}${esc(m.quantity_change)} ${esc(unitLabel(m.unit))}</td><td class="num">${esc(m.quantity_after)} ${esc(unitLabel(m.unit))}</td>
       <td>${esc(m.reference)}</td><td class="mono">${esc(m.ref_id)}</td></tr>`
     )
     .join("");
