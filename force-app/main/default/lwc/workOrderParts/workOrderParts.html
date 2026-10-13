@@ -1,0 +1,78 @@
+<template>
+  <lightning-card title={title} icon-name="standard:product_consumed">
+    <lightning-button-icon
+      slot="actions"
+      icon-name="utility:refresh"
+      alternative-text={labels.LABEL_REFRESH}
+      title={labels.LABEL_REFRESH}
+      onclick={handleRefresh}
+    ></lightning-button-icon>
+
+    <div class="slds-p-horizontal_medium slds-m-bottom_small">
+      <div class="slds-grid slds-wrap slds-gutters_small">
+        <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-3">
+          <p class="slds-text-title">{labels.LABEL_PAID_TOTAL}</p>
+          <p class="slds-text-heading_small">
+            <lightning-formatted-number
+              value={paidTotal}
+              format-style="currency"
+              currency-code="KRW"
+            ></lightning-formatted-number>
+          </p>
+        </div>
+        <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-3">
+          <p class="slds-text-title">{labels.LABEL_TOTAL_CHARGE}</p>
+          <p class="slds-text-heading_small">
+            <lightning-formatted-number
+              value={totalCharge}
+              format-style="currency"
+              currency-code="KRW"
+            ></lightning-formatted-number>
+          </p>
+        </div>
+        <div
+          lwc:if={needsApproval}
+          class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-align-middle"
+        >
+          <lightning-badge
+            label={labels.LABEL_NEEDS_APPROVAL}
+            icon-name="utility:warning"
+            class="slds-theme_warning"
+          ></lightning-badge>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-area">
+      <lightning-spinner
+        lwc:if={isLoading}
+        alternative-text="Loading"
+        size="small"
+      ></lightning-spinner>
+      <lightning-datatable
+        lwc:if={hasRows}
+        key-field="id"
+        data={rows}
+        columns={columns}
+        hide-checkbox-column
+        column-widths-mode="auto"
+      ></lightning-datatable>
+      <p lwc:if={isEmpty} class="slds-p-horizontal_medium slds-text-color_weak">
+        {labels.MSG_NO_PARTS}
+      </p>
+      <p
+        lwc:if={errorMessage}
+        class="slds-p-horizontal_medium slds-text-color_error"
+      >
+        {errorMessage}
+      </p>
+    </div>
+
+    <div lwc:if={canAdd} class="slds-m-top_small slds-border_top">
+      <c-part-add-form
+        work-order-id={recordId}
+        onpartadded={handlePartAdded}
+      ></c-part-add-form>
+    </div>
+  </lightning-card>
+</template>

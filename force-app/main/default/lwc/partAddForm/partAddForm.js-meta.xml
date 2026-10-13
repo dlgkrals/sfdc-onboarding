@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <isExposed>false</isExposed>
+    <masterLabel>사용 부품 추가 폼</masterLabel>
+    <description
+  >26-10-13 출동 사용 부품 화면의 자식: 차량 재고·수량 선택 후 저장, partadded 이벤트 by Edwin</description>
+</LightningComponentBundle>

@@ -470,6 +470,193 @@
     >삭제한 사용 부품은 복원할 수 없습니다. 잘못 지웠으면 새로 입력하세요.</value>
     </labels>
     <labels>
+        <fullName>LABEL_PARTS_TITLE</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>사용 부품</shortDescription>
+        <value>사용 부품</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_PART_ADD_TITLE</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>부품 추가</shortDescription>
+        <value>부품 추가</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_STOCK</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>내 차량 재고</shortDescription>
+        <value>내 차량 재고</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_QUANTITY</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>수량</shortDescription>
+        <value>수량</value>
+    </labels>
+    <labels>
+        <fullName>BTN_ADD_PART</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>추가</shortDescription>
+        <value>추가</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_REFRESH</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>새로 고침</shortDescription>
+        <value>새로 고침</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_PART</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>부품</shortDescription>
+        <value>부품</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_QUANTITY</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>수량</shortDescription>
+        <value>수량</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_CHARGE</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>판정</shortDescription>
+        <value>판정</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_AMOUNT</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>금액</shortDescription>
+        <value>금액</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_ERP_STATUS</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ERP 전송</shortDescription>
+        <value>ERP 전송</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_ERP_REMAINING</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ERP 남은 수량</shortDescription>
+        <value>ERP 남은 수량</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_PAID_TOTAL</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>유상 부품비</shortDescription>
+        <value>유상 부품비</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_TOTAL_CHARGE</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>총 청구액</shortDescription>
+        <value>총 청구액</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_NEEDS_APPROVAL</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>승인 필요</shortDescription>
+        <value>승인 필요</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_STOCK_OPTION</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>{0} ({1}) · 보유 {2} {3}</shortDescription>
+        <value>{0} ({1}) · 보유 {2} {3}</value>
+    </labels>
+    <labels>
+        <fullName>MSG_NO_PARTS</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>아직 사용한 부품이 없습니다.</shortDescription>
+        <value>아직 사용한 부품이 없습니다.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_NO_VAN_STOCK</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >담당 기사 차량에 남은 재고가 없습니다.</shortDescription>
+        <value>담당 기사 차량에 남은 재고가 없습니다.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_QUANTITY_INVALID</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>수량은 0보다 커야 합니다.</shortDescription>
+        <value>수량은 0보다 커야 합니다.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_PART_SELECT_REQUIRED</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>사용한 재고를 선택하세요.</shortDescription>
+        <value>사용한 재고를 선택하세요.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_PART_ADDED</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>부품을 추가했습니다</shortDescription>
+        <value>부품을 추가했습니다</value>
+    </labels>
+    <labels>
+        <fullName>MSG_PART_JUDGED</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>{0} {1} {2} → {3}</shortDescription>
+        <value>{0} {1} {2} → {3}</value>
+    </labels>
+    <labels>
+        <fullName>MSG_ERP_PENDING_HINT</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >ERP 전송 결과는 잠시 뒤 반영됩니다. 새로 고침으로 확인하세요.</shortDescription>
+        <value
+    >ERP 전송 결과는 잠시 뒤 반영됩니다. 새로 고침으로 확인하세요.</value>
+    </labels>
+    <labels>
         <fullName>MISC_UNIT_EACH</fullName>
         <categories>HG_Unit</categories>
         <language>en_US</language>

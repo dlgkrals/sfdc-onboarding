@@ -16,6 +16,10 @@
         <apexClass>AssetSearchController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>WorkOrderPartsController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <customPermissions>
         <enabled>true</enabled>
         <name>HG_BypassValidation</name>

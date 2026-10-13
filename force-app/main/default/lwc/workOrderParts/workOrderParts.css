@@ -1,0 +1,5 @@
+/* 스피너가 표 영역 위에 겹쳐 보이도록 기준 위치 지정 */
+.table-area {
+  position: relative;
+  min-height: 3rem;
+}

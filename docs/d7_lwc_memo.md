@@ -21,7 +21,7 @@
 - 권한: 상담원·센터장·관리자 권한 집합에 두 컨트롤러 클래스 접근과 "장비 검색" 탭 표시 추가. 협력 기사는 장비·접수 권한이 없어 대상 아님(호출하면 오류 → 토스트)
 - 부모→자식: `assetDetail`이 장비 누적 접수 수·최근 접수일 변화를 `getRecord`로 감지하면 자식의 `@api refresh()` 호출
 
-## 3. 자식→부모 이벤트로 구현할 기능 (D8 설계)
+## 3. 자식→부모 이벤트 화면 — 출동 사용 부품 (2026-10-13 구현)
 
 출동 사용 부품 화면에서 **부품을 추가하면 목록·합계를 다시 그리는** 기능을 자식→부모 이벤트로 구현한다.
 
@@ -44,3 +44,11 @@ workOrderParts (부모, 출동 레코드 페이지, @api recordId)
 | 목록 검색·필터·정렬·페이징 | "장비 검색" 탭: `평택` 검색 → "반복 고장 장비만" → 최근 90일 접수 열 정렬 → 다음 페이지                                                                                                           |
 | 상세                       | 시리얼 클릭 → 장비 레코드: 보증 배지, 부품별 만료일, 최근 접수 5건                                                                                                                                |
 | 오류가 토스트로 보이는지   | 협력 기사(최민호)로 Login As → 주소창에 `/lightning/n/HG_AssetSearch` 입력 → 권한 오류 토스트 (**리허설 때 확인 필요**: 탭이 숨겨져 페이지 자체가 막히면, 장비 상세 화면의 오류 표시로 대신 시연) |
+
+## 5. 출동 사용 부품 구현 메모 (2026-10-13)
+
+- 배치: 출동 레코드 페이지 `HG_WorkOrderRecordPage`(앱 기본 페이지), 부모 `workOrderParts`(@wire getParts) ⊃ 자식 `partAddForm`(@wire getVanStock + imperative addPart)
+- 자식 저장 성공 → `partadded`(detail: partId) → 부모 refreshApex + notifyRecordUpdateAvailable(출동 롤업·수식이 표준 상세에도 반영) → 저장된 판정으로 토스트
+- 단위 표기는 Apex가 Custom Label(MISC_UNIT_EACH/KG)로 변환, 수량 칸 이름에 단위 표시. 추가 폼은 사용 부품 생성 권한이 있을 때만(상담원은 목록만)
+- 테스트 `WorkOrderPartsControllerTest` 8개(정상 4·불허 3·벌크 1)
+- **확인 필요**: 실제 org에서 최민호는 자기 차량 재고에 수정 권한이 없음(ProductItem 오브젝트 권한 읽기, UserRecordAccess HasEditAccess=false). 테스트 사용자는 저장 성공했지만, 실제 기사 저장은 리허설에서 Login As로 확인. 막히면 권한 변경 여부를 결정해야 함

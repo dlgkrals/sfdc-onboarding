@@ -1,0 +1,54 @@
+<template>
+  <div class="slds-p-horizontal_medium slds-p-vertical_small form-area">
+    <h3 class="slds-text-heading_small slds-m-bottom_x-small">
+      {labels.LABEL_PART_ADD_TITLE}
+    </h3>
+    <p lwc:if={hasNoStock} class="slds-text-color_weak">
+      {labels.MSG_NO_VAN_STOCK}
+    </p>
+    <div
+      lwc:else
+      class="slds-grid slds-wrap slds-gutters_small slds-grid_vertical-align-end"
+    >
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_7-of-12">
+        <lightning-combobox
+          name="stock"
+          label={labels.LABEL_STOCK}
+          placeholder={labels.MSG_PART_SELECT_REQUIRED}
+          options={stockOptions}
+          value={selectedItemId}
+          onchange={handleStockChange}
+          required
+        ></lightning-combobox>
+      </div>
+      <div class="slds-col slds-size_1-of-2 slds-medium-size_3-of-12">
+        <lightning-input
+          name="quantity"
+          type="number"
+          label={quantityLabel}
+          value={quantity}
+          step="0.01"
+          min="0.01"
+          message-when-range-underflow={labels.MSG_QUANTITY_INVALID}
+          onchange={handleQuantityChange}
+          required
+        ></lightning-input>
+      </div>
+      <div class="slds-col slds-size_1-of-2 slds-medium-size_2-of-12">
+        <lightning-button
+          variant="brand"
+          label={labels.BTN_ADD_PART}
+          icon-name="utility:add"
+          onclick={handleAdd}
+          disabled={isSaving}
+          class="slds-button_stretch"
+        ></lightning-button>
+      </div>
+    </div>
+    <lightning-spinner
+      lwc:if={isSaving}
+      alternative-text="Saving"
+      size="small"
+    ></lightning-spinner>
+  </div>
+</template>

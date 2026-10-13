@@ -16,6 +16,10 @@
         <apexClass>AssetSearchController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>WorkOrderPartsController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <description>한결공조 AS 권한 매트릭스 V1.1</description>
     <externalCredentialPrincipalAccesses>
         <enabled>true</enabled>

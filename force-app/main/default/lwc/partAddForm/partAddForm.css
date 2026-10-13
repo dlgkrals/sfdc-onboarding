@@ -1,0 +1,4 @@
+/* 저장 중 스피너가 폼 위에 겹쳐 보이도록 기준 위치 지정 */
+.form-area {
+  position: relative;
+}
