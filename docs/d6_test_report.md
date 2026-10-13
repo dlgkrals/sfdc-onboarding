@@ -120,3 +120,10 @@ D4·D5의 테스트와 벌크 검증은 모두 관리자로 실행해 드러나�
 - 클래스의 `without sharing`은 이 동작을 바꾸지 않음(상담원 집계 조회 0건). 67.0에서는 `WITH SECURITY_ENFORCED`도 쓸 수 없고 `WITH USER_MODE` / `WITH SYSTEM_MODE`로 명시해야 함
 - 근거: Salesforce Apex Developer Guide "Apex Versioned Behavior Changes" (API 67.0: Apex runs in user context by default)
 - 결정(Edwin, 2026-10-12): 시스템이 계산하는 값(장비 집계·유·무상 판정·Batch)은 `WITH SYSTEM_MODE` / `AccessLevel.SYSTEM_MODE`로 명시 유지. 화면 컨트롤러(D7~)는 `WITH USER_MODE`로 명시. 모드를 적지 않은 조회·DML은 두지 않음
+
+## 5. D7 추가 교훈 — Mock 테스트가 못 잡는 것 (2026-10-13)
+
+- **현상**: 협력 기사(최민호, Login As)가 사용 부품을 저장하자 ERP 전송이 `[CONNECTION] You don't have read permissions on the User External Credential object.`로 실패. 같은 기능의 테스트(`ErpInventoryServiceTest.normalTechnicianSaveSyncsToErp`, 기사 runAs)는 통과했음
+- **원인**: External Credential을 쓰는 콜아웃은 실행 사용자에게 보안 주체 접근 권한 + **사용자 외부 자격 증명(UserExternalCredential) 오브젝트 읽기 권한**이 필요. 테스트는 `HttpCalloutMock`이 응답을 대신하므로 Named/External Credential 단계를 거치지 않음. 관리자로 한 실제 연동 확인은 관리자 권한이라 문제가 드러나지 않음
+- **조치**: HG_Technician·HG_Admin(ERP), HG_CallCenter·HG_CenterManager·HG_Admin(주소 검색) 권한 집합에 UserExternalCredential 읽기 추가, org 반영 확인(ObjectPermissions 4건)
+- **교훈**: 외부 호출은 단위 테스트 통과와 별개로 **실제 사용자 권한으로 실제 호출을 1번 확인**해야 함. 리허설 확인 항목: 기사 — 사용 부품 저장·재고 이동 수령(ERP), 상담원·센터장 — 주소 검색(도로명주소)
