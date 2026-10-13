@@ -235,4 +235,208 @@
         <shortDescription>최근 접수가 없습니다.</shortDescription>
         <value>최근 접수가 없습니다.</value>
     </labels>
+    <labels>
+        <fullName>LABEL_ADDRESS_SEARCH</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>도로명주소 검색</shortDescription>
+        <value>도로명주소 검색</value>
+    </labels>
+    <labels>
+        <fullName>MSG_ADDRESS_PLACEHOLDER</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >도로명·건물명·지번 (예: 평택로 32, 세광전자) 2글자 이상</shortDescription>
+        <value>도로명·건물명·지번 (예: 평택로 32, 세광전자) 2글자 이상</value>
+    </labels>
+    <labels>
+        <fullName>MSG_ADDRESS_KEYWORD_SHORT</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>검색어를 2글자 이상 입력하세요.</shortDescription>
+        <value>검색어를 2글자 이상 입력하세요.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_ADDRESS_NOT_FOUND</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >검색 결과가 없습니다. 도로명과 건물번호를 함께 입력해 보세요.</shortDescription>
+        <value
+    >검색 결과가 없습니다. 도로명과 건물번호를 함께 입력해 보세요.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_ADDRESS_KEY_ERROR</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >주소 검색 승인키가 없거나 만료되었습니다. 관리자에게 문의하세요.</shortDescription>
+        <value
+    >주소 검색 승인키가 없거나 만료되었습니다. 관리자에게 문의하세요.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_ADDRESS_SERVER_ERROR</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >주소 검색 서버에 연결하지 못했습니다. 잠시 후 다시 시도하세요.</shortDescription>
+        <value
+    >주소 검색 서버에 연결하지 못했습니다. 잠시 후 다시 시도하세요.</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ADDRESS_COUNT</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>{0}건 중 {1}건 표시</shortDescription>
+        <value>{0}건 중 {1}건 표시</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_POSTAL_CODE</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>우편번호</shortDescription>
+        <value>우편번호</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_JIBUN</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>지번</shortDescription>
+        <value>지번</value>
+    </labels>
+    <labels>
+        <fullName>BTN_SELECT</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>선택</shortDescription>
+        <value>선택</value>
+    </labels>
+    <labels>
+        <fullName>BTN_MORE</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>더 보기</shortDescription>
+        <value>더 보기</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ADDRESS_ACTION_TITLE</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>주소 검색</shortDescription>
+        <value>주소 검색</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SELECTED_ADDRESS</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>선택한 주소</shortDescription>
+        <value>선택한 주소</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_DETAIL_ADDRESS</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>상세주소 (동·층·호)</shortDescription>
+        <value>상세주소 (동·층·호)</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SERVICE_CENTER</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>서비스센터</shortDescription>
+        <value>서비스센터</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CENTER_AUTO</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >주소로 자동 지정했습니다. 저장 전에 바꿀 수 있습니다.</shortDescription>
+        <value>주소로 자동 지정했습니다. 저장 전에 바꿀 수 있습니다.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CENTER_MANUAL</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >이 주소는 자동 지정 대상이 아닙니다. 서비스센터를 직접 선택하세요.</shortDescription>
+        <value
+    >이 주소는 자동 지정 대상이 아닙니다. 서비스센터를 직접 선택하세요.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CENTER_READONLY</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >서비스센터는 센터장·관리자만 바꿀 수 있어 주소만 저장합니다. 주소 기준 센터: {0}</shortDescription>
+        <value
+    >서비스센터는 센터장·관리자만 바꿀 수 있어 주소만 저장합니다. 주소 기준 센터: {0}</value>
+    </labels>
+    <labels>
+        <fullName>MSG_SELECT_ADDRESS_FIRST</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>주소를 먼저 검색해서 선택하세요.</shortDescription>
+        <value>주소를 먼저 검색해서 선택하세요.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_ADDRESS_SAVED</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>주소를 저장했습니다.</shortDescription>
+        <value>주소를 저장했습니다.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_SAVE_ERROR</fullName>
+        <categories>HG_Common</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>저장하지 못했습니다</shortDescription>
+        <value>저장하지 못했습니다</value>
+    </labels>
+    <labels>
+        <fullName>BTN_CANCEL</fullName>
+        <categories>HG_Common</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>취소</shortDescription>
+        <value>취소</value>
+    </labels>
+    <labels>
+        <fullName>BTN_SAVE</fullName>
+        <categories>HG_Common</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>저장</shortDescription>
+        <value>저장</value>
+    </labels>
+    <labels>
+        <fullName>BTN_RESELECT</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>다시 검색</shortDescription>
+        <value>다시 검색</value>
+    </labels>
 </CustomLabels>

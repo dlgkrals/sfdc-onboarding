@@ -1,0 +1,63 @@
+<template>
+  <lightning-input
+    type="search"
+    label={label}
+    placeholder={labels.MSG_ADDRESS_PLACEHOLDER}
+    onchange={handleKeywordChange}
+  ></lightning-input>
+
+  <div class="result-area slds-m-top_x-small">
+    <lightning-spinner
+      lwc:if={isLoading}
+      alternative-text="Loading"
+      size="small"
+    ></lightning-spinner>
+
+    <p
+      lwc:if={errorMessage}
+      class="slds-text-color_error slds-m-vertical_x-small"
+    >
+      {errorMessage}
+    </p>
+    <p lwc:if={isEmpty} class="slds-text-color_weak slds-m-vertical_x-small">
+      {labels.MSG_ADDRESS_NOT_FOUND}
+    </p>
+
+    <template lwc:if={hasRows}>
+      <p
+        class="slds-text-body_small slds-text-color_weak slds-m-bottom_xx-small"
+      >
+        {countText}
+      </p>
+      <ul class="slds-has-dividers_bottom-space result-list">
+        <template for:each={rows} for:item="row" for:index="index">
+          <li key={row.key} class="slds-item">
+            <div class="slds-grid slds-grid_vertical-align-center">
+              <div class="slds-col slds-grow">
+                <p class="slds-text-title_bold">{row.roadAddress}</p>
+                <p class="slds-text-body_small slds-text-color_weak">
+                  {labels.LABEL_JIBUN} {row.jibunAddress} ·
+                  {labels.LABEL_POSTAL_CODE} {row.postalCode}
+                </p>
+              </div>
+              <div class="slds-col slds-no-flex slds-p-left_small">
+                <lightning-button
+                  label={labels.BTN_SELECT}
+                  data-index={index}
+                  onclick={handleSelect}
+                ></lightning-button>
+              </div>
+            </div>
+          </li>
+        </template>
+      </ul>
+      <div lwc:if={hasMore} class="slds-text-align_center slds-m-top_x-small">
+        <lightning-button
+          variant="base"
+          label={labels.BTN_MORE}
+          onclick={handleMore}
+        ></lightning-button>
+      </div>
+    </template>
+  </div>
+</template>

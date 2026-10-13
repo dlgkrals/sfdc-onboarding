@@ -1,0 +1,64 @@
+<template>
+  <lightning-quick-action-panel header={labels.LABEL_ADDRESS_ACTION_TITLE}>
+    <template lwc:if={hasSelected}>
+      <div class="slds-box slds-theme_shade slds-m-bottom_small">
+        <p class="slds-text-title slds-m-bottom_xx-small">
+          {labels.LABEL_SELECTED_ADDRESS}
+        </p>
+        <p class="slds-text-title_bold">{previewAddress}</p>
+        <p class="slds-text-body_small slds-text-color_weak">
+          {labels.LABEL_POSTAL_CODE} {selected.postalCode}
+        </p>
+        <lightning-button
+          class="slds-m-top_x-small"
+          variant="base"
+          label={labels.BTN_RESELECT}
+          onclick={handleReselect}
+        ></lightning-button>
+      </div>
+
+      <lightning-input
+        label={labels.LABEL_DETAIL_ADDRESS}
+        value={detailAddress}
+        max-length="200"
+        onchange={handleDetailChange}
+      ></lightning-input>
+
+      <template lwc:if={isSite}>
+        <lightning-combobox
+          class="slds-m-top_small"
+          label={labels.LABEL_SERVICE_CENTER}
+          value={serviceCenter}
+          options={centerOptions}
+          disabled={centerDisabled}
+          onchange={handleCenterChange}
+        ></lightning-combobox>
+        <p
+          class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small"
+        >
+          {centerMessage}
+        </p>
+      </template>
+    </template>
+
+    <template lwc:else>
+      <c-address-search
+        onaddressselected={handleAddressSelected}
+      ></c-address-search>
+    </template>
+
+    <div slot="footer">
+      <lightning-button
+        label={labels.BTN_CANCEL}
+        onclick={handleCancel}
+      ></lightning-button>
+      <lightning-button
+        class="slds-m-left_x-small"
+        variant="brand"
+        label={labels.BTN_SAVE}
+        disabled={isSaveDisabled}
+        onclick={handleSave}
+      ></lightning-button>
+    </div>
+  </lightning-quick-action-panel>
+</template>

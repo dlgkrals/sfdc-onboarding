@@ -5,6 +5,10 @@
         <visible>true</visible>
     </applicationVisibilities>
     <classAccesses>
+        <apexClass>AddressSearchController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>AssetDetailController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -18,6 +22,11 @@
     </customPermissions>
     <description
   >관리자(서비스운영팀장): 한결공조 오브젝트 전체 필드 접근 · 한결공조 AS 권한 매트릭스 V1.1</description>
+    <externalCredentialPrincipalAccesses>
+        <enabled>true</enabled>
+        <externalCredentialPrincipal
+    >HG_JusoApi-HG_JusoPrincipal</externalCredentialPrincipal>
+    </externalCredentialPrincipalAccesses>
     <fieldPermissions>
         <editable>true</editable>
         <field>Account.AccountStatus__c</field>

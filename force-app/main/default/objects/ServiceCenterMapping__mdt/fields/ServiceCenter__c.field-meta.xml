@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ServiceCenter__c</fullName>
+    <description
+  >26-10-13 서비스센터 API 값 (Global Value Set ServiceCenter의 값과 같게: Seoul, GyeonggiNorth …) by Edwin</description>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>서비스센터</label>
+    <length>40</length>
+    <required>true</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <isExposed>false</isExposed>
+    <description
+  >26-10-13 공통 도로명주소 검색 (선택 시 addressselected 이벤트) by Edwin</description>
+</LightningComponentBundle>

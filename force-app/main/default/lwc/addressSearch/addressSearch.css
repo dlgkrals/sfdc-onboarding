@@ -1,0 +1,10 @@
+/* 스피너 기준 위치, 결과가 많으면 목록만 스크롤 (모달 안에서 넘치지 않게) */
+.result-area {
+  position: relative;
+  min-height: 2rem;
+}
+
+.result-list {
+  max-height: 22rem;
+  overflow-y: auto;
+}

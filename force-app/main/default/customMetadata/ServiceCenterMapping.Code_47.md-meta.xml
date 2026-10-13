@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomMetadata
+  xmlns="http://soap.sforce.com/2006/04/metadata"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+>
+    <label>47 경상북도 (옛 군위군 47720 포함)</label>
+    <protected>false</protected>
+    <values>
+        <field>AdminDistrictPrefix__c</field>
+        <value xsi:type="xsd:string">47</value>
+    </values>
+    <values>
+        <field>ServiceCenter__c</field>
+        <value xsi:type="xsd:string">Yeongnam</value>
+    </values>
+</CustomMetadata>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<QuickAction xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionSubtype>ScreenAction</actionSubtype>
+    <description
+  >26-10-13 도로명주소 검색으로 고객사 청구지 입력 (국가 KR, 시도 비움) by Edwin</description>
+    <label>주소 검색</label>
+    <lightningWebComponent>addressEditAction</lightningWebComponent>
+    <optionsCreateFeedItem>false</optionsCreateFeedItem>
+    <type>LightningWebComponent</type>
+</QuickAction>
