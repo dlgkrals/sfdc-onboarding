@@ -16,7 +16,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 5번: 사용 부품 → ERP)
  * 1.1    2026-10-13    Edwin     restoreStockForDeleted 추가 (삭제 시 재고 되돌림, decision-log 11 A안)
- * 1.2    2026-10-13    Edwin     재고 이동 → ERP(IF-06) 추가, 전송·결과·재시도 공통화, 콜아웃과 저장 분리(build*·save)
+ * 1.2    2026-10-13    Edwin     재고 이동 → ERP(IF-06) 추가, getMaxRetry 공개(재전송 Batch), 전송·결과·재시도 공통화, 콜아웃과 저장 분리(build*·save)
  * ----------------------------------------------------------------------------
  * @see ErpSyncQueueable, ProductConsumedTriggerHandler, ProductTransferTriggerHandler, erp-mock/src/index.js, docs/interface_definition.md IF-03·IF-06
  */
@@ -588,8 +588,10 @@ public with sharing class ErpInventoryService {
     return message == null ? null : message.left(MESSAGE_MAX_LENGTH);
   }
 
-  @TestVisible
-  private static Integer getMaxRetry() {
+  /**
+   * @description 재시도 상한 (ServiceSetting__mdt ErpMaxRetry, 없으면 3). 재전송 Batch 대상 조건에도 사용
+   */
+  public static Integer getMaxRetry() {
     ServiceSetting__mdt setting = ServiceSetting__mdt.getInstance(
       'ErpMaxRetry'
     );
