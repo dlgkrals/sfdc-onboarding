@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<SharingRules xmlns="http://soap.sforce.com/2006/04/metadata">
+    <sharingOwnerRules>
+        <fullName>HG_AllStock_CallCenter</fullName>
+        <accessLevel>Read</accessLevel>
+        <label>모든 재고 → 콜센터 읽기</label>
+        <sharedTo>
+            <group>HG_CallCenter</group>
+        </sharedTo>
+        <sharedFrom>
+            <allInternalUsers />
+        </sharedFrom>
+    </sharingOwnerRules>
+    <sharingOwnerRules>
+        <fullName>HG_Chungcheong_Stock_CM</fullName>
+        <accessLevel>Read</accessLevel>
+        <label>충청 기사 차량 재고 → 충청센터장 읽기</label>
+        <sharedTo>
+            <role>HG_ChungcheongCenterManager</role>
+        </sharedTo>
+        <sharedFrom>
+            <role>HG_ChungcheongTechnician</role>
+        </sharedFrom>
+    </sharingOwnerRules>
+    <sharingOwnerRules>
+        <fullName>HG_GyeonggiSouth_Stock_CM</fullName>
+        <accessLevel>Read</accessLevel>
+        <label>경기남부 기사 차량 재고 → 경기남부센터장 읽기</label>
+        <sharedTo>
+            <role>HG_GyeonggiSouthCenterManager</role>
+        </sharedTo>
+        <sharedFrom>
+            <role>HG_GyeonggiSouthTechnician</role>
+        </sharedFrom>
+    </sharingOwnerRules>
+    <sharingOwnerRules>
+        <fullName>HG_Seoul_Stock_CM</fullName>
+        <accessLevel>Read</accessLevel>
+        <label>서울 기사 차량 재고 → 서울센터장 읽기</label>
+        <sharedTo>
+            <role>HG_SeoulCenterManager</role>
+        </sharedTo>
+        <sharedFrom>
+            <role>HG_SeoulTechnician</role>
+        </sharedFrom>
+    </sharingOwnerRules>
+    <sharingOwnerRules>
+        <fullName>HG_Warehouse_Stock_GS_Tech</fullName>
+        <accessLevel>Read</accessLevel>
+        <description
+    >26-10-13 관리자(서비스운영팀장) 소유 재고 = 창고 재고를 경기남부 기사에게 읽기 전용. 기사 차량 재고(기사 소유)는 대상 아님 by Edwin</description>
+        <label>창고 재고 → 경기남부 기사 읽기</label>
+        <sharedTo>
+            <role>HG_GyeonggiSouthTechnician</role>
+        </sharedTo>
+        <sharedFrom>
+            <role>HG_ServiceOpsManager</role>
+        </sharedFrom>
+    </sharingOwnerRules></SharingRules>

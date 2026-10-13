@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<SharingRules xmlns="http://soap.sforce.com/2006/04/metadata">
+    <sharingCriteriaRules>
+        <fullName>HG_Chungcheong_Locations_CM</fullName>
+        <accessLevel>Read</accessLevel>
+        <label>충청 창고·차량 → 충청센터장 읽기</label>
+        <sharedTo>
+            <role>HG_ChungcheongCenterManager</role>
+        </sharedTo>
+        <criteriaItems>
+            <field>ServiceCenter__c</field>
+            <operation>equals</operation>
+            <value>충청센터</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>HG_GyeonggiSouth_Locations_CM</fullName>
+        <accessLevel>Read</accessLevel>
+        <label>경기남부 창고·차량 → 경기남부센터장 읽기</label>
+        <sharedTo>
+            <role>HG_GyeonggiSouthCenterManager</role>
+        </sharedTo>
+        <criteriaItems>
+            <field>ServiceCenter__c</field>
+            <operation>equals</operation>
+            <value>경기남부·인천센터</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>HG_Seoul_Locations_CM</fullName>
+        <accessLevel>Read</accessLevel>
+        <label>서울 창고·차량 → 서울센터장 읽기</label>
+        <sharedTo>
+            <role>HG_SeoulCenterManager</role>
+        </sharedTo>
+        <criteriaItems>
+            <field>ServiceCenter__c</field>
+            <operation>equals</operation>
+            <value>서울센터</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>HG_GyeonggiSouth_Warehouse_Tech</fullName>
+        <accessLevel>Read</accessLevel>
+        <description
+    >26-10-13 경기남부 창고를 경기남부 기사에게 읽기 전용 (창고 → 차량 재고 이동용). 기사 차량은 대상 아님 by Edwin</description>
+        <label>경기남부 창고 → 경기남부 기사 읽기</label>
+        <sharedTo>
+            <role>HG_GyeonggiSouthTechnician</role>
+        </sharedTo>
+        <booleanFilter>1 AND 2</booleanFilter>
+        <criteriaItems>
+            <field>LocationType</field>
+            <operation>equals</operation>
+            <value>창고</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>ServiceCenter__c</field>
+            <operation>equals</operation>
+            <value>경기남부·인천센터</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>    <sharingOwnerRules>
+        <fullName>HG_AllLocations_CallCenter</fullName>
+        <accessLevel>Read</accessLevel>
+        <label>모든 창고·차량 → 콜센터 읽기</label>
+        <sharedTo>
+            <group>HG_CallCenter</group>
+        </sharedTo>
+        <sharedFrom>
+            <allInternalUsers />
+        </sharedFrom>
+    </sharingOwnerRules>
+</SharingRules>
