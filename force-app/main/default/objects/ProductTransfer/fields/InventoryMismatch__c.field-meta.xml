@@ -3,7 +3,7 @@
     <fullName>InventoryMismatch__c</fullName>
     <defaultValue>false</defaultValue>
     <description
-  >26-10-13 ERP 출발·도착 남은 수량 중 하나라도 Salesforce 제품 항목 수량과 다르면 체크 (자동 수정 없음). Apex만 씀 by Edwin</description>
+  >26-10-13 ERP 출발·도착 남은 수량 중 하나라도 Salesforce 재고 수량과 다르면 체크 (자동 수정 없음). Apex만 씀 by Edwin</description>
     <label>재고 불일치</label>
     <trackHistory>false</trackHistory>
     <type>Checkbox</type>

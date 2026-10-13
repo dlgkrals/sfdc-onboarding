@@ -38,10 +38,10 @@
 ```
 workOrderParts (부모, 출동 레코드 페이지, @api recordId)
  ├─ 사용 부품 목록 (lightning-datatable: 부품·수량·자동 판정·최종 판정·금액) + 합계(유상 부품비) + 승인 필요 표시(fmNeedsApproval__c)
- └─ partAddForm (자식): 제품 항목 선택 + 수량 → 저장(imperative, DML이라 cacheable 불가)
+ └─ partAddForm (자식): 재고 선택 + 수량 → 저장(imperative, DML이라 cacheable 불가)
        └─ 저장 성공 시 CustomEvent('partadded', { detail: { partId } }) → 부모
 부모: onpartadded → refreshApex(목록·합계) → 판정 결과 토스트 ("보증 내 무상" / "유상")
 ```
 
-- 저장은 트리거가 유·무상을 판정하므로 화면은 수량·제품 항목만 받음. 사유 입력은 최종 판정을 바꿀 때만 표시
+- 저장은 트리거가 유·무상을 판정하므로 화면은 수량·재고만 받음. 사유 입력은 최종 판정을 바꿀 때만 표시
 - 기사 사용자로 동작해야 함 → 컨트롤러는 `with sharing` + 기사 차량 재고만 조회 (D6에서 발견한 API 67.0 user mode 결함 참고)

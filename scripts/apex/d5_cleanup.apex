@@ -1,4 +1,4 @@
-// D5 실습 정리: 테스트 사용 부품 → 출동 → 접수 순으로 삭제, BULK5 차량 위치와 제품 항목 삭제
+// D5 실습 정리: 테스트 사용 부품 → 출동 → 접수 순으로 삭제, BULK5 차량 위치와 재고 삭제
 // 장비 누적 접수 수는 접수 삭제 시 CaseTrigger(after delete)가 자동으로 재계산하는지 확인
 // WARN: Description은 긴 텍스트 영역이라 SOQL 조건에 쓸 수 없어 Subject 접두어로 찾음
 String MARK = '[BULK5]%';
@@ -20,21 +20,21 @@ for (Case c : cases) {
 }
 delete cases;
 
-// 4. 벌크 전용 재고 위치와 제품 항목
+// 4. 벌크 전용 재고 위치와 재고
 List<ProductItem> items = [SELECT Id FROM ProductItem WHERE Location.Name = :LOCATION_NAME];
 delete items;
 List<Schema.Location> locations = [SELECT Id FROM Location WHERE Name = :LOCATION_NAME];
 delete locations;
 
 System.debug(LoggingLevel.WARN, '삭제  사용 부품 ' + parts.size() + ', 출동 ' + workOrders.size() + ', 접수 ' + cases.size()
-    + ', 제품 항목 ' + items.size() + ', 위치 ' + locations.size());
+    + ', 재고 ' + items.size() + ', 위치 ' + locations.size());
 
 // 5. 남은 건수 확인 (모두 0이어야 함)
 Integer leftCases = [SELECT COUNT() FROM Case WHERE Subject LIKE :MARK];
 Integer leftWorkOrders = [SELECT COUNT() FROM WorkOrder WHERE Subject LIKE :MARK];
 Integer leftItems = [SELECT COUNT() FROM ProductItem WHERE Location.Name = :LOCATION_NAME];
 Integer leftLocations = [SELECT COUNT() FROM Location WHERE Name = :LOCATION_NAME];
-System.debug(LoggingLevel.WARN, '남은 건수  접수 ' + leftCases + ', 출동 ' + leftWorkOrders + ', 제품 항목 ' + leftItems + ', 위치 ' + leftLocations);
+System.debug(LoggingLevel.WARN, '남은 건수  접수 ' + leftCases + ', 출동 ' + leftWorkOrders + ', 재고 ' + leftItems + ', 위치 ' + leftLocations);
 
 // 6. 재계산 확인: 삭제한 접수의 장비 중 TotalCaseCount__c가 실제 접수 수와 다른 장비 수
 if (!assetIds.isEmpty()) {

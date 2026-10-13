@@ -1,5 +1,5 @@
 /**
- * @description 테스트 데이터 생성 공통 클래스 (고객사·사업장·장비·접수·출동·제품·제품 항목·사용 부품·테스트 사용자)
+ * @description 테스트 데이터 생성 공통 클래스 (고객사·사업장·장비·접수·출동·부품·재고·사용 부품·테스트 사용자)
  *              build* 는 insert 하지 않고 돌려줌, create* 는 insert 까지 함
  *              모든 값은 org의 Validation Rule을 통과하도록 맞춤 (사업자번호 10자리, 청구 이메일, 사업장 센터, 장비 판매 경로·설치일 근거 등)
  * @layer       Test
@@ -171,7 +171,7 @@ public class TestDataFactory {
     return productsByFamily;
   }
 
-  // DESC: 테스트 차량(재고 위치) + 부품마다 제품 항목. 결과 Map 키 = Family
+  // DESC: 테스트 차량(재고 위치) + 부품마다 재고. 결과 Map 키 = Family
   public static Map<String, ProductItem> createVanStock(
     Map<String, Product2> productsByFamily,
     Decimal quantity

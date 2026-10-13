@@ -128,7 +128,7 @@ after update 재계산 대상 (oldMap 비교):
 
 before update 재판정은 두지 않음 (2026-10-11 결정, 처음 설계에서 제거):
 
-- 출동(`WorkOrderId`)·제품 항목(`ProductItemId`)·부품(`Product2Id`)은 **생성 후 수정 불가**(Org describe: updateable = false) → 판정 근거가 바뀌는 update가 생길 수 없음
+- 출동(`WorkOrderId`)·재고(`ProductItemId`)·부품(`Product2Id`)은 **생성 후 수정 불가**(Org describe: updateable = false) → 판정 근거가 바뀌는 update가 생길 수 없음
 - 따라서 판정은 **insert 시점 스냅샷**. 이후 장비 보증 정보가 바뀌어도 이미 저장된 판정은 그대로 둠(판정 당시 만료일은 `WarrantyEndDateAtJudgment__c`에 남음)
 - 부품을 바꾸려면 **삭제 후 다시 입력** → 새 insert에서 다시 판정
 - 트리거 이벤트도 `before insert`만 등록
@@ -155,7 +155,7 @@ before update 재판정은 두지 않음 (2026-10-11 결정, 처음 설계에서
 ### 5-2. 사용 부품 (`d5_bulk_parts.apex`)
 
 - 생성 방식: **ProductItemId 방식**(표준 가격표가 비활성이라 PricebookEntryId 방식 불가). 필수 값은 WorkOrderId, QuantityConsumed, ProductItemId
-- 준비: **벌크 전용 위치 `BULK5 차량`** 1개 + 부품 12종의 제품 항목(각 재고 10,000). 최민호 차량 등 기존 재고는 건드리지 않음
+- 준비: **벌크 전용 위치 `BULK5 차량`** 1개 + 부품 12종의 재고(각 10,000). 최민호 차량 등 기존 재고는 건드리지 않음
 - 수량은 1로 넣어 재고가 음수가 되지 않게
 - 진행 중 접수 몇 건에 출동 10건 생성 → 사용 부품 N건(출동·부품을 돌아가며) insert
 - 출력: insert 직후 Limits, 자동 판정 분포(무상/유상), 판정 만료일이 채워졌는지
@@ -163,7 +163,7 @@ before update 재판정은 두지 않음 (2026-10-11 결정, 처음 설계에서
 
 ### 5-3. 정리 (`d5_cleanup.apex`)
 
-- 테스트 사용 부품 → 출동 → 접수 순으로 삭제, `BULK5 차량` 위치와 그 제품 항목 삭제, 장비 재계산은 접수 트리거(after delete)가 자동 수행되는지 확인
+- 테스트 사용 부품 → 출동 → 접수 순으로 삭제, `BULK5 차량` 위치와 그 재고 삭제, 장비 재계산은 접수 트리거(after delete)가 자동 수행되는지 확인
 - 표시: 제목 `[BULK5]` 접두사, 위치 이름 `BULK5 차량`
 
 ### 5-4. 판정 기준

@@ -73,7 +73,7 @@ public inherited sharing class WarrantyService {
       );
     }
 
-    // PERF: 제품 항목 → 부품 조회 1회 (ProductItemId 방식으로 만든 사용 부품은 before insert 시점에 Product2Id가 비어 있음)
+    // PERF: 재고 → 부품 조회 1회 (ProductItemId 방식으로 만든 사용 부품은 before insert 시점에 Product2Id가 비어 있음)
     Map<Id, Id> product2IdsByProductItem = new Map<Id, Id>();
     if (!productItemIds.isEmpty()) {
       for (ProductItem item : [

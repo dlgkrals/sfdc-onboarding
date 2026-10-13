@@ -281,7 +281,7 @@ private class WarrantyServiceTest {
     Assert.areEqual(0, soql, '빈 입력에는 쿼리 없음');
   }
 
-  // 정상: Product2Id가 이미 채워진 사용 부품은 제품 항목을 거치지 않고 부품으로 바로 분류 (메모리 레코드로 직접 호출)
+  // 정상: Product2Id가 이미 채워진 사용 부품은 재고를 거치지 않고 부품으로 바로 분류 (메모리 레코드로 직접 호출)
   @isTest
   static void normalProduct2IdUsedDirectly() {
     WorkOrder workOrder = getWorkOrder(ASSET_TWO_YEAR);

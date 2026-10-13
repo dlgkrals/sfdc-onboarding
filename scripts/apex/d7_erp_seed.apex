@@ -1,5 +1,5 @@
 // D7 ERP 4번: Salesforce 현재 재고(창고·기사 차량)를 ERP(Mock)에 한 번 적재 — 처음부터 수량이 다르면 전부 불일치가 되므로
-// - 대상: ERP 위치 코드가 있는 재고 위치 + 그 위치의 제품 항목(ERP 부품 코드가 있는 것)
+// - 대상: ERP 위치 코드가 있는 재고 위치 + 그 위치의 재고(ERP 부품 코드가 있는 것)
 // - reset = true: ERP의 재고·이력·처리 기록을 비우고 다시 채움 (시연 전 초기화에도 사용)
 // - 호출: Named Credential HG_ErpMock (키는 External Credential, 이 스크립트·로그에 없음)
 Map<String, String> erpTypeByLocationType = new Map<String, String>{ 'Warehouse' => 'WAREHOUSE', 'Van' => 'VAN' };
@@ -14,7 +14,7 @@ for (Schema.Location l : [SELECT Id, Name, LocationType, ErpLocationCode__c FROM
     locations.add(new Map<String, Object>{ 'code' => l.ErpLocationCode__c, 'name' => l.Name, 'type' => erpTypeByLocationType.get(l.LocationType) });
 }
 List<Map<String, Object>> stock = new List<Map<String, Object>>();
-// DESC: 수량 단위는 제품 항목의 단위 그대로 (Each, kg). 비어 있으면 부품 단위
+// DESC: 수량 단위는 재고의 단위 그대로 (Each, kg). 비어 있으면 부품 단위
 for (ProductItem p : [SELECT Location.ErpLocationCode__c, Product2.ErpPartCode__c, Product2.QuantityUnitOfMeasure, QuantityOnHand, QuantityUnitOfMeasure FROM ProductItem WHERE LocationId IN :locationIds AND Product2.ErpPartCode__c != null]) {
     String unit = String.isNotBlank(p.QuantityUnitOfMeasure) ? p.QuantityUnitOfMeasure : p.Product2.QuantityUnitOfMeasure;
     stock.add(new Map<String, Object>{ 'locationCode' => p.Location.ErpLocationCode__c, 'partCode' => p.Product2.ErpPartCode__c, 'quantity' => p.QuantityOnHand, 'unit' => unit });

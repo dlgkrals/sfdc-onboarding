@@ -497,7 +497,7 @@ function esc(s) {
 }
 
 const TYPE_LABEL = { WAREHOUSE: "창고", VAN: "기사 차량" };
-// DESC: 수량 단위 화면 표기 (Salesforce 제품 항목 단위 값 → 표시)
+// DESC: 수량 단위 화면 표기 (Salesforce 재고 단위 값 → 표시)
 const UNIT_LABEL = { Each: "개", kg: "kg" };
 function unitLabel(unit) {
   return UNIT_LABEL[unit] || unit || "";

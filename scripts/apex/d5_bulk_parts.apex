@@ -4,7 +4,7 @@
 // 정리: d5_cleanup.apex (출동 제목 접두사 [BULK5], 위치 이름 'BULK5 차량')
 Integer N = 200;   // 비교용으로 20도 실행
 
-// 0. 준비 ① 벌크 전용 위치 + 부품 12종 제품 항목(각 재고 10,000). 최민호 차량 등 기존 재고는 건드리지 않음
+// 0. 준비 ① 벌크 전용 위치 + 부품 12종 재고(각 10,000). 최민호 차량 등 기존 재고는 건드리지 않음
 Schema.Location bulkVan = new Schema.Location(
     Name = 'BULK5 차량',
     LocationType = 'Van',

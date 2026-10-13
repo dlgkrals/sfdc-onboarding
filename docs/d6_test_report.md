@@ -2,7 +2,7 @@
 
 - 실행일: 2026-10-12 · org: devorg · 실행: `sf apex run test --test-level RunLocalTests --code-coverage`
 - 결과: **36개 메서드 모두 통과** (Tests Ran 40 = 메서드 36 + @TestSetup 4) · **org 전체 커버리지 94%** (목표 85%, 운영 배포 기준 75%)
-- 테스트 데이터: `TestDataFactory`(고객사·사업장·장비·접수·출동·제품·제품 항목·사용 부품·테스트 사용자)로 공통화
+- 테스트 데이터: `TestDataFactory`(고객사·사업장·장비·접수·출동·부품·재고·사용 부품·테스트 사용자)로 공통화
 - 메서드 이름 접두어: `normal` = 정상, `reject` = 불허, `bulk` = 벌크 200건. 모든 메서드에 `Test.startTest/stopTest`와 `Assert` 사용
 - 원본 결과: `logs/d6_test/`, `logs/d6_test_result.txt` (커밋 제외)
 
@@ -58,7 +58,7 @@
 | normalManualChargeTypeIsNotOverwritten      | 정상      | 사람이 정한 유상 유지                                                                  |
 | normalTechnicianUserJudgesViaTrigger        | 정상      | (D6) **협력 기사 사용자(runAs)** 가 자기 차량 재고로 부품 입력 → 판정·만료일·분류 정상 |
 | normalEmptyInputDoesNothing                 | 정상      | (D6) 빈 입력 → 쿼리 0                                                                  |
-| normalProduct2IdUsedDirectly                | 정상      | (D6) Product2Id가 있으면 제품 항목을 거치지 않고 분류                                  |
+| normalProduct2IdUsedDirectly                | 정상      | (D6) Product2Id가 있으면 재고를 거치지 않고 분류                                       |
 | normalDateHelpersHandleMissingAndLaterDates | 정상      | (D6) 출동·접수·장비 없음, 압축기·연장 만료일 중 늦은 날                                |
 | rejectOverrideWithoutReason                 | 불허      | 사유 없이 자동 판정과 다르게 확정 → DmlException(OverrideReason_Required)              |
 | bulkInsertJudgesAll                         | 벌크      | 200건 → 압축기 100 무상, 일반 100 유상, 누락 0                                         |
@@ -88,7 +88,7 @@
 | ProductConsumedTriggerHandler        | 100%     |                                                                                |
 | AssetRepeatFailureSchedulable        | 100%     |                                                                                |
 | CaseStatsService                     | 99%      | Custom Metadata 레코드가 없을 때의 기본값 분기                                 |
-| WarrantyService                      | 99%      | 부품을 찾지 못했을 때 단가를 비우는 분기(제품 항목·부품이 없는 사용 부품)      |
+| WarrantyService                      | 99%      | 부품을 찾지 못했을 때 단가를 비우는 분기(재고·부품이 없는 사용 부품)           |
 | CaseTriggerHandler                   | 98%      | 같은 상태 재실행 건너뛰기(워크플로 재실행 시에만 발생)                         |
 | AssetRepeatFailureBatch              | 96%      | 새로 반복 고장으로 표시되는 경우의 카운트(재계산 직후라 테스트에서 발생 안 함) |
 | TriggerHandler                       | 78%      | 재정의하지 않은 이벤트(before update·before delete 등) 분기                    |

@@ -2,7 +2,7 @@
  * @description ERP 재고 연동 서비스 — 사용 부품 → ERP 재고 차감 (IF-03), 재고 이동 → ERP (IF-06)
  *              요청: Named Credential HG_ErpMock (키는 External Credential, x-api-key 헤더 merge field)
  *              결과 기록(시스템 모드): 전송 상태·메시지·일시·재시도 횟수·ERP 남은 수량·재고 불일치
- *              - OK → 완료(Synced). ERP 남은 수량 기록, Salesforce 제품 항목 수량과 다르면 불일치 체크 (수량은 고치지 않음)
+ *              - OK → 완료(Synced). ERP 남은 수량 기록, Salesforce 재고 수량과 다르면 불일치 체크 (수량은 고치지 않음)
  *              - 업무 거부(재고 부족·없는 코드 등) → 확인 필요(NeedsReview) — 재시도해도 같은 결과
  *              - 일시적 실패(5xx·401·시간 초과·연결 실패) → 실패(Failed) — 매시 재전송, 상한 초과 시 확인 필요 [RETRY_EXHAUSTED]
  *              메시지 형식: "[코드] 내용" (삭제 규칙이 코드로 판단)
@@ -350,11 +350,11 @@ public with sharing class ErpInventoryService {
   }
 
   /**
-   * @description 삭제된 사용 부품 수량만큼 Salesforce 재고(제품 항목)를 되돌림 (decision-log 11, A안)
+   * @description 삭제된 사용 부품 수량만큼 Salesforce 재고(ProductItem)를 되돌림 (decision-log 11, A안)
    *              표준은 삭제해도 보유량을 되돌리지 않으므로 Apex가 보정. 삭제 규칙(canDelete)을 통과한 건 = ERP 미반영이 확실한 건만 들어옴
    *              덮어쓰기가 아니라 "현재 수량 + 삭제한 수량". 동시에 다른 사용·이동이 있어도 값이 꼬이지 않게 FOR UPDATE로 잠금
    * @param deleted 삭제된 사용 부품 (Trigger.old)
-   * @return 수량을 고친 제품 항목
+   * @return 수량을 고친 재고
    */
   public static List<ProductItem> restoreStockForDeleted(
     List<ProductConsumed> deleted
