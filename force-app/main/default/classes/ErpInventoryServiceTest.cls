@@ -9,6 +9,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 5번)
  * 1.1    2026-10-13    Edwin     삭제 시 재고 되돌림·복원 거부 테스트 (decision-log 11 A안)
+ * 1.2    2026-10-13    Edwin     ERP 이상 응답(읽을 수 없음·결과 누락·400)·15자리 Id·단위 표시·기사 삭제 테스트 (D7 ERP 연동 8번)
  * ----------------------------------------------------------------------------
  * @see ErpInventoryService
  */
@@ -19,9 +20,12 @@ private class ErpInventoryServiceTest {
 
   // DESC: 가짜 ERP. 요청의 refId마다 정해 둔 방식으로 응답하고 호출 횟수를 셈
   private class ErpMock implements HttpCalloutMock {
-    String mode = 'OK'; // OK · REJECT · HTTP · THROW
+    String mode = 'OK'; // OK · REJECT · HTTP · THROW · RAW(본문 그대로) · EMPTY(결과 없음)
     Integer statusCode = 200;
     String rejectCode = 'INSUFFICIENT_STOCK';
+    String rawBody;
+    // DESC: ERP가 15자리 Id로 돌려주는 경우 흉내
+    Boolean shortRefIds = false;
     Decimal remainingQty;
     Integer calls = 0;
     List<Object> lastItems;
@@ -39,6 +43,10 @@ private class ErpInventoryServiceTest {
         );
         return response;
       }
+      if (mode == 'RAW') {
+        response.setBody(rawBody);
+        return response;
+      }
       lastItems = (List<Object>) ((Map<String, Object>) JSON.deserializeUntyped(
           request.getBody()
         ))
@@ -46,10 +54,14 @@ private class ErpInventoryServiceTest {
       List<Object> results = new List<Object>();
       for (Object raw : lastItems) {
         Map<String, Object> item = (Map<String, Object>) raw;
+        String refId = String.valueOf(item.get('refId'));
+        if (mode == 'EMPTY') {
+          continue;
+        }
         if (mode == 'OK') {
           results.add(
             new Map<String, Object>{
-              'refId' => item.get('refId'),
+              'refId' => shortRefIds ? refId.left(15) : refId,
               'status' => 'OK',
               'remainingQty' => remainingQty,
               'unit' => 'Each'
@@ -336,14 +348,17 @@ private class ErpInventoryServiceTest {
   }
 
   // 정상: 협력 기사 사용자가 자기 차량 재고로 사용 부품을 실제 저장 → 판정 + ERP 전송까지 (기사 권한으로 Queueable 실행)
-  @isTest
-  static void normalTechnicianSaveSyncsToErp() {
-    User technician = [
+  private static User getTechnician() {
+    return [
       SELECT Id
       FROM User
       WHERE LastName = '테스트 HG_Technician'
       LIMIT 1
     ];
+  }
+
+  // DESC: 기사 소유 출동 + 기사 차량(ERP 코드 VAN-TECH) + 압축기 재고 10. 결과 Map 키 workOrder / item
+  private static Map<String, SObject> createTechnicianStock(User technician) {
     WorkOrder source = [SELECT CaseId, AssetId FROM WorkOrder LIMIT 1];
     WorkOrder techWorkOrder = new WorkOrder(
       CaseId = source.CaseId,
@@ -369,6 +384,18 @@ private class ErpInventoryServiceTest {
       OwnerId = technician.Id
     );
     insert techItem;
+    return new Map<String, SObject>{
+      'workOrder' => techWorkOrder,
+      'item' => techItem
+    };
+  }
+
+  @isTest
+  static void normalTechnicianSaveSyncsToErp() {
+    User technician = getTechnician();
+    Map<String, SObject> stock = createTechnicianStock(technician);
+    WorkOrder techWorkOrder = (WorkOrder) stock.get('workOrder');
+    ProductItem techItem = (ProductItem) stock.get('item');
 
     ErpMock mock = new ErpMock();
     mock.remainingQty = 9;
@@ -555,5 +582,108 @@ private class ErpInventoryServiceTest {
       '300 - 200 + 100 (삭제된 100건만 되돌림)'
     );
     Assert.isTrue(queries <= 5, '200건이어도 조회 몇 번: ' + queries);
+  }
+
+  // 불허: ERP가 200인데 읽을 수 없는 본문을 주면 실패(일시적) [BAD_RESPONSE] → 재전송 대상
+  @isTest
+  static void rejectUnreadableResponseIsTransient() {
+    ErpMock mock = new ErpMock();
+    mock.mode = 'RAW';
+    mock.rawBody = '<html>Bad Gateway</html>';
+
+    ProductConsumed after = insertOneAndSync(mock, 1);
+
+    Assert.areEqual('Failed', after.ErpSyncStatus__c, '실패');
+    Assert.isTrue(
+      after.ErpSyncMessage__c.startsWith('[BAD_RESPONSE]'),
+      '메시지: ' + after.ErpSyncMessage__c
+    );
+  }
+
+  // 불허: ERP 응답에 이 건의 결과가 빠지면 실패 [NO_RESULT] (반영 여부를 모르므로 재전송, ERP가 중복은 무시)
+  @isTest
+  static void rejectMissingResultIsTransient() {
+    ErpMock mock = new ErpMock();
+    mock.mode = 'EMPTY';
+
+    ProductConsumed after = insertOneAndSync(mock, 1);
+
+    Assert.areEqual('Failed', after.ErpSyncStatus__c, '실패');
+    Assert.isTrue(
+      after.ErpSyncMessage__c.startsWith('[NO_RESULT]'),
+      '메시지: ' + after.ErpSyncMessage__c
+    );
+  }
+
+  // 불허: HTTP 400(요청 형식 오류)은 다시 보내도 같으므로 확인 필요
+  @isTest
+  static void rejectBadRequestNeedsReview() {
+    ErpMock mock = new ErpMock();
+    mock.mode = 'HTTP';
+    mock.statusCode = 400;
+
+    ProductConsumed after = insertOneAndSync(mock, 1);
+
+    Assert.areEqual('NeedsReview', after.ErpSyncStatus__c, '확인 필요');
+    Assert.isTrue(
+      after.ErpSyncMessage__c.startsWith('[HTTP_400]'),
+      '메시지: ' + after.ErpSyncMessage__c
+    );
+  }
+
+  // 정상: ERP가 15자리 Id로 돌려줘도 같은 건으로 찾아 완료, 화면 표시는 "남은 수량 + 단위 표기"(수식의 Custom Label)
+  @isTest
+  static void normalShortIdMatchedAndUnitShown() {
+    update new ProductItem(
+      Id = getItem('Compressor').Id,
+      QuantityUnitOfMeasure = 'Each'
+    );
+    ErpMock mock = new ErpMock();
+    mock.shortRefIds = true;
+    mock.remainingQty = VAN_QUANTITY - 1;
+
+    ProductConsumed after = insertOneAndSync(mock, 1);
+
+    Assert.areEqual('Synced', after.ErpSyncStatus__c, '15자리 Id로도 완료');
+    String shown = [
+      SELECT fmErpRemainingQty__c
+      FROM ProductConsumed
+      WHERE Id = :after.Id
+    ]
+    .fmErpRemainingQty__c;
+    Assert.isTrue(
+      shown.startsWith(String.valueOf((VAN_QUANTITY - 1).intValue())) &&
+      shown.endsWith(' ' + System.Label.MISC_UNIT_EACH),
+      '표시: ' + shown
+    );
+  }
+
+  // 정상: 협력 기사가 자기 차량 재고로 입력한 실패 건을 직접 삭제 → 재고 되돌림 (기사 권한으로 삭제 + 시스템 보정)
+  @isTest
+  static void normalTechnicianDeleteRestoresStock() {
+    User technician = getTechnician();
+    Map<String, SObject> stock = createTechnicianStock(technician);
+    Id techItemId = stock.get('item').Id;
+    ProductConsumed part;
+    System.runAs(technician) {
+      part = TestDataFactory.buildPart(stock.get('workOrder').Id, techItemId);
+      part.QuantityConsumed = 3;
+      insert part;
+    }
+    part.ErpSyncStatus__c = 'Failed';
+    Database.update(part, AccessLevel.SYSTEM_MODE);
+
+    Test.startTest();
+    System.runAs(technician) {
+      delete part;
+    }
+    Test.stopTest();
+
+    Assert.areEqual(
+      10,
+      [SELECT QuantityOnHand FROM ProductItem WHERE Id = :techItemId]
+      .QuantityOnHand,
+      '10 - 3 + 3'
+    );
   }
 }

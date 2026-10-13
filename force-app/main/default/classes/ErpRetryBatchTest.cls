@@ -157,13 +157,14 @@ private class ErpRetryBatchTest {
     Test.stopTest();
   }
 
-  // 정상: 실패 사용 부품·실패 재고 이동은 재전송, 멈춘 대기 사용 부품은 첫 전송 → 모두 완료
+  // 정상: 실패 건은 재전송, 멈춘 대기 건은 첫 전송 (사용 부품·재고 이동 모두) → 모두 완료
   @isTest
   static void normalRetriesFailedAndStuckPending() {
     List<ProductConsumed> parts = insertParts(2);
     ProductConsumed failed = parts[0];
-    ProductConsumed stuck = parts[1];
     ProductTransfer failedTransfer = insertReceivedTransfer();
+    // DESC: 수령 때 트리거가 대기로 표시, 테스트라 Queueable이 없어 그대로 멈춘 건
+    ProductTransfer stuckTransfer = insertReceivedTransfer();
     setState(failed, 'Failed', 1, '[HTTP_503] 점검');
     setState(failedTransfer, 'Failed', 0, '[CONNECTION] 시간 초과');
     Database.update(failed, AccessLevel.SYSTEM_MODE);
@@ -188,17 +189,18 @@ private class ErpRetryBatchTest {
       );
     }
     Assert.areEqual(
-      'Synced',
+      2,
       [
-        SELECT ErpSyncStatus__c
+        SELECT COUNT()
         FROM ProductTransfer
-        WHERE Id = :failedTransfer.Id
-      ]
-      .ErpSyncStatus__c,
-      '재고 이동 완료'
+        WHERE
+          Id IN (:failedTransfer.Id, :stuckTransfer.Id)
+          AND ErpSyncStatus__c = 'Synced'
+      ],
+      '재고 이동 2건 완료'
     );
     Assert.areEqual(2, mock.consumeCalls, '차감: 재전송 1번 + 첫 전송 1번');
-    Assert.areEqual(1, mock.transferCalls, '이동: 재전송 1번');
+    Assert.areEqual(2, mock.transferCalls, '이동: 재전송 1번 + 첫 전송 1번');
   }
 
   // 불허: 완료·확인 필요·재시도 초과(횟수 = 상한)·방금 저장된 대기 건은 보내지 않음

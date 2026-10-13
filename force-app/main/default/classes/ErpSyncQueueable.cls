@@ -10,6 +10,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 5번)
  * 1.1    2026-10-13    Edwin     재고 이동(IF-06) 추가, 콜아웃 모두 끝낸 뒤 저장
+ * 1.2    2026-10-13    Edwin     쓰지 않는 사용 부품 전용 생성자 삭제
  * ----------------------------------------------------------------------------
  * @see ErpInventoryService
  */
@@ -18,10 +19,6 @@ public with sharing class ErpSyncQueueable implements Queueable, Database.Allows
   private final Set<Id> consumedIds;
   private final Set<Id> transferIds;
   private final Boolean isRetry;
-
-  public ErpSyncQueueable(Set<Id> consumedIds, Boolean isRetry) {
-    this(consumedIds, new Set<Id>(), isRetry);
-  }
 
   public ErpSyncQueueable(
     Set<Id> consumedIds,
