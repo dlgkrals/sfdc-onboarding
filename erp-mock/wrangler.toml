@@ -3,9 +3,12 @@
 name = "hg-erp-mock"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
+# DESC: 주소 https://hg-erp-mock.hg-erp-mock.workers.dev 만 사용, 버전별 미리보기 주소는 끔
+workers_dev = true
+preview_urls = false
 
 [[d1_databases]]
+# DESC: binding은 코드(src/index.js)에서 쓰는 이름 env.DB와 같아야 함 (d1 create 출력의 제안 이름과 달라도 됨)
 binding = "DB"
 database_name = "hg-erp-mock"
-# `npx wrangler d1 create hg-erp-mock` 결과의 database_id로 바꿀 것
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "7b49ab61-c809-4cd4-9b6c-3a10fe6b5b92"
