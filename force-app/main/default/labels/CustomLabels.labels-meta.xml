@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>LABEL_ASSET_SEARCH_TITLE</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>장비 검색</shortDescription>
+        <value>장비 검색</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SEARCH</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>검색</shortDescription>
+        <value>검색</value>
+    </labels>
+    <labels>
+        <fullName>MSG_SEARCH_PLACEHOLDER</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >고객사명·사업장명·시리얼 (2글자 이상)</shortDescription>
+        <value>고객사명·사업장명·시리얼 (2글자 이상)</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_REPEAT_ONLY</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>반복 고장 장비만 보기</shortDescription>
+        <value>반복 고장 장비만 보기</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_SERIAL</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>시리얼</shortDescription>
+        <value>시리얼</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_MODEL</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>모델</shortDescription>
+        <value>모델</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_ACCOUNT</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>고객사</shortDescription>
+        <value>고객사</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_SITE</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>사업장</shortDescription>
+        <value>사업장</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_CENTER</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>센터</shortDescription>
+        <value>센터</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_WARRANTY</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>보증 상태</shortDescription>
+        <value>보증 상태</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_LAST_CASE</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>최근 접수일</shortDescription>
+        <value>최근 접수일</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_RECENT_CASES</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>최근 90일 접수</shortDescription>
+        <value>최근 90일 접수</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_REPEAT</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>반복 고장</shortDescription>
+        <value>반복 고장</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_REPEAT_FLAG</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>반복 고장</shortDescription>
+        <value>반복 고장</value>
+    </labels>
+    <labels>
+        <fullName>BTN_PREVIOUS</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>이전</shortDescription>
+        <value>이전</value>
+    </labels>
+    <labels>
+        <fullName>BTN_NEXT</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>다음</shortDescription>
+        <value>다음</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_PAGE_INFO</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>{0} / 총 {1}쪽 · {2}건</shortDescription>
+        <value>{0} / 총 {1}쪽 · {2}건</value>
+    </labels>
+    <labels>
+        <fullName>MSG_ASSET_NOT_FOUND</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >검색 결과가 없습니다. 고객사명·사업장명·시리얼을 확인하세요.</shortDescription>
+        <value
+    >검색 결과가 없습니다. 고객사명·사업장명·시리얼을 확인하세요.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_LOAD_ERROR</fullName>
+        <categories>HG_Common</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>데이터를 불러오지 못했습니다</shortDescription>
+        <value>데이터를 불러오지 못했습니다</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ASSET_DETAIL_TITLE</fullName>
+        <categories>HG_AssetDetail</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>장비 상세</shortDescription>
+        <value>장비 상세</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_BASIC_INFO</fullName>
+        <categories>HG_AssetDetail</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>기본 정보</shortDescription>
+        <value>기본 정보</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_WARRANTY_SECTION</fullName>
+        <categories>HG_AssetDetail</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>보증</shortDescription>
+        <value>보증</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_RECENT_CASES_TITLE</fullName>
+        <categories>HG_AssetDetail</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>최근 접수</shortDescription>
+        <value>최근 접수</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_CASE_NUMBER</fullName>
+        <categories>HG_AssetDetail</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>접수번호</shortDescription>
+        <value>접수번호</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_CREATED</fullName>
+        <categories>HG_AssetDetail</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>접수일</shortDescription>
+        <value>접수일</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_SYMPTOM</fullName>
+        <categories>HG_AssetDetail</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>증상</shortDescription>
+        <value>증상</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_COL_STATUS</fullName>
+        <categories>HG_AssetDetail</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>상태</shortDescription>
+        <value>상태</value>
+    </labels>
+    <labels>
+        <fullName>BTN_VIEW_ALL</fullName>
+        <categories>HG_AssetDetail</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>모두 보기</shortDescription>
+        <value>모두 보기</value>
+    </labels>
+    <labels>
+        <fullName>MSG_NO_RECENT_CASES</fullName>
+        <categories>HG_AssetDetail</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>최근 접수가 없습니다.</shortDescription>
+        <value>최근 접수가 없습니다.</value>
+    </labels>
+</CustomLabels>

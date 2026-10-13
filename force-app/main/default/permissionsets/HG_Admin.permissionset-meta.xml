@@ -4,6 +4,14 @@
         <application>HangyeolAS</application>
         <visible>true</visible>
     </applicationVisibilities>
+    <classAccesses>
+        <apexClass>AssetDetailController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>AssetSearchController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <customPermissions>
         <enabled>true</enabled>
         <name>HG_BypassValidation</name>
@@ -813,6 +821,10 @@
         <recordType>Account.SoleProprietor</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
+    <tabSettings>
+        <tab>HG_AssetSearch</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
     <tabSettings>
         <tab>CustomerSite__c</tab>
         <visibility>Visible</visibility>

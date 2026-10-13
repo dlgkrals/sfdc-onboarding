@@ -1,6 +1,6 @@
 # D6 화면 설계 (D7 LWC 준비)
 
-- 작성: 2026-10-12 · 초안 Claude 작성 → **Edwin 검토·결정 반영(2026-10-12)** · 사용자: 콜센터 상담원(HG_CallCenter), 센터장(HG_CenterManager). 협력 기사는 장비 권한이 없어 SC-01·SC-04 대상 아님
+- 사용자: 콜센터 상담원(HG_CallCenter), 센터장(HG_CenterManager). 협력 기사는 장비 권한이 없어 SC-01·SC-04 대상 아님
 - 공통: Apex 컨트롤러는 `with sharing` + 조회 `WITH USER_MODE`(화면은 사용자 권한대로. API 67.0 기본도 user mode지만 명시 — CLAUDE.md 접근 모드 규칙), 오류는 `reduceErrors` → `ShowToastEvent`(오류), 문구는 Custom Label(`LABEL_`, `MSG_`, `BTN_`)
 
 ## SC-01 장비 검색 목록 — `assetSearch`
@@ -11,9 +11,9 @@
 | 배치           | Lightning 앱 페이지(AS 관리 앱의 "장비 검색" 탭)                                                                                                                                                                                                                                         |
 | 컴포넌트       | `assetSearch`(부모: 검색어·정렬·페이지 상태 보유) ⊃ `lightning-input`(검색) · `lightning-datatable`(목록) · 페이지 버튼(이전/다음, `N / 총 M쪽`)                                                                                                                                         |
 | 열             | 시리얼(`SerialKey__c`, 행 클릭 링크) · 모델 · 고객사 · 사업장 · 센터 · 보증 상태(`fmWarrantyStatus__c`) · 최근 접수일(`LastCaseDate__c`) · 최근 90일 접수(`RecentCaseCount__c`) · **반복 고장**(`RepeatFailure__c` → 빨간 경고 아이콘 + 행 강조)                                         |
-| 검색           | 한 칸 입력 → **고객사명·사업장명·시리얼** LIKE 검색 (접수 번호는 검색 대상 아님 — 결정 1). 입력 후 300ms 디바운스, 2글자 이상부터                                                                                                                                                        |
-| 정렬           | **기본: 최근 접수일 내림차순, 접수 없는 장비는 맨 뒤** (`ORDER BY LastCaseDate__c DESC NULLS LAST, SerialKey__c`) — 결정 2. 열 머리글 클릭(`onsort`) → 서버 정렬. 허용 필드 화이트리스트(시리얼·고객사·최근 접수일·최근 90일 접수·보증 상태)만, 날짜·숫자 정렬은 항상 NULLS LAST         |
-| 페이징         | **20건 고정** (결정 4), 서버 `LIMIT/OFFSET` (OFFSET 최대 2,000 → 장비 수 증가 시 키셋 페이징으로 전환)                                                                                                                                                                                   |
+| 검색           | 한 칸 입력 → **고객사명·사업장명·시리얼** LIKE 검색 (접수 번호는 검색 대상 아님). 입력 후 300ms 디바운스, 2글자 이상부터                                                                                                                                                                 |
+| 정렬           | **기본: 최근 접수일 내림차순, 접수 없는 장비는 맨 뒤** (`ORDER BY LastCaseDate__c DESC NULLS LAST, SerialKey__c`). 열 머리글 클릭(`onsort`) → 서버 정렬. 허용 필드 화이트리스트(시리얼·고객사·최근 접수일·최근 90일 접수·보증 상태)만, 날짜·숫자 정렬은 항상 NULLS LAST                  |
+| 페이징         | **20건 고정**, 서버 `LIMIT/OFFSET` (OFFSET 최대 2,000 → 장비 수 증가 시 키셋 페이징으로 전환)                                                                                                                                                                                            |
 | 데이터         | **imperative** 호출 — 검색·정렬·페이지 이동이 모두 사용자 동작이라 호출 시점을 컴포넌트가 정함. 메서드는 `cacheable=true`로 같은 조건 재조회는 캐시                                                                                                                                      |
 | Apex           | `AssetSearchController.searchAssets(String searchKey, String sortField, String sortDirection, Integer pageNumber)` → `AssetSearchController.AssetPage`(rows, totalCount). 페이지 크기는 컨트롤러 상수 `PAGE_SIZE = 20`. 검색어는 바인드 변수, 정렬 필드는 화이트리스트(SOQL 인젝션 방어) |
 | 행 클릭        | `NavigationMixin`으로 장비 레코드 페이지(SC-04가 배치된 페이지)로 이동                                                                                                                                                                                                                   |
@@ -29,7 +29,7 @@
 | 기본 정보      | 시리얼 · 모델 · 고객사 · 사업장 · 설치일 · 판매 경로 · 누적 접수 · 최근 접수일 · 최근 90일 접수 · 반복 고장 장비 (`lightning-output-field`, 읽기 전용)                                                                                                                         |
 | 보증           | 보증 상태 배지(`fmWarrantyStatus__c`: 보증 중/부분 보증/보증 만료/미확정) · 시작일 · 기본/압축기/연장 만료일 (Formula 3개)                                                                                                                                                     |
 | 데이터         | 기본 정보·보증: **LDS** (`record-view-form`) — 캐시·레코드 변경 시 자동 갱신, Apex 불필요. 최근 접수: **@wire** `AssetDetailController.getRecentCases(Id assetId)` (`cacheable=true`, 컨트롤러 상수 `RECENT_CASE_LIMIT = 5`) — `recordId`에 반응해 자동 조회, 사용자 동작 없음 |
-| 최근 접수      | `lightning-datatable` **최근 5건** (결정 3): 접수번호 · 접수일 · 증상 · 상태 · 반복 고장(접수 시점 표시) · 센터. 정렬 접수일 내림차순. 새 접수 저장 후 `refreshApex`                                                                                                           |
+| 최근 접수      | `lightning-datatable` **최근 5건**: 접수번호 · 접수일 · 증상 · 상태 · 반복 고장(접수 시점 표시) · 센터. 정렬 접수일 내림차순. 새 접수 저장 후 `refreshApex`                                                                                                                    |
 | 모두 보기      | 카드 아래 "모두 보기"(`BTN_VIEW_ALL`) → `NavigationMixin` `standard__recordRelationshipPage` (`recordId`, `relationshipApiName: 'Cases'`, `actionName: 'view'`)로 **표준 관련 목록** 이동. 전체 이력의 필터·정렬·내보내기는 표준 화면에 맡김. 접수가 5건 이하이면 버튼 숨김    |
 | 빈 결과 / 오류 | 접수 0건: "최근 접수가 없습니다."(`MSG_NO_RECENT_CASES`) / 오류: 카드 안에 오류 문구 + 토스트 / 권한 없음(기사 등): 컴포넌트를 페이지 가시성 규칙으로 숨김                                                                                                                     |
 
@@ -45,12 +45,3 @@ workOrderParts (부모, 출동 레코드 페이지, @api recordId)
 
 - 저장은 트리거가 유·무상을 판정하므로 화면은 수량·제품 항목만 받음. 사유 입력은 최종 판정을 바꿀 때만 표시
 - 기사 사용자로 동작해야 함 → 컨트롤러는 `with sharing` + 기사 차량 재고만 조회 (D6에서 발견한 API 67.0 user mode 결함 참고)
-
-## 결정 사항 (Edwin, 2026-10-12)
-
-| 번호 | 검토 질문                    | 결정                                         |
-| ---- | ---------------------------- | -------------------------------------------- |
-| 1    | SC-01 검색 대상에 접수 번호? | 넣지 않음. 고객사·사업장·시리얼              |
-| 2    | SC-01 기본 정렬              | 최근 접수일 내림차순, 접수 없는 장비는 맨 뒤 |
-| 3    | SC-04 최근 접수 건수         | 최근 5건 + 표준 관련 목록 "모두 보기"        |
-| 4    | 페이지 크기                  | 20건 고정 (사용자 선택 없음)                 |

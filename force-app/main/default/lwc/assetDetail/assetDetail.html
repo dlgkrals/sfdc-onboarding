@@ -1,0 +1,59 @@
+<template>
+  <lightning-card
+    title={labels.LABEL_ASSET_DETAIL_TITLE}
+    icon-name="standard:asset_object"
+  >
+    <lightning-badge
+      lwc:if={warrantyStatus}
+      slot="actions"
+      label={warrantyStatus}
+      class={badgeClass}
+    ></lightning-badge>
+
+    <lightning-record-view-form
+      record-id={recordId}
+      object-api-name="Asset"
+      density="comfy"
+    >
+      <div class="slds-p-horizontal_medium">
+        <h3 class="slds-text-heading_small slds-m-bottom_x-small">
+          {labels.LABEL_BASIC_INFO}
+        </h3>
+        <div class="slds-grid slds-wrap">
+          <template for:each={basicFields} for:item="field">
+            <div
+              key={field}
+              class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2"
+            >
+              <lightning-output-field
+                field-name={field}
+              ></lightning-output-field>
+            </div>
+          </template>
+        </div>
+
+        <h3
+          class="slds-text-heading_small slds-m-top_small slds-m-bottom_x-small"
+        >
+          {labels.LABEL_WARRANTY_SECTION}
+        </h3>
+        <div class="slds-grid slds-wrap">
+          <template for:each={warrantyFields} for:item="field">
+            <div
+              key={field}
+              class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2"
+            >
+              <lightning-output-field
+                field-name={field}
+              ></lightning-output-field>
+            </div>
+          </template>
+        </div>
+      </div>
+    </lightning-record-view-form>
+  </lightning-card>
+
+  <div class="slds-m-top_small">
+    <c-asset-recent-cases asset-id={recordId}></c-asset-recent-cases>
+  </div>
+</template>

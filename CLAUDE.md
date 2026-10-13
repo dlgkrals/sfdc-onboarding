@@ -45,6 +45,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - ProductConsumed의 WorkOrderId·ProductItemId·Product2Id는 생성 후 수정 불가 → 판정은 insert 시점 스냅샷, 부품을 바꾸려면 삭제 후 재입력
 - 생성 방식: ProductConsumed는 ProductItemId 방식(표준 가격표 비활성). 필수 WorkOrderId, QuantityConsumed
 - 승인 프로세스: 아직 없음 (docs의 승인 상세 정의 기준으로 예정). 진입 조건용 WorkOrder.fmNeedsApproval__c(수식 체크박스: 예외 무상 포함 또는 fmTotalCharge__c > ServiceSetting ApprovalAmount) 준비됨(D6)
+- LWC(D7): 한결공조 AS 앱 "장비 검색" 탭(앱 페이지 HG_AssetSearch → assetSearch, imperative + AssetSearchController) · 장비 레코드 페이지 HG_AssetRecordPage(앱 기본 페이지 지정, assetDetail = LDS + 자식 assetRecentCases = @wire AssetDetailController). 공통 c/ldsUtils.reduceErrors, 화면 문구 Custom Label 29개(LABEL_/MSG_/BTN_, 기본 언어 en_US에 한국어 값). 컨트롤러는 with sharing + USER_MODE, 상담원·센터장·관리자 권한 집합에 클래스 접근·탭 표시. 판단 메모 docs/d7_lwc_memo.md
 - 설계 문서: docs/d5_trigger_design.md, docs/d5_flow_vs_trigger.md, docs/d6_screen_design.md(화면 설계, Edwin 결정 반영: 검색 고객사·사업장·시리얼, 기본 정렬 최근 접수일 내림차순 NULLS LAST, 페이지 20건, 장비 상세 최근 접수 5건 + 표준 관련 목록 모두 보기), docs/d6_config_externalization.md / 검증 결과: docs/d5_bulk_verification.md, docs/d6_test_report.md (D4 벌크 검증 결과는 문서 없이 커밋 메시지·채팅으로만 남음)
 - 테스트: TestDataFactory 공통 데이터, 메서드 이름 접두어 normal/reject/bulk, 상담원·기사는 System.runAs + 테스트 사용자(기사는 Field Service 권한 집합 라이선스 필요)
 - 벌크·정리 스크립트: scripts/apex/d4_bulk.apex(markRepeatFailures 부분은 1.4부터 주석)·d4_cleanup.apex, d5_bulk_case.apex·d5_bulk_case_update.apex·d5_bulk_parts.apex·d5_cleanup.apex (표시: 제목 [BULK5], 위치 BULK5 차량), d6_backfill.apex(새 필드 초기 적재 1회)·d6_run_batch.apex·d6_schedule.apex. 실행 로그는 logs/(커밋 제외)
@@ -60,7 +61,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 
 ## 일정
 
-- 진행: D4 완료(a15d9a5, feature/onboarding-d4), D5 완료(45af40d·e5ff670·9070a35, feature/onboarding-d5), D6 완료(feature/onboarding-d6). 테스트 36개 통과(정상 26·불허 4·벌크 6), org 커버리지 94%(docs/d6_test_report.md)
+- 진행: D4 완료(a15d9a5, feature/onboarding-d4), D5 완료(45af40d·e5ff670·9070a35, feature/onboarding-d5), D6 완료(feature/onboarding-d6). 테스트 36개 통과(정상 26·불허 4·벌크 6), org 커버리지 94%(docs/d6_test_report.md). D7 진행 중(feature/onboarding-d7): LWC 목록·상세 완료(테스트 59개 통과, 커버리지 96%), ERP Mock 연동은 0번 확인 후 대기. CaseRejectPracticeTest는 Edwin 연습용(커밋하지 않음, org에만 있음)
 - D5 계획 중 미구현: WorkOrder 트리거(선택 항목), 승인 프로세스
 - D4(10/7) SOQL·서비스 클래스·200건 벌크 검증 / D5(10/8) 트리거(Case·WorkOrder·ProductConsumed)·승인 프로세스 / D6(10/12) 테스트 85%·Batch / D7~8 LWC·연동(Mock) / D9 배포·산출물 / D11(10/19) 발표
 

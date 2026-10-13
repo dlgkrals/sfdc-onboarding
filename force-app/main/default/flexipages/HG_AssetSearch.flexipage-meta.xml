@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description
+  >26-10-13 SC-01 장비 검색 앱 페이지 (한결공조 AS 앱 "장비 검색" 탭) by Edwin</description>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>assetSearch</componentName>
+                <identifier>c_assetSearch</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>main</name>
+        <type>Region</type>
+    </flexiPageRegions>
+    <masterLabel>장비 검색</masterLabel>
+    <template>
+        <name>flexipage:defaultAppHomeTemplate</name>
+    </template>
+    <type>AppPage</type>
+</FlexiPage>
