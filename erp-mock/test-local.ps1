@@ -24,3 +24,18 @@ Post '/api/admin/maintenance' @{ on = $false } | Out-Null
 "9 bad body: " + (Post '/api/stock/consume' @{ nothing = 1 })
 $page = Invoke-WebRequest "$Base/" -UseBasicParsing
 "10 page: HTTP $($page.StatusCode) length=$($page.Content.Length) hasHistory=$($page.Content.Contains('사용 차감')) hasUnitLabel=$($page.Content.Contains('17.5 kg') -or $page.Content.Contains('15 kg'))"
+# IF-02 역방향: ERP 입고·조정 → 이력 번호 이후 변동 조회
+$r = Post '/api/stock/receive' @{ locationCode = 'VAN-GS-001'; partCode = 'RFG-404A'; quantity = 5; note = 'PO-TEST' }
+"11 receive: $($r.status) remaining=$($r.remainingQty)$($r.unit)"
+$n = Post '/api/stock/receive' @{ locationCode = 'WH-GS-001'; partCode = 'NEW-PART'; quantity = 3 }
+"12 receive new part: $($n.status) remaining=$($n.remainingQty)$($n.unit)"
+$a = Post '/api/stock/adjust' @{ locationCode = 'VAN-GS-001'; partCode = 'RFG-404A'; quantityChange = -1.5; note = '실사 차이' }
+"13 adjust -1.5: $($a.status) remaining=$($a.remainingQty)"
+$a2 = Post '/api/stock/adjust' @{ locationCode = 'VAN-GS-001'; partCode = 'CMP-404-50'; quantityChange = -999 }
+"14 adjust over: $($a2.status)/$($a2.code)"
+$u = Post '/api/stock/receive' @{ locationCode = 'NOWHERE'; partCode = 'X'; quantity = 1 }
+"15 receive unknown location: $($u.status)/$($u.code)"
+$m = Invoke-RestMethod "$Base/api/movements?after=0&limit=500" -Headers $h
+"16 movements: count=$($m.items.Count) lastId=$($m.lastId) latestId=$($m.latestId) hasMore=$($m.hasMore) erp=" + (($m.items | ? { $_.origin -eq 'ERP' } | % { "$($_.id):$($_.type)$($_.quantityChange)" }) -join ',')
+$m2 = Invoke-RestMethod "$Base/api/movements?after=$($m.latestId - 2)&limit=1" -Headers $h
+"17 paging after latest-2 limit 1: count=$($m2.items.Count) id=$($m2.items[0].id) hasMore=$($m2.hasMore)"

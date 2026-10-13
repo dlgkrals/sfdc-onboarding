@@ -9,9 +9,12 @@
  *   GET  /api/stock?location=CODE     재고 조회 (location 없으면 전체)        IF-04
  *   POST /api/stock/consume           사용 차감 (여러 건 한 번에)          IF-03
  *   POST /api/stock/transfer          재고 이동 (창고 → 차량 등, 여러 건)  IF-06
+ *   GET  /api/movements?after=N       이력 번호 N 이후 변동 (최대 500건, latestId 포함)  IF-02
+ *   POST /api/stock/receive           ERP 입고 (시연 화면에서 입력)                      IF-02
+ *   POST /api/stock/adjust            ERP 재고 조정 (±, 시연 화면에서 입력)              IF-02
  *   POST /api/admin/seed              초기 재고 적재 (Salesforce 현재 재고)
  *   POST /api/admin/maintenance       시연용 장애 모드 켜기·끄기 (켜면 API가 503)
- *   GET  /                            위치별 재고·최근 이력 화면 (읽기 전용)
+ *   GET  /                            위치별 재고·최근 이력 화면 + 입고·조정 입력 (키는 화면에서 입력, 저장 안 함)
  *
  * 업무 결과(성공·거부)는 HTTP 200 + 건별 status. 인증 실패 401, 요청 형식 오류 400, 장애 모드 503
  * 같은 refId(Salesforce 레코드 Id)가 다시 오면 처음 결과를 그대로 돌려줌 (재전송해도 두 번 차감 안 됨)
@@ -63,6 +66,15 @@ export default {
       }
       if (request.method === "POST" && url.pathname === "/api/stock/transfer") {
         return await transfer(request, env);
+      }
+      if (request.method === "GET" && url.pathname === "/api/movements") {
+        return await getMovements(url, env);
+      }
+      if (request.method === "POST" && url.pathname === "/api/stock/receive") {
+        return await receive(request, env);
+      }
+      if (request.method === "POST" && url.pathname === "/api/stock/adjust") {
+        return await adjust(request, env);
       }
       if (request.method === "POST" && url.pathname === "/api/admin/seed") {
         return await seed(request, env);
@@ -188,7 +200,8 @@ async function decrease(
   locationCode,
   partCode,
   quantity,
-  reference
+  reference,
+  origin = "SALESFORCE"
 ) {
   const stamp = now();
   const res = await env.DB.prepare(
@@ -205,7 +218,7 @@ async function decrease(
     .bind(locationCode, partCode)
     .first();
   await env.DB.prepare(
-    "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   )
     .bind(
       refId,
@@ -216,7 +229,8 @@ async function decrease(
       row.quantity,
       row.unit,
       reference || null,
-      stamp
+      stamp,
+      origin
     )
     .run();
   return { quantity: round(row.quantity), unit: row.unit };
@@ -230,7 +244,8 @@ async function increase(
   partCode,
   quantity,
   unit,
-  reference
+  reference,
+  origin = "SALESFORCE"
 ) {
   const stamp = now();
   await env.DB.prepare(
@@ -245,7 +260,7 @@ async function increase(
     .bind(locationCode, partCode)
     .first();
   await env.DB.prepare(
-    "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   )
     .bind(
       refId,
@@ -256,7 +271,8 @@ async function increase(
       row.quantity,
       row.unit,
       reference || null,
-      stamp
+      stamp,
+      origin
     )
     .run();
   return { quantity: round(row.quantity), unit: row.unit };
@@ -428,6 +444,167 @@ async function transfer(request, env) {
   return json({ results });
 }
 
+// IF-02 역방향: 이력 번호 after 이후 변동 (번호 오름차순, 최대 500건). Salesforce가 origin=ERP만 골라 반영
+const MAX_MOVEMENTS = 500;
+async function getMovements(url, env) {
+  const after = Number(url.searchParams.get("after") || "0");
+  const limit = Math.min(
+    Number(url.searchParams.get("limit") || MAX_MOVEMENTS),
+    MAX_MOVEMENTS
+  );
+  if (
+    !Number.isInteger(after) ||
+    after < 0 ||
+    !Number.isInteger(limit) ||
+    limit < 1
+  ) {
+    throw new BadRequest("after는 0 이상, limit은 1 이상 정수여야 합니다.");
+  }
+  // DESC: 한 건 더 읽어 다음 쪽이 있는지 판단
+  const { results } = await env.DB.prepare(
+    "SELECT id, ref_id, type, origin, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at FROM movements WHERE id > ? ORDER BY id LIMIT ?"
+  )
+    .bind(after, limit + 1)
+    .all();
+  const hasMore = results.length > limit;
+  const page = results.slice(0, limit);
+  const latest = await env.DB.prepare(
+    "SELECT MAX(id) AS id FROM movements"
+  ).first();
+  return json({
+    items: page.map((m) => ({
+      id: m.id,
+      type: m.type,
+      origin: m.origin,
+      locationCode: m.location_code,
+      partCode: m.part_code,
+      quantityChange: round(m.quantity_change),
+      quantityAfter: round(m.quantity_after),
+      unit: m.unit,
+      reference: m.reference,
+      refId: m.ref_id,
+      createdAt: m.created_at
+    })),
+    lastId: page.length ? page[page.length - 1].id : after,
+    hasMore,
+    latestId: latest && latest.id ? latest.id : 0
+  });
+}
+
+async function readOne(request) {
+  try {
+    return (await request.json()) || {};
+  } catch {
+    throw new BadRequest("JSON 본문이 아닙니다.");
+  }
+}
+
+// DESC: 입고·조정 공통 검사 — 위치는 ERP에 있어야 하고 부품 코드는 필수
+async function checkTarget(env, body) {
+  if (!body.locationCode || !body.partCode) {
+    throw new BadRequest("locationCode와 partCode가 필요합니다.");
+  }
+  if (!(await locationExists(env, body.locationCode))) {
+    return rejected(
+      null,
+      "UNKNOWN_LOCATION",
+      `ERP에 없는 위치 코드입니다: ${body.locationCode}`
+    );
+  }
+  return null;
+}
+
+// IF-02 ERP 입고 (구매 입고 등 ERP에서만 생기는 증가). 재고가 없던 위치+부품이면 새로 만듦
+async function receive(request, env) {
+  const body = await readOne(request);
+  const bad = await checkTarget(env, body);
+  if (bad) return json(bad);
+  if (!validQuantity(body.quantity)) {
+    return json(
+      rejected(null, "INVALID_QUANTITY", "수량은 0보다 커야 합니다.")
+    );
+  }
+  const existing = await env.DB.prepare(
+    "SELECT unit FROM stock WHERE location_code = ? AND part_code = ?"
+  )
+    .bind(body.locationCode, body.partCode)
+    .first();
+  const unit = existing ? existing.unit : body.unit || "Each";
+  const after = await increase(
+    env,
+    null,
+    "RECEIPT",
+    body.locationCode,
+    body.partCode,
+    body.quantity,
+    unit,
+    body.note || "ERP 입고",
+    "ERP"
+  );
+  return json({ status: "OK", remainingQty: after.quantity, unit: after.unit });
+}
+
+// IF-02 ERP 재고 조정 (실사 차이 등, ±). 줄이는 조정은 재고보다 많이 줄일 수 없음
+async function adjust(request, env) {
+  const body = await readOne(request);
+  const bad = await checkTarget(env, body);
+  if (bad) return json(bad);
+  const change = body.quantityChange;
+  if (typeof change !== "number" || !isFinite(change) || change === 0) {
+    return json(
+      rejected(
+        null,
+        "INVALID_QUANTITY",
+        "조정 수량은 0이 아닌 숫자여야 합니다."
+      )
+    );
+  }
+  const note = body.note || "ERP 재고 조정";
+  if (change > 0) {
+    const existing = await env.DB.prepare(
+      "SELECT unit FROM stock WHERE location_code = ? AND part_code = ?"
+    )
+      .bind(body.locationCode, body.partCode)
+      .first();
+    const after = await increase(
+      env,
+      null,
+      "ADJUST",
+      body.locationCode,
+      body.partCode,
+      change,
+      existing ? existing.unit : body.unit || "Each",
+      note,
+      "ERP"
+    );
+    return json({
+      status: "OK",
+      remainingQty: after.quantity,
+      unit: after.unit
+    });
+  }
+  const after = await decrease(
+    env,
+    null,
+    "ADJUST",
+    body.locationCode,
+    body.partCode,
+    -change,
+    note,
+    "ERP"
+  );
+  if (after === null) {
+    return json(
+      rejected(
+        null,
+        "INSUFFICIENT_STOCK",
+        "현재 재고보다 많이 줄일 수 없습니다."
+      )
+    );
+  }
+  return json({ status: "OK", remainingQty: after.quantity, unit: after.unit });
+}
+
 // 초기 재고 적재: reset=true면 재고·이력·처리 기록을 비우고 다시 채움
 async function seed(request, env) {
   let body;
@@ -472,7 +649,7 @@ async function seed(request, env) {
       .bind(s.locationCode, s.partCode, s.quantity, s.unit || "Each", stamp)
       .run();
     await env.DB.prepare(
-      "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at, origin) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'SEED')"
     )
       .bind(
         "SEED",
@@ -506,7 +683,14 @@ const MOVE_LABEL = {
   SEED: "초기 적재",
   CONSUME: "사용 차감",
   TRANSFER_OUT: "이동 출고",
-  TRANSFER_IN: "이동 입고"
+  TRANSFER_IN: "이동 입고",
+  RECEIPT: "ERP 입고",
+  ADJUST: "ERP 조정"
+};
+const ORIGIN_LABEL = {
+  SALESFORCE: "Salesforce",
+  ERP: "ERP",
+  SEED: "초기 적재"
 };
 
 // 위치별 재고·최근 이력 화면 (읽기 전용, 고객 정보 없음)
@@ -524,7 +708,7 @@ async function renderPage(env) {
       "SELECT location_code, part_code, quantity, unit, updated_at FROM stock ORDER BY location_code, part_code"
     ).all(),
     env.DB.prepare(
-      "SELECT ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at FROM movements ORDER BY id DESC LIMIT 50"
+      "SELECT id, ref_id, type, origin, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at FROM movements ORDER BY id DESC LIMIT 50"
     ).all(),
     getSetting(env, "maintenance")
   ]);
@@ -549,13 +733,13 @@ async function renderPage(env) {
     .map(
       (
         m
-      ) => `<tr><td>${esc(fmt(m.created_at))}</td><td>${esc(MOVE_LABEL[m.type])}</td><td>${esc(m.location_code)}</td><td>${esc(m.part_code)}</td>
+      ) => `<tr><td class="num">${esc(m.id)}</td><td>${esc(fmt(m.created_at))}</td><td>${esc(MOVE_LABEL[m.type])}</td><td><span class="origin ${esc(m.origin)}">${esc(ORIGIN_LABEL[m.origin] || m.origin)}</span></td><td>${esc(m.location_code)}</td><td>${esc(m.part_code)}</td>
       <td class="num ${m.quantity_change < 0 ? "minus" : "plus"}">${m.quantity_change > 0 ? "+" : ""}${esc(m.quantity_change)} ${esc(unitLabel(m.unit))}</td><td class="num">${esc(m.quantity_after)} ${esc(unitLabel(m.unit))}</td>
       <td>${esc(m.reference)}</td><td class="mono">${esc(m.ref_id)}</td></tr>`
     )
     .join("");
   const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>한결공조 ERP (Mock) — 재고</title><meta http-equiv="refresh" content="30">
+<title>한결공조 ERP (Mock) — 재고</title>
 <style>
 body{margin:0;font-family:'Malgun Gothic',system-ui,sans-serif;background:#f3f4f6;color:#1f2937}
 header{background:#1e3a5f;color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
@@ -565,14 +749,41 @@ main{padding:20px 24px;max-width:1200px;margin:0 auto} .grid{display:grid;grid-t
 .tag{font-size:11px;border-radius:3px;padding:2px 6px;margin-right:6px;color:#fff} .tag.WAREHOUSE{background:#2563eb} .tag.VAN{background:#059669}
 table{width:100%;border-collapse:collapse;font-size:13px} th,td{border-bottom:1px solid #e5e7eb;padding:6px 8px;text-align:left} th{background:#f9fafb}
 .num{text-align:right} .minus{color:#dc2626} .plus{color:#059669} .muted{color:#9ca3af} .mono{font-family:Consolas,monospace;font-size:11px;color:#6b7280}
+.origin{font-size:11px;border-radius:3px;padding:1px 6px;background:#e5e7eb} .origin.ERP{background:#fde68a} .origin.SALESFORCE{background:#dbeafe}
+form.op{display:flex;flex-wrap:wrap;gap:8px;align-items:end} form.op label{display:flex;flex-direction:column;font-size:12px;color:#4b5563;gap:2px} form.op input,form.op select{padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font:inherit} form.op button{padding:6px 14px;border:0;border-radius:4px;background:#1e3a5f;color:#fff;cursor:pointer} #opResult{margin-top:8px;font-size:13px}
 .warn{background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:8px 12px;border-radius:4px;margin-bottom:12px}
 </style></head><body>
-<header><h1>한결공조 ERP <span class="badge">Mock</span></h1><span>재고 현황 · 30초마다 새로 고침 · ${esc(fmt(now()))}</span></header>
+<header><h1>한결공조 ERP <span class="badge">Mock</span></h1><span>재고 현황 · ${esc(fmt(now()))}</span></header>
 <main>${maintenance === "on" ? '<div class="warn">점검(장애) 모드: API가 503으로 응답합니다.</div>' : ""}
 <div class="grid">${locHtml || '<p class="muted">위치가 없습니다. 초기 재고를 적재하세요.</p>'}</div>
+<section class="card" style="margin-top:16px"><h2>ERP 입고 · 재고 조정 (시연용)</h2>
+<p class="muted" style="margin:0 0 8px;font-size:12px">ERP에서만 생기는 변동입니다. Salesforce가 15분마다 이력을 가져가 변동량만큼 재고를 조정합니다(IF-02). API 키는 이 화면에서만 쓰고 저장하지 않습니다.</p>
+<form class="op" id="opForm"><label>작업<select id="opKind"><option value="receive">입고 (+)</option><option value="adjust">조정 (±)</option></select></label>
+<label>위치<select id="opLoc">${locs.map((l) => `<option value="${esc(l.code)}">${esc(l.name)} (${esc(l.code)})</option>`).join("")}</select></label>
+<label>부품 코드<input id="opPart" required placeholder="예: RFG-404A" size="12"></label>
+<label>수량<input id="opQty" type="number" step="0.01" required size="6"></label>
+<label>메모<input id="opNote" placeholder="예: 구매 입고 PO-123" size="18"></label>
+<label>API 키<input id="opKey" type="password" required size="14" autocomplete="off"></label><button type="submit">반영</button></form>
+<div id="opResult"></div></section>
+<script>
+document.getElementById("opForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const kind = document.getElementById("opKind").value;
+  const qty = Number(document.getElementById("opQty").value);
+  const body = { locationCode: document.getElementById("opLoc").value, partCode: document.getElementById("opPart").value.trim(), note: document.getElementById("opNote").value.trim() || undefined };
+  if (kind === "receive") body.quantity = qty; else body.quantityChange = qty;
+  const out = document.getElementById("opResult");
+  try {
+    const res = await fetch("/api/stock/" + kind, { method: "POST", headers: { "content-type": "application/json", "x-api-key": document.getElementById("opKey").value }, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (res.ok && data.status === "OK") { out.textContent = "반영됨: 남은 수량 " + data.remainingQty; setTimeout(() => location.reload(), 800); }
+    else { out.textContent = "거부: " + (data.message || data.error || res.status); }
+  } catch (err) { out.textContent = "오류: " + err.message; }
+});
+</script>
 <section class="card" style="margin-top:16px"><h2>최근 재고 이동 이력 (50건)</h2>
-<table><thead><tr><th>일시</th><th>구분</th><th>위치</th><th>부품</th><th class="num">변화</th><th class="num">변경 후</th><th>참조(출동·이동)</th><th>Salesforce Id</th></tr></thead>
-<tbody>${moveHtml || '<tr><td colspan="8" class="muted">이력 없음</td></tr>'}</tbody></table></section></main></body></html>`;
+<table><thead><tr><th class="num">번호</th><th>일시</th><th>구분</th><th>출처</th><th>위치</th><th>부품</th><th class="num">변화</th><th class="num">변경 후</th><th>참조(출동·이동)</th><th>Salesforce Id</th></tr></thead>
+<tbody>${moveHtml || '<tr><td colspan="10" class="muted">이력 없음</td></tr>'}</tbody></table></section></main></body></html>`;
   return new Response(html, {
     headers: { "content-type": "text/html; charset=utf-8" }
   });

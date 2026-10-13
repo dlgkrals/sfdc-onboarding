@@ -25,11 +25,14 @@ CREATE TABLE stock (
   PRIMARY KEY (location_code, part_code)
 );
 
--- 이력: 모든 수량 변화 (사용 차감, 이동 출고·입고, 초기 적재)
+-- 이력: 모든 수량 변화 (사용 차감, 이동 출고·입고, 초기 적재, ERP 입고·조정)
+-- origin: SALESFORCE(Salesforce가 보낸 사용·이동) / ERP(ERP에서만 생긴 입고·조정) / SEED(초기 적재)
+-- id = 이력 번호. Salesforce 역방향 동기화(IF-02)가 '마지막으로 가져온 번호 이후'를 조회
 CREATE TABLE movements (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   ref_id TEXT,
-  type TEXT NOT NULL CHECK (type IN ('SEED', 'CONSUME', 'TRANSFER_OUT', 'TRANSFER_IN')),
+  type TEXT NOT NULL CHECK (type IN ('SEED', 'CONSUME', 'TRANSFER_OUT', 'TRANSFER_IN', 'RECEIPT', 'ADJUST')),
+  origin TEXT NOT NULL DEFAULT 'SALESFORCE' CHECK (origin IN ('SALESFORCE', 'ERP', 'SEED')),
   location_code TEXT NOT NULL,
   part_code TEXT NOT NULL,
   quantity_change REAL NOT NULL,

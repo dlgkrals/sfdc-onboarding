@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description
+  >26-10-13 IF-02 역방향 동기화 기록: ERP에서만 생긴 입고·조정 1건마다 반영·오류 결과. ERP 이력 번호는 고유(같은 변동 두 번 반영 방지) by Edwin</description>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableHistory>false</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>false</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <label>ERP 재고 동기화 기록</label>
+    <nameField>
+        <displayFormat>IL-{00000}</displayFormat>
+        <label>기록 번호</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>ERP 재고 동기화 기록</pluralLabel>
+    <sharingModel>Read</sharingModel>
+    <externalSharingModel>Private</externalSharingModel>
+</CustomObject>

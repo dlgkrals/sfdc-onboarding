@@ -2,6 +2,15 @@
 // - 대상: ERP 위치 코드가 있는 재고 위치 + 그 위치의 재고(ERP 부품 코드가 있는 것)
 // - reset = true: ERP의 재고·이력·처리 기록을 비우고 다시 채움 (시연 전 초기화에도 사용)
 // - 호출: Named Credential HG_ErpMock (키는 External Credential, 이 스크립트·로그에 없음)
+// WARN: 재적재하면 ERP의 중복 방지 기록이 사라짐 + Salesforce 재고(이미 차감된 값)가 그대로 ERP 값이 됨
+//       → 아직 ERP에 안 간 대기·실패 건이 있으면 나중에 재전송될 때 ERP에서 한 번 더 빠짐 (2026-10-13 PC-245 이중 차감)
+//       확인과 재적재를 따로 하면 그 사이에 저장된 건을 놓치므로, 같은 실행 안에서 확인하고 있으면 멈춤
+Integer unsentParts = [SELECT COUNT() FROM ProductConsumed WHERE ErpSyncStatus__c IN ('Pending', 'Failed')];
+Integer unsentTransfers = [SELECT COUNT() FROM ProductTransfer WHERE ErpSyncStatus__c IN ('Pending', 'Failed')];
+if (unsentParts + unsentTransfers > 0) {
+    throw new IllegalArgumentException('SEED 중단: ERP에 아직 안 간 대기·실패 건이 있습니다 (사용 부품 ' + unsentParts
+        + ', 재고 이동 ' + unsentTransfers + '). 재전송(d7_erp_retry_run.apex)으로 먼저 보내거나 정리한 뒤 다시 실행하세요.');
+}
 Map<String, String> erpTypeByLocationType = new Map<String, String>{ 'Warehouse' => 'WAREHOUSE', 'Van' => 'VAN' };
 
 List<Map<String, Object>> locations = new List<Map<String, Object>>();
