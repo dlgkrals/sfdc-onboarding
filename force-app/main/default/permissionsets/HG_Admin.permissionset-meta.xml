@@ -508,6 +508,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>ProductConsumed.fmErpRemainingQty__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>ProductConsumed.InventoryMismatch__c</field>
         <readable>true</readable>
@@ -580,6 +585,16 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>ProductTransfer.ErpSyncedAt__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>ProductTransfer.fmErpDestinationRemainingQty__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>ProductTransfer.fmErpSourceRemainingQty__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

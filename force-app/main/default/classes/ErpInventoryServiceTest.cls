@@ -8,6 +8,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 5번)
+ * 1.1    2026-10-13    Edwin     삭제 시 재고 되돌림·복원 거부 테스트 (decision-log 11 A안)
  * ----------------------------------------------------------------------------
  * @see ErpInventoryService
  */
@@ -402,18 +403,24 @@ private class ErpInventoryServiceTest {
     );
   }
 
-  // 정상: 실패 상태·영구적 실패로 확인 필요인 사용 부품은 삭제 가능
+  // 정상: 실패 상태·영구적 실패로 확인 필요인 사용 부품은 삭제 가능, 삭제한 수량만큼 재고가 돌아옴 (현재 + 삭제 수량)
   @isTest
   static void normalDeleteAllowedWhenNotReflected() {
     ProductConsumed failed = TestDataFactory.buildPart(
       getWorkOrder().Id,
       getItem('General').Id
     );
+    failed.QuantityConsumed = 2;
     ProductConsumed rejected = TestDataFactory.buildPart(
       getWorkOrder().Id,
       getItem('General').Id
     );
     insert new List<ProductConsumed>{ failed, rejected };
+    Assert.areEqual(
+      VAN_QUANTITY - 3,
+      getItem('General').QuantityOnHand,
+      '표준 차감: 2 + 1'
+    );
     failed.ErpSyncStatus__c = 'Failed';
     rejected.ErpSyncStatus__c = 'NeedsReview';
     rejected.ErpSyncMessage__c = '[INSUFFICIENT_STOCK] 재고가 부족합니다.';
@@ -435,6 +442,11 @@ private class ErpInventoryServiceTest {
         WHERE Id IN (:failed.Id, :rejected.Id)
       ],
       '둘 다 삭제됨'
+    );
+    Assert.areEqual(
+      VAN_QUANTITY,
+      getItem('General').QuantityOnHand,
+      '삭제한 2 + 1만큼 되돌림'
     );
   }
 
@@ -471,5 +483,77 @@ private class ErpInventoryServiceTest {
       [SELECT COUNT() FROM ProductConsumed WHERE Id IN :parts],
       '3건 그대로'
     );
+    Assert.areEqual(
+      VAN_QUANTITY - 3,
+      getItem('General').QuantityOnHand,
+      '거부된 건은 재고도 그대로'
+    );
+  }
+
+  // 불허: 삭제한 사용 부품을 휴지통에서 복원하면 거부 (잘못 지웠으면 새로 입력)
+  @isTest
+  static void rejectUndeleteDeletedPart() {
+    ProductConsumed part = TestDataFactory.buildPart(
+      getWorkOrder().Id,
+      getItem('General').Id
+    );
+    insert part;
+    part.ErpSyncStatus__c = 'Failed';
+    Database.update(part, AccessLevel.SYSTEM_MODE);
+    delete part;
+
+    Test.startTest();
+    Database.UndeleteResult result = Database.undelete(part.Id, false);
+    Test.stopTest();
+
+    Assert.isFalse(result.isSuccess(), '복원 거부');
+    Assert.areEqual(
+      System.Label.MSG_ERP_UNDELETE_BLOCKED,
+      result.getErrors()[0].getMessage(),
+      '안내 문구'
+    );
+    Assert.areEqual(
+      0,
+      [SELECT COUNT() FROM ProductConsumed WHERE Id = :part.Id],
+      '복원되지 않음'
+    );
+    Assert.areEqual(
+      VAN_QUANTITY,
+      getItem('General').QuantityOnHand,
+      '삭제 때 되돌린 재고 그대로'
+    );
+  }
+
+  // 벌크: 200건 한 번에 삭제(실패 100 + 완료 100, 부분 성공) → 실패 100건만 삭제·재고 되돌림, 완료 100건은 거부
+  @isTest
+  static void bulkDelete200RestoresOnlyAllowed() {
+    Id workOrderId = getWorkOrder().Id;
+    Id itemId = getItem('General').Id;
+    List<ProductConsumed> parts = new List<ProductConsumed>();
+    for (Integer i = 0; i < 200; i++) {
+      parts.add(TestDataFactory.buildPart(workOrderId, itemId));
+    }
+    insert parts;
+    for (Integer i = 0; i < 200; i++) {
+      parts[i].ErpSyncStatus__c = Math.mod(i, 2) == 0 ? 'Failed' : 'Synced';
+    }
+    Database.update(parts, AccessLevel.SYSTEM_MODE);
+
+    Test.startTest();
+    List<Database.DeleteResult> results = Database.delete(parts, false);
+    Integer queries = Limits.getQueries();
+    Test.stopTest();
+
+    Integer deleted = 0;
+    for (Database.DeleteResult r : results) {
+      deleted += r.isSuccess() ? 1 : 0;
+    }
+    Assert.areEqual(100, deleted, '실패 100건만 삭제');
+    Assert.areEqual(
+      VAN_QUANTITY - 100,
+      getItem('General').QuantityOnHand,
+      '300 - 200 + 100 (삭제된 100건만 되돌림)'
+    );
+    Assert.isTrue(queries <= 5, '200건이어도 조회 몇 번: ' + queries);
   }
 }

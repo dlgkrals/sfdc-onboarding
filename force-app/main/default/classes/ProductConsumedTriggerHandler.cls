@@ -4,6 +4,8 @@
  *              최종 판정(ChargeType__c)은 비어 있을 때만 채움 (WarrantyService)
  *              after insert  : ERP 재고 차감 전송 예약 (IF-03, Queueable 비동기 — 트리거에서는 콜아웃 불가)
  *              before delete : ERP에 반영됐거나 반영 여부를 모르는 사용 기록은 삭제 거부 (ERP 되돌림 API 없음)
+ *              after delete  : 삭제가 허용된 건(ERP 미반영 확실)만 그 수량만큼 Salesforce 재고 되돌림
+ *              after undelete: 휴지통 복원 거부 (잘못 지웠으면 새로 입력)
  * @layer       TriggerHandler
  * @author      Edwin
  * @date        2026-10-08
@@ -13,6 +15,7 @@
  * 1.0    2026-10-08    Edwin     최초 작성 (D5 실습: 유·무상 자동 판정 트리거)
  * 1.1    2026-10-11    Edwin     before update 재판정 제거 (출동·제품 항목·부품은 생성 후 수정 불가)
  * 1.2    2026-10-13    Edwin     after insert ERP 전송 예약, before delete 삭제 규칙 (D7 ERP 연동)
+ * 1.3    2026-10-13    Edwin     after delete 재고 되돌림, after undelete 복원 거부 (decision-log 11 A안)
  * ----------------------------------------------------------------------------
  * @see ProductConsumedTrigger, WarrantyService, ErpInventoryService, TriggerHandler
  */
@@ -32,6 +35,20 @@ public with sharing class ProductConsumedTriggerHandler extends TriggerHandler {
       if (!ErpInventoryService.canDelete(pc)) {
         pc.addError(System.Label.MSG_ERP_DELETE_BLOCKED);
       }
+    }
+  }
+
+  // DESC: before delete에서 거부된 건은 여기 오지 않음 → 삭제가 확정된 건만 재고 되돌림
+  protected override void afterDelete() {
+    ErpInventoryService.restoreStockForDeleted(
+      (List<ProductConsumed>) Trigger.old
+    );
+  }
+
+  // WARN: 복원하면 재고·ERP 상태가 삭제 전 기준과 어긋나므로 막음. 잘못 지웠으면 새로 입력 (새 insert에서 판정·ERP 전송)
+  protected override void afterUndelete() {
+    for (ProductConsumed pc : (List<ProductConsumed>) Trigger.new) {
+      pc.addError(System.Label.MSG_ERP_UNDELETE_BLOCKED);
     }
   }
 }

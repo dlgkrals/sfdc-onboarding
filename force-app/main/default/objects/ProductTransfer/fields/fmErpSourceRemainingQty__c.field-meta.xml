@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>fmErpSourceRemainingQty__c</fullName>
+    <description
+  >26-10-13 ERP 출발 위치 남은 수량에 재고 단위 표기(개, kg)를 붙여 표시 by Edwin</description>
+    <externalId>false</externalId>
+    <formula
+  >IF(ISBLANK(ErpSourceRemainingQty__c), NULL, TEXT(ErpSourceRemainingQty__c) &amp; &apos; &apos; &amp; CASE(TEXT(SourceProductItem.QuantityUnitOfMeasure), &apos;Each&apos;, $Label.MISC_UNIT_EACH, &apos;kg&apos;, $Label.MISC_UNIT_KG, TEXT(SourceProductItem.QuantityUnitOfMeasure)))</formula>
+    <formulaTreatBlanksAs>BlankAsBlank</formulaTreatBlanksAs>
+    <label>ERP 출발 남은 수량(단위)</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

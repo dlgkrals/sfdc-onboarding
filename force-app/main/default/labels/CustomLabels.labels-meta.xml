@@ -460,6 +460,16 @@
     >ERP에 반영된 사용 기록은 삭제할 수 없습니다. 재고 조정은 센터장에게 요청하세요.</value>
     </labels>
     <labels>
+        <fullName>MSG_ERP_UNDELETE_BLOCKED</fullName>
+        <categories>HG_Erp</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >삭제한 사용 부품은 복원할 수 없습니다. 잘못 지웠으면 새로 입력하세요.</shortDescription>
+        <value
+    >삭제한 사용 부품은 복원할 수 없습니다. 잘못 지웠으면 새로 입력하세요.</value>
+    </labels>
+    <labels>
         <fullName>MISC_UNIT_EACH</fullName>
         <categories>HG_Unit</categories>
         <language>en_US</language>
