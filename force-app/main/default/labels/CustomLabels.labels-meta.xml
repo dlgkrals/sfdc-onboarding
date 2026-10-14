@@ -470,6 +470,106 @@
     >삭제한 사용 부품은 복원할 수 없습니다. 잘못 지웠으면 새로 입력하세요.</value>
     </labels>
     <labels>
+        <fullName>LABEL_SITE_NEW_TITLE</fullName>
+        <categories>HG_RecordNew</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>사업장 등록</shortDescription>
+        <value>사업장 등록</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ACCOUNT_NEW_TITLE</fullName>
+        <categories>HG_RecordNew</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>고객사 등록</shortDescription>
+        <value>고객사 등록</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SITE_INFO</fullName>
+        <categories>HG_RecordNew</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>사업장 정보</shortDescription>
+        <value>사업장 정보</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ACCOUNT_INFO</fullName>
+        <categories>HG_RecordNew</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>고객사 정보</shortDescription>
+        <value>고객사 정보</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ADDRESS</fullName>
+        <categories>HG_RecordNew</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>주소</shortDescription>
+        <value>주소</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_BILLING_ADDRESS</fullName>
+        <categories>HG_RecordNew</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>청구지 주소</shortDescription>
+        <value>청구지 주소</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_CONTACT_INFO</fullName>
+        <categories>HG_RecordNew</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>담당자 · 결제</shortDescription>
+        <value>담당자 · 결제</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_RECORD_TYPE</fullName>
+        <categories>HG_RecordNew</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>고객 유형</shortDescription>
+        <value>고객 유형</value>
+    </labels>
+    <labels>
+        <fullName>MSG_ADDRESS_LATER</fullName>
+        <categories>HG_RecordNew</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >주소를 고르지 않아도 저장할 수 있습니다. 나중에 "주소 검색"으로 넣을 수 있습니다.</shortDescription>
+        <value
+    >주소를 고르지 않아도 저장할 수 있습니다. 나중에 "주소 검색"으로 넣을 수 있습니다.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_SITE_CREATED</fullName>
+        <categories>HG_RecordNew</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>사업장을 등록했습니다</shortDescription>
+        <value>사업장을 등록했습니다</value>
+    </labels>
+    <labels>
+        <fullName>MSG_ACCOUNT_CREATED</fullName>
+        <categories>HG_RecordNew</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>고객사를 등록했습니다</shortDescription>
+        <value>고객사를 등록했습니다</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CENTER_AFTER_SAVE</fullName>
+        <categories>HG_RecordNew</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >상담원은 서비스센터를 고를 수 없습니다. 저장하면 주소 기준으로 자동 지정됩니다.</shortDescription>
+        <value
+    >상담원은 서비스센터를 고를 수 없습니다. 저장하면 주소 기준으로 자동 지정됩니다.</value>
+    </labels>
+    <labels>
         <fullName>LABEL_PARTS_TITLE</fullName>
         <categories>HG_WorkOrderParts</categories>
         <language>en_US</language>

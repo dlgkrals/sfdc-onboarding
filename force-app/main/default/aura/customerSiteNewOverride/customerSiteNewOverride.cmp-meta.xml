@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AuraDefinitionBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <description
+  >26-10-14 사업장 새로 만들기 재정의 래퍼 (LWC customerSiteNew) by Edwin</description>
+</AuraDefinitionBundle>

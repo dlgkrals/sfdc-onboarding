@@ -1,0 +1,23 @@
+<!--
+  @description 사업장 "새로 만들기"(데스크톱) 재정의용 Aura 래퍼 — 표준 버튼 재정의에는 lightning:actionOverride를 구현한
+               Aura 컴포넌트만 고를 수 있어, 실제 화면은 LWC customerSiteNew에 맡기고 여기서는 주소 상태만 넘김
+               · 관련 목록(고객사 → 사업장)에서 열면 state.inContextOfRef에 부모 고객사가 들어옴 → parentAccountId
+  @layer       Aura (재정의 래퍼)
+  @author      Edwin
+  @date        2026-10-14
+  @see         customerSiteNew (LWC), docs/decision-log.md (재정의·되돌리기)
+-->
+<aura:component
+  implements="lightning:actionOverride,lightning:isUrlAddressable"
+  access="global"
+>
+  <aura:attribute name="parentAccountId" type="String" />
+  <aura:handler name="init" value="{!this}" action="{!c.readState}" />
+  <!-- DESC: 재정의 화면은 재사용(캐시)되므로 주소가 바뀔 때마다 다시 읽음 -->
+  <aura:handler
+    name="change"
+    value="{!v.pageReference}"
+    action="{!c.readState}"
+  />
+  <c:customerSiteNew parentAccountId="{!v.parentAccountId}" />
+</aura:component>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>고객사 등록</masterLabel>
+    <description
+  >26-10-14 고객사 새로 만들기 재정의 화면 (Aura 래퍼 accountNewOverride 안에서 사용) by Edwin</description>
+</LightningComponentBundle>

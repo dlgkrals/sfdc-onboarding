@@ -1,0 +1,21 @@
+<!--
+  @description 고객사 "새로 만들기"(데스크톱) 재정의용 Aura 래퍼 — 실제 화면은 LWC accountNew
+               · 표준 레코드 유형 선택 화면에서 고른 유형이 state.recordTypeId로 들어옴 → recordTypeId
+  @layer       Aura (재정의 래퍼)
+  @author      Edwin
+  @date        2026-10-14
+  @see         accountNew (LWC), docs/decision-log.md (재정의·되돌리기)
+-->
+<aura:component
+  implements="lightning:actionOverride,lightning:isUrlAddressable"
+  access="global"
+>
+  <aura:attribute name="recordTypeId" type="String" />
+  <aura:handler name="init" value="{!this}" action="{!c.readState}" />
+  <aura:handler
+    name="change"
+    value="{!v.pageReference}"
+    action="{!c.readState}"
+  />
+  <c:accountNew recordTypeId="{!v.recordTypeId}" />
+</aura:component>

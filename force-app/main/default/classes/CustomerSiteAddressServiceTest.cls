@@ -8,6 +8,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성
+ * 1.1    2026-10-14    Edwin     상담원 새 사업장 센터 없이 저장 거부(현재 동작)·기사 생성 거부 (D8 새로 만들기 재정의)
  * ----------------------------------------------------------------------------
  * @see CustomerSiteAddressService
  */
@@ -217,5 +218,57 @@ private class CustomerSiteAddressServiceTest {
     Test.stopTest();
 
     Assert.isNotNull(caught, '주소 없으면 거부');
+  }
+
+  // 불허(현재 동작 기록): 상담원은 서비스센터 수정 권한이 없어 센터 없이 저장 → 검증 규칙 ServiceCenter_Required가 거부
+  //   표준 새로 만들기·사업장 등록 화면 모두 같음. 상담원 등록 경로는 결정 대기 (decision-log 20)
+  @isTest
+  static void rejectCallCenterNewSiteWithoutCenter() {
+    Id accountId = [SELECT Id FROM Account LIMIT 1].Id;
+    String message;
+
+    Test.startTest();
+    System.runAs(getUser('HG_CallCenter')) {
+      try {
+        Database.insert(
+          new CustomerSite__c(
+            Name = '상담원 등록 사업장',
+            Account__c = accountId,
+            AdminDistrictCode__c = UIJEONGBU_CODE
+          ),
+          true,
+          AccessLevel.USER_MODE
+        );
+      } catch (DmlException e) {
+        message = e.getDmlMessage(0);
+      }
+    }
+    Test.stopTest();
+
+    Assert.isNotNull(message, '센터 없는 사업장 거부');
+    Assert.areEqual(1, [SELECT COUNT() FROM CustomerSite__c], '기존 1건만');
+  }
+
+  // 불허: 협력 기사는 사업장을 만들 수 없음 (사업장 오브젝트 권한 없음 → 새로 만들기 화면도 쓸 수 없음)
+  @isTest
+  static void rejectTechnicianCannotCreateSite() {
+    Id accountId = [SELECT Id FROM Account LIMIT 1].Id;
+    Boolean failed = false;
+
+    Test.startTest();
+    System.runAs(getUser('HG_Technician')) {
+      try {
+        Database.insert(
+          new CustomerSite__c(Name = '기사 등록 시도', Account__c = accountId),
+          true,
+          AccessLevel.USER_MODE
+        );
+      } catch (Exception e) {
+        failed = true;
+      }
+    }
+    Test.stopTest();
+
+    Assert.isTrue(failed, '기사 생성 거부');
   }
 }

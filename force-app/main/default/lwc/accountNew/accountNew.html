@@ -1,0 +1,126 @@
+<template>
+  <lightning-card title={title} icon-name="standard:account">
+    <!-- 유형 없이 열렸을 때(주소로 바로 연 경우)만: 고객 유형부터 고름 -->
+    <div
+      lwc:if={showTypeChoice}
+      class="slds-p-horizontal_medium slds-p-bottom_medium"
+    >
+      <lightning-radio-group
+        name="recordType"
+        label={labels.LABEL_RECORD_TYPE}
+        options={typeOptions}
+        value={chosenRecordTypeId}
+        onchange={handleTypeChange}
+        required
+      ></lightning-radio-group>
+    </div>
+    <lightning-record-edit-form
+      lwc:if={hasRecordType}
+      object-api-name="Account"
+      record-type-id={effectiveRecordTypeId}
+      onsubmit={handleSubmit}
+      onsuccess={handleSuccess}
+      onerror={handleError}
+    >
+      <lightning-messages></lightning-messages>
+      <div class="slds-grid slds-wrap slds-gutters slds-p-horizontal_medium">
+        <!-- 왼쪽: 고객사 정보 (유형별 필드) -->
+        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+          <h3 class="slds-text-heading_small slds-m-bottom_small">
+            {labels.LABEL_ACCOUNT_INFO}
+          </h3>
+          <lightning-input-field
+            field-name="Name"
+            required
+          ></lightning-input-field>
+          <template lwc:if={showBusinessNumber}>
+            <lightning-input-field
+              field-name="BusinessRegistrationNumber__c"
+            ></lightning-input-field>
+          </template>
+          <lightning-input-field field-name="Phone"></lightning-input-field>
+          <lightning-input-field
+            field-name="AccountStatus__c"
+          ></lightning-input-field>
+          <lightning-input-field
+            field-name="CustomerGrade__c"
+          ></lightning-input-field>
+          <h3 class="slds-text-heading_small slds-m-vertical_small">
+            {labels.LABEL_CONTACT_INFO}
+          </h3>
+          <lightning-input-field
+            field-name="BillingContactName__c"
+          ></lightning-input-field>
+          <lightning-input-field
+            field-name="BillingContactPhone__c"
+          ></lightning-input-field>
+          <lightning-input-field
+            field-name="BillingContactEmail__c"
+          ></lightning-input-field>
+          <lightning-input-field
+            field-name="PaymentMethod__c"
+          ></lightning-input-field>
+        </div>
+
+        <!-- 오른쪽: 청구지 주소 (공통 주소 검색 부품 재사용) -->
+        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+          <h3 class="slds-text-heading_small slds-m-bottom_small">
+            {labels.LABEL_BILLING_ADDRESS}
+          </h3>
+          <template lwc:if={hasSelected}>
+            <div class="slds-box slds-theme_shade slds-m-bottom_small">
+              <p class="slds-text-title">{labels.LABEL_SELECTED_ADDRESS}</p>
+              <p class="slds-text-body_regular">{billingStreet}</p>
+              <p class="slds-text-body_small slds-text-color_weak">
+                {labels.LABEL_POSTAL_CODE} {selected.postalCode}
+              </p>
+              <lightning-button
+                variant="base"
+                label={labels.BTN_RESELECT}
+                onclick={handleReselect}
+                class="slds-m-top_x-small"
+              ></lightning-button>
+            </div>
+            <lightning-input
+              label={labels.LABEL_DETAIL_ADDRESS}
+              value={detailAddress}
+              onchange={handleDetailChange}
+              max-length="200"
+            ></lightning-input>
+          </template>
+          <template lwc:else>
+            <p
+              class="slds-text-body_small slds-text-color_weak slds-m-bottom_x-small"
+            >
+              {labels.MSG_ADDRESS_LATER}
+            </p>
+            <c-address-search
+              onaddressselected={handleAddressSelected}
+            ></c-address-search>
+          </template>
+        </div>
+      </div>
+
+      <div
+        class="slds-p-around_medium slds-text-align_right slds-border_top slds-m-top_medium"
+      >
+        <lightning-button
+          label={labels.BTN_CANCEL}
+          onclick={handleCancel}
+          class="slds-m-right_x-small"
+        ></lightning-button>
+        <lightning-button
+          variant="brand"
+          type="submit"
+          label={labels.BTN_SAVE}
+          disabled={isSaving}
+        ></lightning-button>
+      </div>
+    </lightning-record-edit-form>
+    <lightning-spinner
+      lwc:if={isSaving}
+      alternative-text="Saving"
+      size="small"
+    ></lightning-spinner>
+  </lightning-card>
+</template>
