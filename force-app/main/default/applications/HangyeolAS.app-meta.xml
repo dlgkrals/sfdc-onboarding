@@ -2,21 +2,31 @@
 <CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionOverrides>
         <actionName>View</actionName>
-        <comment>26-10-13 출동 레코드 페이지(사용 부품 화면) by Edwin</comment>
-        <content>HG_WorkOrderRecordPage</content>
-        <formFactor>Large</formFactor>
-        <skipRecordTypeSelect>false</skipRecordTypeSelect>
-        <type>Flexipage</type>
-        <pageOrSobjectType>WorkOrder</pageOrSobjectType>
-    </actionOverrides>
-    <actionOverrides>
-        <actionName>View</actionName>
         <comment>26-10-13 SC-04 장비 상세 레코드 페이지 by Edwin</comment>
         <content>HG_AssetRecordPage</content>
         <formFactor>Large</formFactor>
         <skipRecordTypeSelect>false</skipRecordTypeSelect>
         <type>Flexipage</type>
         <pageOrSobjectType>Asset</pageOrSobjectType>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <comment
+    >Action override created by Lightning App Builder during activation.</comment>
+        <content>HG_CaseRecordPage</content>
+        <formFactor>Large</formFactor>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <comment>26-10-13 출동 레코드 페이지(사용 부품 화면) by Edwin</comment>
+        <content>HG_WorkOrderRecordPage</content>
+        <formFactor>Large</formFactor>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
+        <pageOrSobjectType>WorkOrder</pageOrSobjectType>
     </actionOverrides>
     <formFactors>Small</formFactors>
     <formFactors>Large</formFactors>
