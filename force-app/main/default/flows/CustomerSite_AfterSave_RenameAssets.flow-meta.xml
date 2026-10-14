@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <description
+  >26-10-14 사업장 이름이 바뀐 경우만 그 사업장의 장비를 저장해 장비 저장 전 Flow가 이름을 다시 만들게 함. 여러 사업장을 한 번에 바꿔도 장비 저장은 묶어서 한 번(Flow 벌크 처리) by Edwin</description>
+    <environments>Default</environments>
+    <interviewLabel
+  >사업장 저장 후 - 이름 바뀌면 장비 이름 다시 만들기 {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>사업장 저장 후 - 이름 바뀌면 장비 이름 다시 만들기</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordUpdates>
+        <name>Touch_Assets</name>
+        <label
+    >장비 이름 다시 만들기 (장비 저장 → 저장 전 Flow가 새 이름)</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>CustomerSite__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Name</field>
+            <value>
+                <stringValue>-</stringValue>
+            </value>
+        </inputAssignments>
+        <object>Asset</object>
+    </recordUpdates>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Touch_Assets</targetReference>
+        </connector>
+        <filterFormula>ISCHANGED({!$Record.Name})</filterFormula>
+        <object>CustomerSite__c</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

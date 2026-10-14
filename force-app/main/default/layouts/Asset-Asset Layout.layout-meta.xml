@@ -23,10 +23,6 @@
                 <field>SerialNumber</field>
             </layoutItems>
             <layoutItems>
-                <behavior>Readonly</behavior>
-                <field>SerialKey__c</field>
-            </layoutItems>
-            <layoutItems>
                 <behavior>Edit</behavior>
                 <field>AccountId</field>
             </layoutItems>

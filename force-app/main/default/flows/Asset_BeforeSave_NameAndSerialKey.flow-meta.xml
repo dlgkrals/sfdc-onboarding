@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <assignments>
+        <name>Assign_Name_And_Key</name>
+        <label>장비 이름·시리얼 키 채우기</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.Name</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>fxAssetName</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.SerialKey__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>fxSerial</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.SerialNumber</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>fxSerial</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <description
+  >26-10-14 장비 저장 전(생성·수정): 이름 = 모델/고객사/사업장/시리얼 끝자리(마지막 하이픈 뒤), 빈 칸은 건너뜀·모두 비면 "미지정 장비". 시리얼 키 = 일련번호(외부 ID·고유. 일련번호가 비면 시리얼 키를 일련번호로 채워 두 값을 같게). 모든 저장에서 다시 만듦 → 사업장·고객사 이름 변경 Flow가 장비를 저장만 하면 새 이름 by Edwin</description>
+    <environments>Default</environments>
+    <formulas>
+        <description
+    >시리얼 = 일련번호. 일련번호가 비고 시리얼 키만 있으면(외부 ID upsert·예전 데이터) 시리얼 키를 일련번호로 → 두 값을 항상 같게</description>
+        <name>fxSerial</name>
+        <dataType>String</dataType>
+        <expression
+    >IF(ISBLANK({!$Record.SerialNumber}), {!$Record.SerialKey__c}, {!$Record.SerialNumber})</expression>
+    </formulas>
+    <formulas>
+        <description
+    >각 칸 앞에 "/"를 붙여 이음 (빈 칸은 건너뜀). 시리얼 끝자리 = 하이픈을 공백 100개로 바꾼 뒤 오른쪽 100자를 TRIM → 마지막 하이픈 뒤</description>
+        <name>fxJoined</name>
+        <dataType>String</dataType>
+        <expression
+    >IF(ISBLANK({!Get_Product.Name}), &quot;&quot;, &quot;/&quot; &amp; {!Get_Product.Name})
+&amp; IF(ISBLANK({!Get_Account.Name}), &quot;&quot;, &quot;/&quot; &amp; {!Get_Account.Name})
+&amp; IF(ISBLANK({!Get_Site.Name}), &quot;&quot;, &quot;/&quot; &amp; {!Get_Site.Name})
+&amp; IF(ISBLANK({!fxSerial}), &quot;&quot;, &quot;/&quot; &amp; TRIM(RIGHT(SUBSTITUTE({!fxSerial}, &quot;-&quot;, RPAD(&quot; &quot;, 100, &quot; &quot;)), 100)))</expression>
+    </formulas>
+    <formulas>
+        <description
+    >앞의 "/" 하나를 떼고 255자로. 모두 비면 "미지정 장비" (이름은 필수)</description>
+        <name>fxAssetName</name>
+        <dataType>String</dataType>
+        <expression
+    >IF(LEN({!fxJoined}) = 0, &quot;미지정 장비&quot;, LEFT(MID({!fxJoined}, 2, 300), 255))</expression>
+    </formulas>
+    <interviewLabel
+  >장비 이름·시리얼 키 자동 {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>장비 저장 전 - 이름·시리얼 키 자동</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_Product</name>
+        <label>모델 가져오기</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound
+    >true</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Get_Account</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Product2Id</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Product2</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Name</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Account</name>
+        <label>고객사 가져오기</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound
+    >true</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Get_Site</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.AccountId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Account</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Name</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Site</name>
+        <label>사업장 가져오기</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound
+    >true</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Assign_Name_And_Key</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.CustomerSite__c</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>CustomerSite__c</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Name</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_Product</targetReference>
+        </connector>
+        <object>Asset</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

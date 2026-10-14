@@ -46,7 +46,7 @@ export default class AssetDetail extends LightningElement {
 
   // DESC: record-view-form에 그릴 필드 (화면 설계 SC-04 순서)
   basicFields = [
-    "SerialKey__c",
+    "SerialNumber",
     "Product2Id",
     "AccountId",
     "CustomerSite__c",
