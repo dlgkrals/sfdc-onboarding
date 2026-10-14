@@ -4,15 +4,19 @@
 
 ## API
 
-| 메서드 | 경로                       | 인증        | 내용                                                                                                         |
-| ------ | -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------ |
-| GET    | `/health`                  | 없음        | 상태 확인 (시연 전 깨우기용)                                                                                 |
-| GET    | `/`                        | 없음        | 위치별 재고·최근 이력 50건 화면 (읽기 전용, 30초마다 새로 고침)                                              |
-| GET    | `/api/stock?location=CODE` | `x-api-key` | 재고 조회 (IF-04 창고 재고 조회와 같은 형식)                                                                 |
-| POST   | `/api/stock/consume`       | `x-api-key` | 사용 차감 `{ items: [{ refId, locationCode, partCode, quantity, workOrderNumber }] }` (최대 200건)           |
-| POST   | `/api/stock/transfer`      | `x-api-key` | 재고 이동 `{ items: [{ refId, fromLocationCode, toLocationCode, partCode, quantity, reference }] }`          |
-| POST   | `/api/admin/seed`          | `x-api-key` | 초기 재고 적재 `{ reset, locations: [{ code, name, type }], stock: [{ locationCode, partCode, quantity }] }` |
-| POST   | `/api/admin/maintenance`   | `x-api-key` | 시연용 장애 모드 `{ on: true }` → API가 503                                                                  |
+| 메서드 | 경로                          | 인증             | 내용                                                                                                         |
+| ------ | ----------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| GET    | `/health`                     | 없음             | 상태 확인 (시연 전 깨우기용)                                                                                 |
+| GET    | `/`                           | 없음             | 위치별 재고·최근 이력 50건 화면 + ERP 입고·조정 입력 (F5로 새로 고침)                                        |
+| POST   | `/ui/stock/receive`           | 없음 (화면 전용) | 화면의 입고 입력 `{ locationCode, partCode, quantity, note }` — 로직은 `/api/stock/receive`와 같음           |
+| POST   | `/ui/stock/adjust`            | 없음 (화면 전용) | 화면의 조정 입력 `{ locationCode, partCode, quantityChange(±), note }` — 로직은 `/api/stock/adjust`와 같음   |
+| GET    | `/api/movements?after=N`      | `x-api-key`      | 이력 번호 N 이후 변동 (IF-02 역방향, 최대 500건, `latestId` 포함)                                            |
+| POST   | `/api/stock/receive`·`adjust` | `x-api-key`      | ERP 입고·조정 (시스템용)                                                                                     |
+| GET    | `/api/stock?location=CODE`    | `x-api-key`      | 재고 조회 (IF-04 창고 재고 조회와 같은 형식)                                                                 |
+| POST   | `/api/stock/consume`          | `x-api-key`      | 사용 차감 `{ items: [{ refId, locationCode, partCode, quantity, workOrderNumber }] }` (최대 200건)           |
+| POST   | `/api/stock/transfer`         | `x-api-key`      | 재고 이동 `{ items: [{ refId, fromLocationCode, toLocationCode, partCode, quantity, reference }] }`          |
+| POST   | `/api/admin/seed`             | `x-api-key`      | 초기 재고 적재 `{ reset, locations: [{ code, name, type }], stock: [{ locationCode, partCode, quantity }] }` |
+| POST   | `/api/admin/maintenance`      | `x-api-key`      | 시연용 장애 모드 `{ on: true }` → API가 503                                                                  |
 
 - 건별 결과 `status`: `OK`(남은 수량 포함) / `REJECTED`(`code`: `INSUFFICIENT_STOCK`, `UNKNOWN_LOCATION`, `UNKNOWN_PART`, `INVALID_QUANTITY`, `INVALID_REQUEST`)
 - 같은 `refId`(Salesforce 레코드 Id)가 다시 오면 처음 결과를 그대로 돌려줌 (`duplicate: true`) → 재전송해도 두 번 차감되지 않음
@@ -49,7 +53,13 @@ Workers는 잠들지 않지만(첫 요청도 바로 응답), 시연 직전에 �
 Invoke-RestMethod https://hg-erp-mock.<계정>.workers.dev/health   # status = ok 이면 준비 완료
 ```
 
-브라우저에서 `/`(재고 화면)를 열어 두면 시연 중 재고 변화가 30초 안에 보인다(F5로 즉시).
+브라우저에서 `/`(재고 화면)를 열어 두고 F5로 재고 변화를 확인한다. 입고·조정 입력도 이 화면에서 한다.
+
+### 화면 인증 (시연용)
+
+- 재고 화면과 입고·조정 입력(`/ui/…`)은 **시연용이라 인증을 생략**했다. 주소(`*.workers.dev`)를 공개하지 않는다는 전제
+- API 키는 서버 비밀값(`API_KEY`)에만 있고 화면 코드나 브라우저로 나가지 않는다. Salesforce가 쓰는 `/api/…`는 지금처럼 키를 확인(없으면 401)
+- 운영이라면: **사람은 로그인(SSO 등), 시스템(Salesforce)은 API 키**로 인증을 분리한다
 
 ## 로컬 실행 (로그인 없이)
 

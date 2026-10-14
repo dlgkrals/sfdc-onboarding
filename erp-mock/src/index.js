@@ -14,7 +14,8 @@
  *   POST /api/stock/adjust            ERP 재고 조정 (±, 시연 화면에서 입력)              IF-02
  *   POST /api/admin/seed              초기 재고 적재 (Salesforce 현재 재고)
  *   POST /api/admin/maintenance       시연용 장애 모드 켜기·끄기 (켜면 API가 503)
- *   GET  /                            위치별 재고·최근 이력 화면 + 입고·조정 입력 (키는 화면에서 입력, 저장 안 함)
+ *   GET  /                            위치별 재고·최근 이력 화면 + 입고·조정 입력
+ *   POST /ui/stock/receive · adjust   화면 전용 입고·조정 (키 없음, 시연용·주소 비공개 전제. 로직은 /api/와 같음)
  *
  * 업무 결과(성공·거부)는 HTTP 200 + 건별 status. 인증 실패 401, 요청 형식 오류 400, 장애 모드 503
  * 같은 refId(Salesforce 레코드 Id)가 다시 오면 처음 결과를 그대로 돌려줌 (재전송해도 두 번 차감 안 됨)
@@ -32,6 +33,15 @@ export default {
       }
       if (request.method === "GET" && url.pathname === "/") {
         return await renderPage(env);
+      }
+      // DESC: 화면 전용 주소 — 재고 화면의 입고·조정 입력이 키 없이 호출. 서버 안에서 /api/와 같은 로직 실행
+      //       시연용이라 인증 생략(주소 비공개 전제). 키는 서버 환경 변수에만 있고 화면·브라우저로 나가지 않음
+      //       운영이라면 사람은 로그인(SSO 등), 시스템(Salesforce)은 API 키로 분리
+      if (request.method === "POST" && url.pathname === "/ui/stock/receive") {
+        return await receive(request, env);
+      }
+      if (request.method === "POST" && url.pathname === "/ui/stock/adjust") {
+        return await adjust(request, env);
       }
       if (!url.pathname.startsWith("/api/")) {
         return json({ error: "NOT_FOUND" }, 404);
@@ -757,13 +767,13 @@ form.op{display:flex;flex-wrap:wrap;gap:8px;align-items:end} form.op label{displ
 <main>${maintenance === "on" ? '<div class="warn">점검(장애) 모드: API가 503으로 응답합니다.</div>' : ""}
 <div class="grid">${locHtml || '<p class="muted">위치가 없습니다. 초기 재고를 적재하세요.</p>'}</div>
 <section class="card" style="margin-top:16px"><h2>ERP 입고 · 재고 조정 (시연용)</h2>
-<p class="muted" style="margin:0 0 8px;font-size:12px">ERP에서만 생기는 변동입니다. Salesforce가 15분마다 이력을 가져가 변동량만큼 재고를 조정합니다(IF-02). API 키는 이 화면에서만 쓰고 저장하지 않습니다.</p>
+<p class="muted" style="margin:0 0 8px;font-size:12px">ERP에서만 생기는 변동입니다. Salesforce가 15분마다 이력을 가져가 변동량만큼 재고를 조정합니다(IF-02). 시연용 화면이라 로그인 없이 입력합니다.</p>
 <form class="op" id="opForm"><label>작업<select id="opKind"><option value="receive">입고 (+)</option><option value="adjust">조정 (±)</option></select></label>
 <label>위치<select id="opLoc">${locs.map((l) => `<option value="${esc(l.code)}">${esc(l.name)} (${esc(l.code)})</option>`).join("")}</select></label>
 <label>부품 코드<input id="opPart" required placeholder="예: RFG-404A" size="12"></label>
 <label>수량<input id="opQty" type="number" step="0.01" required size="6"></label>
 <label>메모<input id="opNote" placeholder="예: 구매 입고 PO-123" size="18"></label>
-<label>API 키<input id="opKey" type="password" required size="14" autocomplete="off"></label><button type="submit">반영</button></form>
+<button type="submit">반영</button></form>
 <div id="opResult"></div></section>
 <script>
 document.getElementById("opForm").addEventListener("submit", async (e) => {
@@ -774,7 +784,7 @@ document.getElementById("opForm").addEventListener("submit", async (e) => {
   if (kind === "receive") body.quantity = qty; else body.quantityChange = qty;
   const out = document.getElementById("opResult");
   try {
-    const res = await fetch("/api/stock/" + kind, { method: "POST", headers: { "content-type": "application/json", "x-api-key": document.getElementById("opKey").value }, body: JSON.stringify(body) });
+    const res = await fetch("/ui/stock/" + kind, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const data = await res.json();
     if (res.ok && data.status === "OK") { out.textContent = "반영됨: 남은 수량 " + data.remainingQty; setTimeout(() => location.reload(), 800); }
     else { out.textContent = "거부: " + (data.message || data.error || res.status); }
