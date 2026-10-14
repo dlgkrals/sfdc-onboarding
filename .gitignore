@@ -46,3 +46,6 @@ $RECYCLE.BIN/
 **/__pycache__/
 **/.venv/
 **/venv/
+
+# 화면 설계 PDF 출력본 (원본은 docs/d6_screen_design.md)
+docs/d6_screen_design.pdf

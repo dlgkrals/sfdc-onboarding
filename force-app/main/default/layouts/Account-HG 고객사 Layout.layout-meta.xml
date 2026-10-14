@@ -79,6 +79,8 @@
         <detailHeading>false</detailHeading>
         <editHeading>false</editHeading>
         <layoutColumns />
+        <layoutColumns />
+        <layoutColumns />
         <style>CustomLinks</style>
     </layoutSections>
     <platformActionList>
@@ -111,11 +113,22 @@
         <relatedList>CustomerSite__c.Account__c</relatedList>
     </relatedLists>
     <relatedLists>
+        <fields>ASSET.SERIAL_NUMBER</fields>
+        <fields>PRODUCT2.NAME</fields>
+        <fields>CustomerSite__c</fields>
+        <fields>ASSET.STATUS</fields>
+        <fields>ASSET.INSTALL_DATE</fields>
+        <fields>fmWarrantyStatus__c</fields>
+        <fields>HasExtendedWarranty__c</fields>
+        <relatedList>RelatedAssetList</relatedList>
+    </relatedLists>
+    <relatedLists>
         <fields>CASES.CASE_NUMBER</fields>
         <fields>CASES.SUBJECT</fields>
         <fields>CASES.STATUS</fields>
         <relatedList>RelatedCaseList</relatedList>
     </relatedLists>
+    <relatedObjects>ParentId</relatedObjects>
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>false</showHighlightsPanel>
     <showInteractionLogPanel>false</showInteractionLogPanel>
