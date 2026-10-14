@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AllAssets</fullName>
+    <columns>ASSET.SERIAL_NUMBER</columns>
+    <columns>PRODUCT2.NAME</columns>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>CustomerSite__c</columns>
+    <columns>ASSET.STATUS</columns>
+    <columns>ASSET.INSTALL_DATE</columns>
+    <columns>fmWarrantyStatus__c</columns>
+    <columns>HasExtendedWarranty__c</columns>
+    <filterScope>Everything</filterScope>
+    <label>전체 장비</label>
+</ListView>

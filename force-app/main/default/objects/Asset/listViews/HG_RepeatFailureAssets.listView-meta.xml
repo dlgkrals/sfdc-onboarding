@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>HG_RepeatFailureAssets</fullName>
+    <columns>ASSET.SERIAL_NUMBER</columns>
+    <columns>PRODUCT2.NAME</columns>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>CustomerSite__c</columns>
+    <columns>RecentCaseCount__c</columns>
+    <columns>LastCaseDate__c</columns>
+    <columns>fmWarrantyStatus__c</columns>
+    <columns>HasExtendedWarranty__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>RepeatFailure__c</field>
+        <operation>equals</operation>
+        <value>1</value>
+    </filters>
+    <label>반복 고장 장비</label>
+    <sharedTo>
+        <role>HG_ChungcheongCenterManager</role>
+        <role>HG_GyeonggiSouthCenterManager</role>
+        <role>HG_SeoulCenterManager</role>
+        <role>HG_ServiceOpsManager</role>
+    </sharedTo>
+</ListView>
