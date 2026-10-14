@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All</fullName>
+    <columns>NAME</columns>
+    <columns>MovementId__c</columns>
+    <columns>MovementType__c</columns>
+    <columns>LocationCode__c</columns>
+    <columns>PartCode__c</columns>
+    <columns>QuantityChange__c</columns>
+    <columns>Result__c</columns>
+    <columns>Message__c</columns>
+    <columns>CREATED_DATE</columns>
+    <filterScope>Everything</filterScope>
+    <label>전체 기록</label>
+</ListView>
