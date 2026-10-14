@@ -12,16 +12,15 @@
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 LWC: 자식 → 부모 이벤트 화면)
  * 1.1    2026-10-14    Edwin     차량 재고 선택지에 남은 수량 0 포함(available), 0인 재고로 저장 거부 (D8 화면 개선)
  * 1.2    2026-10-14    Edwin     남은 수량보다 많이 쓰는 입력 거부 (D8 결정, 정확히 남은 수량은 허용)
+ * 1.3    2026-10-14    Edwin     안내 문구·단위 표기를 VanStockService로 (트리거와 같은 문구, 보안 점검 R1)
  * ----------------------------------------------------------------------------
- * @see workOrderParts, partAddForm (LWC), ProductConsumedTriggerHandler, docs/d7_lwc_memo.md 3절
+ * @see workOrderParts, partAddForm (LWC), ProductConsumedTriggerHandler, VanStockService, docs/d7_lwc_memo.md 3절
  */
 // DESC: 화면은 실행 사용자 권한대로 → with sharing + 조회·저장 USER_MODE (기사는 자기 출동·자기 차량 재고만)
 public with sharing class WorkOrderPartsController {
   // DESC: 출동 한 건의 사용 부품은 많아야 수십 건. 화면 보호용 상한
   private static final Integer MAX_ROWS = 200;
   private static final String LOCATION_TYPE_VAN = 'Van';
-  private static final String UNIT_EACH = 'Each';
-  private static final String UNIT_KG = 'kg';
 
   /**
    * @description 출동의 사용 부품 목록과 합계
@@ -162,19 +161,14 @@ public with sharing class WorkOrderPartsController {
     if (items.isEmpty()) {
       throw toAuraException(System.Label.MSG_PART_SELECT_REQUIRED);
     }
-    if (items[0].QuantityOnHand == null || items[0].QuantityOnHand <= 0) {
-      throw toAuraException(System.Label.MSG_STOCK_EMPTY);
-    }
     // WARN: 차량 재고보다 많이 쓰면 거부. ERP 입고는 역방향 동기화(15분) 뒤에 반영되므로 그 사이엔 적게 보일 수 있음 (decision-log 18)
-    if (quantity > items[0].QuantityOnHand) {
+    //       같은 검사를 트리거(VanStockService.rejectOverStock)도 함 — 여기는 저장 전에 바로 안내하려는 것
+    Decimal onHand = items[0].QuantityOnHand == null
+      ? 0
+      : items[0].QuantityOnHand;
+    if (onHand <= 0 || quantity > onHand) {
       throw toAuraException(
-        String.format(
-          System.Label.MSG_STOCK_SHORT,
-          new List<String>{
-            items[0].QuantityOnHand.stripTrailingZeros().toPlainString(),
-            unitLabelOf(items[0].QuantityUnitOfMeasure)
-          }
-        )
+        VanStockService.stockMessage(onHand, items[0].QuantityUnitOfMeasure)
       );
     }
     ProductConsumed part = new ProductConsumed(
@@ -193,16 +187,9 @@ public with sharing class WorkOrderPartsController {
     }
   }
 
-  // DESC: 단위 값 → 화면 표기 (Custom Label 한 곳에서 관리, 수식 필드 fmErpRemainingQty__c와 같은 규칙)
-  @TestVisible
+  // DESC: 단위 값 → 화면 표기 (규칙은 VanStockService 한 곳)
   private static String unitLabelOf(String unit) {
-    if (unit == UNIT_EACH) {
-      return System.Label.MISC_UNIT_EACH;
-    }
-    if (unit == UNIT_KG) {
-      return System.Label.MISC_UNIT_KG;
-    }
-    return unit == null ? '' : unit;
+    return VanStockService.unitLabelOf(unit);
   }
 
   private static Map<String, String> labelsOf(

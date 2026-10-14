@@ -1,6 +1,6 @@
 /**
  * @description 사용 부품(ProductConsumed) 트리거 핸들러
- *              before insert : 전부 유·무상 자동 판정 (판정은 insert 시점 스냅샷)
+ *              before insert : 차량 재고 초과 사용 거부(모든 입력 경로), 유·무상 자동 판정 (판정은 insert 시점 스냅샷)
  *              최종 판정(ChargeType__c)은 비어 있을 때만 채움 (WarrantyService)
  *              after insert  : ERP 재고 차감 전송 예약 (IF-03, Queueable 비동기 — 트리거에서는 콜아웃 불가)
  *              before delete : ERP에 반영됐거나 반영 여부를 모르는 사용 기록은 삭제 거부 (ERP 되돌림 API 없음)
@@ -16,13 +16,16 @@
  * 1.1    2026-10-11    Edwin     before update 재판정 제거 (출동·재고·부품은 생성 후 수정 불가)
  * 1.2    2026-10-13    Edwin     after insert ERP 전송 예약, before delete 삭제 규칙 (D7 ERP 연동)
  * 1.3    2026-10-13    Edwin     after delete 재고 되돌림, after undelete 복원 거부 (decision-log 11 A안)
+ * 1.4    2026-10-14    Edwin     before insert 차량 재고 초과 거부 (D8 보안 점검 R1: 표준 새로 만들기 등 화면 밖 경로도 차단)
  * ----------------------------------------------------------------------------
- * @see ProductConsumedTrigger, WarrantyService, ErpInventoryService, TriggerHandler
+ * @see ProductConsumedTrigger, VanStockService, WarrantyService, ErpInventoryService, TriggerHandler
  */
 // NOTE: WorkOrderId·ProductItemId·Product2Id는 생성 후 수정할 수 없으므로 판정 근거가 바뀌는 update가 없음.
 //       부품을 바꾸려면 삭제 후 다시 입력 → 새 insert에서 다시 판정됨 (단, ERP 반영 전·실패한 것만 삭제 가능)
 public with sharing class ProductConsumedTriggerHandler extends TriggerHandler {
   protected override void beforeInsert() {
+    // DESC: 화면 검사는 우회할 수 있으므로 서버에서 한 번 더 (메시지는 부품 추가 화면과 같음)
+    VanStockService.rejectOverStock((List<ProductConsumed>) Trigger.new);
     WarrantyService.judgeChargeTypes((List<ProductConsumed>) Trigger.new);
   }
 
