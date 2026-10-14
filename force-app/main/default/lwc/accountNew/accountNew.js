@@ -15,6 +15,10 @@
  *   - 유형 API 이름: @wire Apex AccountNewController.getRecordTypeDeveloperName (getObjectInfo에는 API 이름이 없음)
  *   - 주소 검색: 자식 addressSearch (addressselected 이벤트)
  * ----------------------------------------------------------------------------
+ * 변경 이력
+ * 1.0  2026-10-14  Edwin  최초 작성 (D8 새로 만들기 재정의)
+ * 1.1  2026-10-14  Edwin  저장·취소로 나갈 때 입력값·주소·고른 유형 초기화 (재정의 화면이 캐시돼 이전 값이 남던 결함)
+ * ----------------------------------------------------------------------------
  * @see accountNewOverride (Aura), addressSearch, AccountNewController
  */
 import { LightningElement, api, wire } from "lwc";
@@ -175,6 +179,7 @@ export default class AccountNew extends NavigationMixin(LightningElement) {
   handleSuccess(event) {
     this.isSaving = false;
     this.toast(MSG_ACCOUNT_CREATED, "", "success");
+    this.resetForm();
     this[NavigationMixin.Navigate]({
       type: "standard__recordPage",
       attributes: { recordId: event.detail.id, actionName: "view" }
@@ -192,10 +197,22 @@ export default class AccountNew extends NavigationMixin(LightningElement) {
   }
 
   handleCancel() {
+    this.resetForm();
     this[NavigationMixin.Navigate]({
       type: "standard__objectPage",
       attributes: { objectApiName: "Account", actionName: "home" }
     });
+  }
+
+  // DESC: 화면을 처음 상태로 — 재정의 화면은 나갔다 와도 컴포넌트가 재사용될 수 있음(Aura 래퍼도 다시 그림)
+  resetForm() {
+    this.selected = undefined;
+    this.detailAddress = "";
+    this.chosenRecordTypeId = undefined;
+    this.isSaving = false;
+    this.template
+      .querySelectorAll("lightning-input-field")
+      .forEach((field) => field.reset());
   }
 
   toast(title, message, variant) {

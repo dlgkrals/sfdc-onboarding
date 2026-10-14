@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-expressions */
 ({
   // DESC: 부모 고객사 Id 찾기 ① inContextOfRef("1." + base64 JSON 페이지 참조) ② defaultFieldValues("Account__c=Id")
-  readState: function (component) {
+  //       그다음 LWC를 지웠다가 다시 그려 이전 입력이 남지 않게 함 (재정의 화면 캐시 대응)
+  readState: function (component, event, helper) {
     var state = (component.get("v.pageReference") || {}).state || {};
     var parentId = null;
     var context = state.inContextOfRef;
@@ -27,5 +28,6 @@
       parentId = match ? match[1] : null;
     }
     component.set("v.parentAccountId", parentId);
+    helper.rerender(component);
   }
 });

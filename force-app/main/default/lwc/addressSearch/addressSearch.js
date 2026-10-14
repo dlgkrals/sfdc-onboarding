@@ -11,6 +11,9 @@
  * 자식→부모 이벤트: addressselected  detail = { roadAddress, roadAddressPart1, roadAddressNote, jibunAddress,
  *   postalCode, sido, sigungu, eupMyeonDong, adminDistrictCode, buildingName }
  * ----------------------------------------------------------------------------
+ * 변경 이력
+ * 1.1  2026-10-14  Edwin  검색칸 Enter = 바로 검색 (등록 화면 폼 안에서 Enter가 저장으로 이어지던 결함)
+ * ----------------------------------------------------------------------------
  * @see AddressSearchController
  */
 import { LightningElement, api } from "lwc";
@@ -99,6 +102,22 @@ export default class AddressSearch extends LightningElement {
       this.keyword = value;
       this.search(1);
     }, SEARCH_DELAY_MS);
+  }
+
+  // DESC: Enter는 바로 검색. 부모 화면의 lightning-record-edit-form 안에서 Enter가 폼 저장으로 이어지지 않게 막음
+  //       (2026-10-14 실제 org: 고객사 등록에서 검색어 + Enter → 주소 없이 고객사 저장됨)
+  handleKeyDown(event) {
+    if (event.key !== "Enter") {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    const value = (event.target.value || "").trim();
+    if (value.length >= MIN_KEYWORD_LENGTH) {
+      clearTimeout(this.searchTimer);
+      this.keyword = value;
+      this.search(1);
+    }
   }
 
   handleMore() {

@@ -12,6 +12,7 @@
  * 변경 이력
  * 1.0  2026-10-14  Edwin  최초 작성 (D8 새로 만들기 재정의)
  * 1.1  2026-10-14  Edwin  센터 선택 칸 삭제 → 자동 지정 표시만, 주소 검색 필수, 저장 후 Apex 반영 단계 삭제 (D8 센터 완전 자동)
+ * 1.2  2026-10-14  Edwin  저장·취소로 나갈 때 입력값·주소·센터 표시 초기화 (재정의 화면이 캐시돼 이전 값이 남던 결함)
  * ----------------------------------------------------------------------------
  * 데이터 방식
  *   - 입력·저장: lightning-record-edit-form (LDS) — 사용자 권한·검증 규칙 그대로. onsubmit에서 주소 필드를 더해 submit(fields)
@@ -186,6 +187,7 @@ export default class CustomerSiteNew extends NavigationMixin(LightningElement) {
   handleSuccess(event) {
     this.isSaving = false;
     this.toast(MSG_SITE_CREATED, "", "success");
+    this.resetForm();
     this.navigateToRecord(event.detail.id);
   }
 
@@ -201,6 +203,7 @@ export default class CustomerSiteNew extends NavigationMixin(LightningElement) {
 
   // DESC: 취소 → 관련 목록에서 열었으면 그 고객사로, 아니면 사업장 목록으로
   handleCancel() {
+    this.resetForm();
     if (this.effectiveParentId) {
       this.navigateToRecord(this.effectiveParentId);
       return;
@@ -209,6 +212,17 @@ export default class CustomerSiteNew extends NavigationMixin(LightningElement) {
       type: "standard__objectPage",
       attributes: { objectApiName: "CustomerSite__c", actionName: "home" }
     });
+  }
+
+  // DESC: 화면을 처음 상태로 — 재정의 화면은 나갔다 와도 컴포넌트가 재사용될 수 있음(Aura 래퍼도 다시 그림)
+  resetForm() {
+    this.selected = undefined;
+    this.mappedCenter = undefined;
+    this.detailAddress = "";
+    this.isSaving = false;
+    this.template
+      .querySelectorAll("lightning-input-field")
+      .forEach((field) => field.reset());
   }
 
   navigateToRecord(recordId) {
