@@ -8,6 +8,7 @@
  * 변경 이력
  * 1.0  2026-10-13  Edwin  최초 작성 (D7)
  * 1.1  2026-10-14  Edwin  재고 선택을 "부품 이름 · 위치 · 남은 수량(단위)" 목록으로, 남은 수량 0은 비활성 (D8)
+ * 1.2  2026-10-14  Edwin  남은 수량보다 많이 쓰면 거부 (화면 + 서버, D8 결정)
  * ----------------------------------------------------------------------------
  * 데이터 방식
  *   - 재고 선택지: @wire Apex (WorkOrderPartsController.getVanStock, cacheable=true, with sharing + USER_MODE)
@@ -35,6 +36,7 @@ import BTN_ADD_PART from "@salesforce/label/c.BTN_ADD_PART";
 import MSG_NO_VAN_STOCK from "@salesforce/label/c.MSG_NO_VAN_STOCK";
 import MSG_PART_SELECT_REQUIRED from "@salesforce/label/c.MSG_PART_SELECT_REQUIRED";
 import MSG_QUANTITY_INVALID from "@salesforce/label/c.MSG_QUANTITY_INVALID";
+import MSG_STOCK_SHORT from "@salesforce/label/c.MSG_STOCK_SHORT";
 import MSG_LOAD_ERROR from "@salesforce/label/c.MSG_LOAD_ERROR";
 import MSG_SAVE_ERROR from "@salesforce/label/c.MSG_SAVE_ERROR";
 
@@ -112,18 +114,42 @@ export default class PartAddForm extends LightningElement {
   handleStockChange(event) {
     this.selectedItemId = event.target.value;
     this.stockError = undefined;
+    this.clearShortage();
   }
 
   handleQuantityChange(event) {
     this.quantity = event.target.value;
+    this.clearShortage();
+  }
+
+  clearShortage() {
+    this.template.querySelector("lightning-input")?.setCustomValidity("");
+  }
+
+  // DESC: 남은 수량보다 많이 쓰면 "차량 재고가 부족합니다(남은 n단위)…" (서버 addPart도 같은 규칙으로 거부)
+  //       정확히 남은 수량만큼은 허용
+  shortageMessage() {
+    const selected = this.stock.find(
+      (item) => item.productItemId === this.selectedItemId
+    );
+    if (!selected || Number(this.quantity) <= selected.quantityOnHand) {
+      return "";
+    }
+    return MSG_STOCK_SHORT.replace(
+      "{0}",
+      Number(selected.quantityOnHand)
+    ).replace("{1}", selected.unitLabel);
   }
 
   async handleAdd() {
-    // DESC: 재고 미선택은 직접, 수량 필수·범위는 Base Component가 검사. 서버(addPart)도 한 번 더 검사
+    // DESC: 재고 미선택은 직접, 수량 필수·범위는 Base Component, 재고 부족은 setCustomValidity. 서버(addPart)도 한 번 더 검사
     this.stockError = this.selectedItemId
       ? undefined
       : MSG_PART_SELECT_REQUIRED;
     const quantityInput = this.template.querySelector("lightning-input");
+    if (quantityInput) {
+      quantityInput.setCustomValidity(this.shortageMessage());
+    }
     const quantityValid = quantityInput ? quantityInput.reportValidity() : true;
     if (this.stockError || !quantityValid) {
       return;

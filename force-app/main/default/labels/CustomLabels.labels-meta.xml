@@ -606,6 +606,16 @@
         <value>재고 없음</value>
     </labels>
     <labels>
+        <fullName>MSG_STOCK_SHORT</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >차량 재고가 부족합니다(남은 {0}{1}). 창고에서 재고 이동으로 먼저 채워 주세요.</shortDescription>
+        <value
+    >차량 재고가 부족합니다(남은 {0}{1}). 창고에서 재고 이동으로 먼저 채워 주세요.</value>
+    </labels>
+    <labels>
         <fullName>MSG_STOCK_EMPTY</fullName>
         <categories>HG_WorkOrderParts</categories>
         <language>en_US</language>

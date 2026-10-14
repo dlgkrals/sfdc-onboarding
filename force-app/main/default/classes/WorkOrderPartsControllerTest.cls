@@ -8,6 +8,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 LWC: 출동 사용 부품 화면)
  * 1.1    2026-10-14    Edwin     빈 재고 비활성·저장 거부, 기사 runAs 자기 차량만·빈 재고 거부 (D8 화면 개선)
+ * 1.2    2026-10-14    Edwin     남은 수량 초과 거부(불허)·정확히 남은 수량 허용(경계)
  * ----------------------------------------------------------------------------
  * @see WorkOrderPartsController
  */
@@ -170,6 +171,57 @@ private class WorkOrderPartsControllerTest {
 
     Assert.areEqual(System.Label.MSG_STOCK_EMPTY, message, '안내 문구');
     Assert.areEqual(0, [SELECT COUNT() FROM ProductConsumed], '저장 안 됨');
+  }
+
+  // 불허: 남은 수량보다 많이 쓰면 거부 — "차량 재고가 부족합니다(남은 n단위)…"
+  @isTest
+  static void rejectOverRemainingQuantity() {
+    String message;
+
+    Test.startTest();
+    try {
+      WorkOrderPartsController.addPart(
+        getWorkOrder().Id,
+        getItem('General').Id,
+        VAN_QUANTITY + 0.5
+      );
+    } catch (AuraHandledException e) {
+      message = e.getMessage();
+    }
+    Test.stopTest();
+
+    Assert.areEqual(
+      String.format(
+        System.Label.MSG_STOCK_SHORT,
+        new List<String>{
+          String.valueOf(VAN_QUANTITY.intValue()),
+          System.Label.MISC_UNIT_KG
+        }
+      ),
+      message,
+      '안내 문구 (남은 300kg)'
+    );
+    Assert.areEqual(0, [SELECT COUNT() FROM ProductConsumed], '저장 안 됨');
+    Assert.areEqual(
+      VAN_QUANTITY,
+      getItem('General').QuantityOnHand,
+      '재고 그대로'
+    );
+  }
+
+  // 정상(경계): 정확히 남은 수량만큼은 허용 → 차량 재고 0
+  @isTest
+  static void normalExactRemainingQuantityAllowed() {
+    Test.startTest();
+    Id partId = WorkOrderPartsController.addPart(
+      getWorkOrder().Id,
+      getItem('General').Id,
+      VAN_QUANTITY
+    );
+    Test.stopTest();
+
+    Assert.isNotNull(partId, '저장됨');
+    Assert.areEqual(0, getItem('General').QuantityOnHand, '남은 수량 0');
   }
 
   // 정상: 부품 추가 → 저장, 트리거가 유·무상 판정, 표준이 차량 재고 차감

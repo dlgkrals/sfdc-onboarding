@@ -11,6 +11,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 LWC: 자식 → 부모 이벤트 화면)
  * 1.1    2026-10-14    Edwin     차량 재고 선택지에 남은 수량 0 포함(available), 0인 재고로 저장 거부 (D8 화면 개선)
+ * 1.2    2026-10-14    Edwin     남은 수량보다 많이 쓰는 입력 거부 (D8 결정, 정확히 남은 수량은 허용)
  * ----------------------------------------------------------------------------
  * @see workOrderParts, partAddForm (LWC), ProductConsumedTriggerHandler, docs/d7_lwc_memo.md 3절
  */
@@ -153,7 +154,7 @@ public with sharing class WorkOrderPartsController {
     }
     // DESC: 화면에서 비활성이어도 서버에서 한 번 더 (화면 검사는 우회할 수 있음). 사용자 권한으로 보이는 재고만
     List<ProductItem> items = [
-      SELECT QuantityOnHand
+      SELECT QuantityOnHand, QuantityUnitOfMeasure
       FROM ProductItem
       WHERE Id = :productItemId
       WITH USER_MODE
@@ -163,6 +164,18 @@ public with sharing class WorkOrderPartsController {
     }
     if (items[0].QuantityOnHand == null || items[0].QuantityOnHand <= 0) {
       throw toAuraException(System.Label.MSG_STOCK_EMPTY);
+    }
+    // WARN: 차량 재고보다 많이 쓰면 거부. ERP 입고는 역방향 동기화(15분) 뒤에 반영되므로 그 사이엔 적게 보일 수 있음 (decision-log 18)
+    if (quantity > items[0].QuantityOnHand) {
+      throw toAuraException(
+        String.format(
+          System.Label.MSG_STOCK_SHORT,
+          new List<String>{
+            items[0].QuantityOnHand.stripTrailingZeros().toPlainString(),
+            unitLabelOf(items[0].QuantityUnitOfMeasure)
+          }
+        )
+      );
     }
     ProductConsumed part = new ProductConsumed(
       WorkOrderId = workOrderId,
