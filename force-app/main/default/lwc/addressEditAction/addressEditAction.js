@@ -1,29 +1,30 @@
 /**
  * @description 빠른 작업 "주소 검색" (사업장 CustomerSite__c · 고객사 Account 공용)
- *              공통 addressSearch로 주소 선택 → 상세주소 입력 → (사업장) 서비스센터 확인 → 저장
- *              - 사업장: 도로명주소·참고항목·상세주소·우편번호·시도·시군구·행정구역 코드 + 서비스센터
- *                · 센터장·관리자: 매핑으로 미리 채운 센터를 바꿔서 저장 가능
- *                · 상담원: 센터는 고를 수 없고, 저장하면 서버가 주소 기준 매핑 센터를 시스템 모드로 반영
+ *              공통 addressSearch로 주소 선택 → 상세주소 입력 → 저장
+ *              - 사업장: 도로명주소·참고항목·상세주소·우편번호·시도·시군구·행정구역 코드
+ *                · 서비스센터는 누구도 고르지 않음: 주소 매핑으로 자동 지정(트리거). 화면은 지정될 센터를 보여 주기만 함
+ *                · 매핑 없는 주소는 저장 버튼을 막고 "관리자에게 매핑 추가 요청" 안내 (D8 결정)
  *              - 고객사: 청구지 국가 KR, 시도 비움, 시 = 시군구, 번지 = 도로명주소(+상세주소), 우편번호
  * @layer       LWC
  * @author      Edwin
  * @date        2026-10-13
  * ----------------------------------------------------------------------------
+ * 변경 이력
+ * 1.0  2026-10-13  Edwin  최초 작성
+ * 1.1  2026-10-14  Edwin  사업장 센터 선택 칸 삭제 → 자동 지정 표시만, 매핑 없으면 저장 막음 (D8 센터 완전 자동)
+ * ----------------------------------------------------------------------------
  * 데이터 방식
  *   - 주소 검색: 자식 addressSearch (imperative Apex) → addressselected 이벤트로 받음 (자식→부모)
- *   - 현재 값·센터 수정 권한·센터 선택지: LDS @wire (getRecord · getObjectInfo · getPicklistValues)
- *     레코드·메타데이터 읽기는 Apex 불필요, 사용자 권한(FLS) 정보도 같이 옴
+ *   - 센터 표시 이름: LDS @wire (getObjectInfo · getPicklistValues) — 매핑 결과(API 값)를 화면 이름으로
  *   - 저장
- *     · 사업장: imperative Apex saveSiteAddress — 상담원의 센터 반영은 시스템 모드가 필요해 LDS로는 불가
+ *     · 사업장: imperative Apex saveSiteAddress — 주소는 사용자 권한으로 저장, 센터는 트리거가 매핑으로 채움
  *       저장 후 notifyRecordUpdateAvailable로 레코드 화면 갱신
  *     · 고객사: LDS updateRecord — 사용자 권한·검증 규칙 그대로, Apex 불필요
  * ----------------------------------------------------------------------------
- * @see addressSearch, AddressSearchController, CustomerSiteAddressService, ServiceCenterMappingService
+ * @see addressSearch, AddressSearchController, CustomerSiteAddressService, CustomerSiteTriggerHandler
  */
 import { LightningElement, api, wire } from "lwc";
 import {
-  getRecord,
-  getFieldValue,
   updateRecord,
   notifyRecordUpdateAvailable
 } from "lightning/uiRecordApi";
@@ -41,10 +42,8 @@ import LABEL_SELECTED_ADDRESS from "@salesforce/label/c.LABEL_SELECTED_ADDRESS";
 import LABEL_DETAIL_ADDRESS from "@salesforce/label/c.LABEL_DETAIL_ADDRESS";
 import LABEL_SERVICE_CENTER from "@salesforce/label/c.LABEL_SERVICE_CENTER";
 import LABEL_POSTAL_CODE from "@salesforce/label/c.LABEL_POSTAL_CODE";
-import MSG_CENTER_AUTO from "@salesforce/label/c.MSG_CENTER_AUTO";
-import MSG_CENTER_MANUAL from "@salesforce/label/c.MSG_CENTER_MANUAL";
-import MSG_CENTER_READONLY from "@salesforce/label/c.MSG_CENTER_READONLY";
-import MSG_CENTER_READONLY_NONE from "@salesforce/label/c.MSG_CENTER_READONLY_NONE";
+import MSG_CENTER_ASSIGNED from "@salesforce/label/c.MSG_CENTER_ASSIGNED";
+import MSG_CENTER_NO_MAPPING from "@salesforce/label/c.MSG_CENTER_NO_MAPPING";
 import MSG_SELECT_ADDRESS_FIRST from "@salesforce/label/c.MSG_SELECT_ADDRESS_FIRST";
 import MSG_ADDRESS_SAVED from "@salesforce/label/c.MSG_ADDRESS_SAVED";
 import MSG_SAVE_ERROR from "@salesforce/label/c.MSG_SAVE_ERROR";
@@ -74,22 +73,15 @@ export default class AddressEditAction extends LightningElement {
 
   selected;
   detailAddress = "";
-  serviceCenter;
   mappedCenter;
   centerOptions = [];
-  centerUpdateable = false;
   siteRecordTypeId;
   isSaving = false;
 
-  // DESC: 사업장의 현재 서비스센터 (매핑이 없을 때 기본값으로 표시)
-  @wire(getRecord, { recordId: "$siteRecordId", fields: [SITE_CENTER_FIELD] })
-  wiredSite;
-
-  // DESC: 서비스센터 필드 수정 권한(센터장·관리자만) + picklist 조회용 레코드 유형
+  // DESC: 센터 표시 이름(picklist 라벨) 조회용 레코드 유형
   @wire(getObjectInfo, { objectApiName: "$siteObjectApiName" })
   wiredSiteInfo({ data }) {
     if (data) {
-      this.centerUpdateable = data.fields.ServiceCenter__c?.updateable === true;
       this.siteRecordTypeId = data.defaultRecordTypeId;
     }
   }
@@ -112,10 +104,6 @@ export default class AddressEditAction extends LightningElement {
   }
 
   // DESC: 사업장일 때만 사업장 관련 @wire가 돌도록 (고객사에서는 undefined → wire 대기)
-  get siteRecordId() {
-    return this.isSite ? this.recordId : undefined;
-  }
-
   get siteObjectApiName() {
     return this.isSite ? SITE_OBJECT : undefined;
   }
@@ -124,25 +112,27 @@ export default class AddressEditAction extends LightningElement {
     return !!this.selected;
   }
 
+  // DESC: 사업장은 매핑 없는 주소면 저장 불가 (서버 트리거도 같은 규칙으로 거부)
   get isSaveDisabled() {
-    return !this.selected || this.isSaving;
-  }
-
-  get centerDisabled() {
-    return !this.centerUpdateable;
+    return (
+      !this.selected || this.isSaving || (this.isSite && !this.mappedCenter)
+    );
   }
 
   get centerMessage() {
-    if (!this.centerUpdateable) {
-      if (!this.mappedCenter) {
-        return MSG_CENTER_READONLY_NONE;
-      }
-      const label =
-        this.centerOptions.find((o) => o.value === this.mappedCenter)?.label ||
-        this.mappedCenter;
-      return MSG_CENTER_READONLY.replace("{0}", label);
+    if (!this.mappedCenter) {
+      return MSG_CENTER_NO_MAPPING;
     }
-    return this.mappedCenter ? MSG_CENTER_AUTO : MSG_CENTER_MANUAL;
+    const label =
+      this.centerOptions.find((o) => o.value === this.mappedCenter)?.label ||
+      this.mappedCenter;
+    return MSG_CENTER_ASSIGNED.replace("{0}", label);
+  }
+
+  get centerMessageClass() {
+    return this.mappedCenter
+      ? "slds-text-body_regular"
+      : "slds-text-body_regular slds-text-color_error";
   }
 
   get previewAddress() {
@@ -161,22 +151,15 @@ export default class AddressEditAction extends LightningElement {
   handleAddressSelected(event) {
     this.selected = event.detail;
     this.mappedCenter = event.detail.serviceCenter;
-    // DESC: 매핑이 있으면 미리 채움, 없으면 현재 값 표시 (센터장·관리자는 바꿀 수 있음)
-    this.serviceCenter =
-      this.mappedCenter ||
-      getFieldValue(this.wiredSite?.data, SITE_CENTER_FIELD);
   }
 
   handleReselect() {
     this.selected = undefined;
+    this.mappedCenter = undefined;
   }
 
   handleDetailChange(event) {
     this.detailAddress = event.target.value || "";
-  }
-
-  handleCenterChange(event) {
-    this.serviceCenter = event.detail.value;
   }
 
   handleCancel() {
@@ -217,7 +200,7 @@ export default class AddressEditAction extends LightningElement {
     }
   }
 
-  // DESC: 센터 값은 센터장·관리자일 때만 서버가 사용. 상담원은 서버가 행정구역 코드로 다시 매핑
+  // DESC: 센터는 보내지 않음 — 서버 트리거가 행정구역 코드로 매핑
   buildSiteAddress() {
     const a = this.selected;
     return {
@@ -228,7 +211,7 @@ export default class AddressEditAction extends LightningElement {
       sido: a.sido,
       sigungu: a.sigungu,
       adminDistrictCode: a.adminDistrictCode,
-      serviceCenter: this.centerUpdateable ? this.serviceCenter : null
+      serviceCenter: null
     };
   }
 

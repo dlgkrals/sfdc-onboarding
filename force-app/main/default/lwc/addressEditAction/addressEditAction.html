@@ -24,20 +24,12 @@
         onchange={handleDetailChange}
       ></lightning-input>
 
+      <!-- 사업장: 서비스센터는 고르지 않고 주소로 자동 지정 (표시만) -->
       <template lwc:if={isSite}>
-        <lightning-combobox
-          class="slds-m-top_small"
-          label={labels.LABEL_SERVICE_CENTER}
-          value={serviceCenter}
-          options={centerOptions}
-          disabled={centerDisabled}
-          onchange={handleCenterChange}
-        ></lightning-combobox>
-        <p
-          class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small"
-        >
-          {centerMessage}
-        </p>
+        <div class="slds-m-top_small">
+          <p class="slds-text-title">{labels.LABEL_SERVICE_CENTER}</p>
+          <p class={centerMessageClass}>{centerMessage}</p>
+        </div>
       </template>
     </template>
 

@@ -363,45 +363,6 @@
         <value>서비스센터</value>
     </labels>
     <labels>
-        <fullName>MSG_CENTER_AUTO</fullName>
-        <categories>HG_Address</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription
-    >주소로 자동 지정했습니다. 저장 전에 바꿀 수 있습니다.</shortDescription>
-        <value>주소로 자동 지정했습니다. 저장 전에 바꿀 수 있습니다.</value>
-    </labels>
-    <labels>
-        <fullName>MSG_CENTER_MANUAL</fullName>
-        <categories>HG_Address</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription
-    >이 주소는 자동 지정 대상이 아닙니다. 서비스센터를 직접 선택하세요.</shortDescription>
-        <value
-    >이 주소는 자동 지정 대상이 아닙니다. 서비스센터를 직접 선택하세요.</value>
-    </labels>
-    <labels>
-        <fullName>MSG_CENTER_READONLY</fullName>
-        <categories>HG_Address</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription
-    >저장하면 주소 기준으로 서비스센터가 자동 지정됩니다: {0} (직접 변경은 센터장·관리자)</shortDescription>
-        <value
-    >저장하면 주소 기준으로 서비스센터가 자동 지정됩니다: {0} (직접 변경은 센터장·관리자)</value>
-    </labels>
-    <labels>
-        <fullName>MSG_CENTER_READONLY_NONE</fullName>
-        <categories>HG_Address</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription
-    >이 주소는 자동 지정 대상이 아니라 서비스센터는 그대로 둡니다. 변경은 센터장에게 요청하세요.</shortDescription>
-        <value
-    >이 주소는 자동 지정 대상이 아니라 서비스센터는 그대로 둡니다. 변경은 센터장에게 요청하세요.</value>
-    </labels>
-    <labels>
         <fullName>MSG_SELECT_ADDRESS_FIRST</fullName>
         <categories>HG_Address</categories>
         <language>en_US</language>
@@ -560,14 +521,41 @@
         <value>고객사를 등록했습니다</value>
     </labels>
     <labels>
-        <fullName>MSG_CENTER_AFTER_SAVE</fullName>
-        <categories>HG_RecordNew</categories>
+        <fullName>MSG_ADDRESS_SEARCH_REQUIRED</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>주소 검색으로 주소를 선택해 주세요</shortDescription>
+        <value>주소 검색으로 주소를 선택해 주세요</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CENTER_NO_MAPPING</fullName>
+        <categories>HG_Address</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription
-    >상담원은 서비스센터를 고를 수 없습니다. 저장하면 주소 기준으로 자동 지정됩니다.</shortDescription>
+    >이 주소는 담당 센터를 자동 지정할 수 없습니다. 관리자에게 매핑 추가를 요청하세요</shortDescription>
         <value
-    >상담원은 서비스센터를 고를 수 없습니다. 저장하면 주소 기준으로 자동 지정됩니다.</value>
+    >이 주소는 담당 센터를 자동 지정할 수 없습니다. 관리자에게 매핑 추가를 요청하세요</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CENTER_AUTO_ONLY</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >담당 서비스센터는 주소로 자동 지정되어 직접 바꿀 수 없습니다. 예외는 관리자가 매핑을 고쳐 처리합니다</shortDescription>
+        <value
+    >담당 서비스센터는 주소로 자동 지정되어 직접 바꿀 수 없습니다. 예외는 관리자가 매핑을 고쳐 처리합니다</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CENTER_ASSIGNED</fullName>
+        <categories>HG_Address</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >주소로 담당 서비스센터가 자동 지정됩니다: {0}</shortDescription>
+        <value>주소로 담당 서비스센터가 자동 지정됩니다: {0}</value>
     </labels>
     <labels>
         <fullName>LABEL_PARTS_TITLE</fullName>

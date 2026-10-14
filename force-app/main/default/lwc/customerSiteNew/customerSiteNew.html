@@ -28,16 +28,15 @@
           <lightning-input-field
             field-name="UsageType__c"
           ></lightning-input-field>
-          <lightning-input-field
-            field-name="ServiceCenter__c"
-            value={serviceCenter}
-            onchange={handleCenterChange}
-          ></lightning-input-field>
-          <p
-            class="slds-text-body_small slds-text-color_weak slds-m-bottom_small slds-p-horizontal_xx-small"
+          <!-- 서비스센터: 고르지 않음. 주소로 자동 지정될 센터를 표시만 -->
+          <div
+            class="slds-form-element slds-m-bottom_small slds-p-horizontal_xx-small"
           >
-            {centerMessage}
-          </p>
+            <span class="slds-form-element__label"
+              >{labels.LABEL_SERVICE_CENTER}</span
+            >
+            <p class={centerMessageClass}>{centerMessage}</p>
+          </div>
           <lightning-input-field
             field-name="OnSiteContactName__c"
           ></lightning-input-field>
@@ -91,7 +90,7 @@
             <p
               class="slds-text-body_small slds-text-color_weak slds-m-bottom_x-small"
             >
-              {labels.MSG_ADDRESS_LATER}
+              {labels.MSG_ADDRESS_SEARCH_REQUIRED}
             </p>
             <c-address-search
               onaddressselected={handleAddressSelected}

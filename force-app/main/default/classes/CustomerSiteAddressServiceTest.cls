@@ -1,6 +1,6 @@
 /**
  * @description CustomerSiteAddressService · AddressSearchController.saveSiteAddress 테스트
- *              상담원은 센터를 직접 못 고치지만 주소 저장 시 매핑 센터가 시스템 모드로 반영되는지
+ *              누구든 주소를 저장하면 서비스센터는 매핑으로 자동 지정(트리거), 매핑 없는 주소는 거부
  * @layer       Test
  * @author      Edwin
  * @date        2026-10-13
@@ -8,7 +8,8 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성
- * 1.1    2026-10-14    Edwin     상담원 새 사업장 센터 없이 저장 거부(현재 동작)·기사 생성 거부 (D8 새로 만들기 재정의)
+ * 1.1    2026-10-14    Edwin     기사 생성 거부 (D8 새로 만들기 재정의)
+ * 1.2    2026-10-14    Edwin     센터 완전 자동: 센터장도 매핑 센터, 매핑 없는 주소 거부, 상담원 새 사업장 자동 지정
  * ----------------------------------------------------------------------------
  * @see CustomerSiteAddressService
  */
@@ -106,9 +107,9 @@ private class CustomerSiteAddressServiceTest {
     );
   }
 
-  // 정상: 상담원에게 서비스센터 편집 권한은 없음 (직접 변경 시도 → 거부, 센터 그대로)
+  // 불허: 상담원은 서비스센터를 직접 바꿀 수 없음 (필드 읽기 전용 → 거부, 센터 그대로)
   @isTest
-  static void normalCallCenterCannotEditCenterDirectly() {
+  static void rejectCallCenterEditsCenterDirectly() {
     CustomerSite__c site = getSite();
     Exception caught;
 
@@ -129,32 +130,40 @@ private class CustomerSiteAddressServiceTest {
     Assert.areEqual('GyeonggiSouth', getSite().ServiceCenter__c, '센터 그대로');
   }
 
-  // 정상: 매핑에 없는 행정구역 코드 → 주소만 저장, 센터는 그대로
+  // 불허: 매핑에 없는 행정구역 코드 → 저장 거부 ("관리자에게 매핑 추가 요청"), 주소·센터 그대로
   @isTest
-  static void normalCallCenterUnmappedKeepsCenter() {
+  static void rejectUnmappedAddress() {
     CustomerSite__c site = getSite();
     CustomerSiteAddressService.SiteAddress address = uijeongbu(null);
     address.adminDistrictCode = '9911010100';
-    String saved;
+    AuraHandledException caught;
 
     Test.startTest();
     System.runAs(getUser('HG_CallCenter')) {
-      saved = AddressSearchController.saveSiteAddress(site.Id, address);
+      try {
+        AddressSearchController.saveSiteAddress(site.Id, address);
+      } catch (AuraHandledException e) {
+        caught = e;
+      }
     }
     Test.stopTest();
 
-    Assert.isNull(saved, '센터 변경 없음');
+    Assert.isNotNull(caught, '매핑 없는 주소 거부');
+    Assert.isTrue(
+      caught.getMessage().contains(System.Label.MSG_CENTER_NO_MAPPING),
+      '메시지: ' + caught.getMessage()
+    );
     Assert.areEqual('GyeonggiSouth', getSite().ServiceCenter__c, '센터 그대로');
     Assert.areEqual(
-      '9911010100',
+      TestDataFactory.PYEONGTAEK_DISTRICT_CODE,
       getSite().AdminDistrictCode__c,
-      '주소는 저장'
+      '주소도 그대로'
     );
   }
 
-  // 정상: 센터장은 매핑(경기북부)과 다른 센터(경기남부)를 골라 저장할 수 있음
+  // 정상: 센터장이 화면에서 다른 센터(경기남부)를 보내도 무시 → 주소 매핑(경기북부)으로 자동 지정
   @isTest
-  static void normalCenterManagerChoosesCenter() {
+  static void normalCenterManagerGetsMappedCenter() {
     CustomerSite__c site = getSite();
     String saved;
 
@@ -167,16 +176,11 @@ private class CustomerSiteAddressServiceTest {
     }
     Test.stopTest();
 
-    Assert.areEqual('GyeonggiSouth', saved, '센터장이 고른 값');
+    Assert.areEqual('GyeonggiNorth', saved, '매핑 센터');
     Assert.areEqual(
-      'GyeonggiSouth',
+      'GyeonggiNorth',
       getSite().ServiceCenter__c,
-      '센터장 선택 유지'
-    );
-    Assert.areEqual(
-      UIJEONGBU_CODE,
-      getSite().AdminDistrictCode__c,
-      '주소는 의정부'
+      '센터장도 자동 지정'
     );
   }
 
@@ -197,7 +201,11 @@ private class CustomerSiteAddressServiceTest {
     Test.stopTest();
 
     Assert.isNotNull(caught, '기사는 사업장 주소를 저장할 수 없음');
-    Assert.isNull(getSite().AdminDistrictCode__c, '변경 없음');
+    Assert.areEqual(
+      TestDataFactory.PYEONGTAEK_DISTRICT_CODE,
+      getSite().AdminDistrictCode__c,
+      '변경 없음'
+    );
     Assert.areEqual('GyeonggiSouth', getSite().ServiceCenter__c, '센터 그대로');
   }
 
@@ -220,33 +228,29 @@ private class CustomerSiteAddressServiceTest {
     Assert.isNotNull(caught, '주소 없으면 거부');
   }
 
-  // 불허(현재 동작 기록): 상담원은 서비스센터 수정 권한이 없어 센터 없이 저장 → 검증 규칙 ServiceCenter_Required가 거부
-  //   표준 새로 만들기·사업장 등록 화면 모두 같음. 상담원 등록 경로는 결정 대기 (decision-log 20)
+  // 정상: 사업장 등록 화면 경로 — 상담원이 주소 검색 결과(행정구역 코드)와 함께 새 사업장 저장 → 센터 자동 지정(경기북부)
   @isTest
-  static void rejectCallCenterNewSiteWithoutCenter() {
+  static void normalCallCenterNewSiteGetsMappedCenter() {
     Id accountId = [SELECT Id FROM Account LIMIT 1].Id;
-    String message;
+    CustomerSite__c created = new CustomerSite__c(
+      Name = '상담원 등록 사업장',
+      Account__c = accountId,
+      RoadAddress__c = '경기도 의정부시 시민로 1',
+      AdminDistrictCode__c = UIJEONGBU_CODE
+    );
 
     Test.startTest();
     System.runAs(getUser('HG_CallCenter')) {
-      try {
-        Database.insert(
-          new CustomerSite__c(
-            Name = '상담원 등록 사업장',
-            Account__c = accountId,
-            AdminDistrictCode__c = UIJEONGBU_CODE
-          ),
-          true,
-          AccessLevel.USER_MODE
-        );
-      } catch (DmlException e) {
-        message = e.getDmlMessage(0);
-      }
+      Database.insert(created, true, AccessLevel.USER_MODE);
     }
     Test.stopTest();
 
-    Assert.isNotNull(message, '센터 없는 사업장 거부');
-    Assert.areEqual(1, [SELECT COUNT() FROM CustomerSite__c], '기존 1건만');
+    Assert.areEqual(
+      'GyeonggiNorth',
+      [SELECT ServiceCenter__c FROM CustomerSite__c WHERE Id = :created.Id]
+      .ServiceCenter__c,
+      '새 사업장 센터 자동 지정'
+    );
   }
 
   // 불허: 협력 기사는 사업장을 만들 수 없음 (사업장 오브젝트 권한 없음 → 새로 만들기 화면도 쓸 수 없음)

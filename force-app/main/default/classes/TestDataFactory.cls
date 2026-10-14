@@ -16,6 +16,8 @@
 public class TestDataFactory {
   public static final String STATUS_NEW = 'New';
   public static final String VAN_NAME = '테스트 차량';
+  // DESC: 평택시 행정구역 코드 — 매핑상 경기남부·인천센터 (사업장 서비스센터 자동 지정용)
+  public static final String PYEONGTAEK_DISTRICT_CODE = '4122010100';
   private static final String PROFILE_MINIMUM_ACCESS = 'Minimum Access - Salesforce';
   private static final String PSL_FIELD_SERVICE = 'FieldServiceStandardPsl';
 
@@ -33,12 +35,16 @@ public class TestDataFactory {
     return account;
   }
 
-  // DESC: 사무실 용도 → 저장 전 Flow가 접수를 긴급으로 바꾸지 않음 (긴급 메일 Flow 미실행)
+  // DESC: 사무실 용도 → 저장 전 Flow가 접수를 긴급으로 바꾸지 않음 (긴급 메일 Flow 미실행). 센터는 주소로 자동 지정(경기남부)
   public static CustomerSite__c createSite(Id accountId) {
     CustomerSite__c site = new CustomerSite__c(
       Name = '테스트 사업장',
       Account__c = accountId,
-      ServiceCenter__c = 'GyeonggiSouth',
+      // DESC: 서비스센터는 트리거가 행정구역 코드로 자동 지정 (평택 41220 → 경기도 41 → 경기남부·인천센터)
+      RoadAddress__c = '경기도 평택시 평택로 32',
+      Sido__c = '경기도',
+      Sigungu__c = '평택시',
+      AdminDistrictCode__c = PYEONGTAEK_DISTRICT_CODE,
       UsageType__c = 'Office'
     );
     insert site;
