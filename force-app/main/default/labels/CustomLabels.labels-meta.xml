@@ -62,16 +62,16 @@
         <categories>HG_AssetSearch</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>사업장</shortDescription>
-        <value>사업장</value>
+        <shortDescription>설치 사업장</shortDescription>
+        <value>설치 사업장</value>
     </labels>
     <labels>
         <fullName>LABEL_COL_CENTER</fullName>
         <categories>HG_AssetSearch</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>센터</shortDescription>
-        <value>센터</value>
+        <shortDescription>서비스센터</shortDescription>
+        <value>서비스센터</value>
     </labels>
     <labels>
         <fullName>LABEL_COL_WARRANTY</fullName>
@@ -94,8 +94,8 @@
         <categories>HG_AssetSearch</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>최근 90일 접수</shortDescription>
-        <value>최근 90일 접수</value>
+        <shortDescription>최근 90일 접수 수</shortDescription>
+        <value>최근 90일 접수 수</value>
     </labels>
     <labels>
         <fullName>LABEL_COL_REPEAT</fullName>
@@ -192,8 +192,8 @@
         <categories>HG_AssetDetail</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>접수번호</shortDescription>
-        <value>접수번호</value>
+        <shortDescription>접수 번호</shortDescription>
+        <value>접수 번호</value>
     </labels>
     <labels>
         <fullName>LABEL_COL_CREATED</fullName>
@@ -208,8 +208,8 @@
         <categories>HG_AssetDetail</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>증상</shortDescription>
-        <value>증상</value>
+        <shortDescription>증상 유형</shortDescription>
+        <value>증상 유형</value>
     </labels>
     <labels>
         <fullName>LABEL_COL_STATUS</fullName>
@@ -618,16 +618,16 @@
         <categories>HG_WorkOrderParts</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>수량</shortDescription>
-        <value>수량</value>
+        <shortDescription>사용 수량</shortDescription>
+        <value>사용 수량</value>
     </labels>
     <labels>
         <fullName>LABEL_COL_CHARGE</fullName>
         <categories>HG_WorkOrderParts</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>판정</shortDescription>
-        <value>판정</value>
+        <shortDescription>최종 판정</shortDescription>
+        <value>최종 판정</value>
     </labels>
     <labels>
         <fullName>LABEL_COL_AMOUNT</fullName>
@@ -642,8 +642,8 @@
         <categories>HG_WorkOrderParts</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>ERP 전송</shortDescription>
-        <value>ERP 전송</value>
+        <shortDescription>ERP 전송 상태</shortDescription>
+        <value>ERP 전송 상태</value>
     </labels>
     <labels>
         <fullName>LABEL_COL_ERP_REMAINING</fullName>

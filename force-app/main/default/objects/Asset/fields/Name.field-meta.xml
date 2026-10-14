@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Name</fullName>
+    <inlineHelpText
+  >저장할 때 모델/고객사/사업장/시리얼로 자동 생성됩니다. 입력한 값은 무시됩니다.</inlineHelpText>
+    <trackHistory>false</trackHistory>
+</CustomField>
