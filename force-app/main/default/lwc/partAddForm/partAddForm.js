@@ -5,13 +5,19 @@
  * @author      Edwin
  * @date        2026-10-13
  * ----------------------------------------------------------------------------
- * 데이터 방식
- *   - 재고 선택지: @wire Apex (WorkOrderPartsController.getVanStock) — 출동 Id만으로 정해지는 조회
- *   - 저장: imperative Apex (addPart) — 사용자가 "추가"를 눌렀을 때, DML이라 cacheable 불가
- * 자식 → 부모: CustomEvent('partadded'). bubbles 기본값(false) — 바로 위 부모만 받으면 충분
- *   detail에는 새 Id만 담음. 유·무상 판정은 트리거가 하므로 부모가 저장된 결과를 다시 읽어야 정확
+ * 변경 이력
+ * 1.0  2026-10-13  Edwin  최초 작성 (D7)
+ * 1.1  2026-10-14  Edwin  재고 선택을 "부품 이름 · 위치 · 남은 수량(단위)" 목록으로, 남은 수량 0은 비활성 (D8)
  * ----------------------------------------------------------------------------
- * @see workOrderParts, WorkOrderPartsController, docs/d7_lwc_memo.md 3절
+ * 데이터 방식
+ *   - 재고 선택지: @wire Apex (WorkOrderPartsController.getVanStock, cacheable=true, with sharing + USER_MODE)
+ *     출동 Id만으로 정해지는 조회라 wire가 맞음(값이 들어오면 자동 조회·캐시). 저장 뒤 남은 수량이 바뀌므로 refreshApex
+ *     USER_MODE라 기사는 자기 차량 재고만, 서버가 "이 출동 담당 기사의 차량"으로 한 번 더 좁힘
+ *   - 저장: imperative Apex (addPart) — 사용자가 "추가"를 눌렀을 때만, DML이라 cacheable 불가
+ *   - 표준 조회 필드(재고 번호 PI0001 검색) 대신 목록: 기사는 재고 번호를 모르고, 다른 위치 재고를 고르는 실수를 막음
+ *   - lightning-combobox는 항목별 비활성이 없어 SLDS select 사용 (남은 수량 0은 보이되 고를 수 없게)
+ * ----------------------------------------------------------------------------
+ * @see workOrderParts, WorkOrderPartsController, docs/d8_lwc_memo.md
  */
 import { LightningElement, api, wire } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
@@ -24,6 +30,7 @@ import LABEL_PART_ADD_TITLE from "@salesforce/label/c.LABEL_PART_ADD_TITLE";
 import LABEL_STOCK from "@salesforce/label/c.LABEL_STOCK";
 import LABEL_QUANTITY from "@salesforce/label/c.LABEL_QUANTITY";
 import LABEL_STOCK_OPTION from "@salesforce/label/c.LABEL_STOCK_OPTION";
+import MISC_OUT_OF_STOCK from "@salesforce/label/c.MISC_OUT_OF_STOCK";
 import BTN_ADD_PART from "@salesforce/label/c.BTN_ADD_PART";
 import MSG_NO_VAN_STOCK from "@salesforce/label/c.MSG_NO_VAN_STOCK";
 import MSG_PART_SELECT_REQUIRED from "@salesforce/label/c.MSG_PART_SELECT_REQUIRED";
@@ -45,7 +52,8 @@ export default class PartAddForm extends LightningElement {
 
   stock = [];
   stockLoaded = false;
-  selectedItemId;
+  selectedItemId = "";
+  stockError;
   quantity = 1;
   isSaving = false;
   wiredStockResult;
@@ -64,18 +72,31 @@ export default class PartAddForm extends LightningElement {
     }
   }
 
+  // DESC: "부품 이름 · 위치 · 남은 수량(단위)". 남은 수량 0은 "재고 없음"을 붙이고 비활성
   get stockOptions() {
-    return this.stock.map((item) => ({
-      label: LABEL_STOCK_OPTION.replace("{0}", item.partName)
-        .replace("{1}", item.partCode || "-")
+    return this.stock.map((item) => {
+      const label = LABEL_STOCK_OPTION.replace("{0}", item.partName)
+        .replace("{1}", item.locationName)
         .replace("{2}", item.quantityOnHand)
-        .replace("{3}", item.unitLabel),
-      value: item.productItemId
-    }));
+        .replace("{3}", item.unitLabel)
+        .trim();
+      return {
+        label: item.available ? label : `${label} (${MISC_OUT_OF_STOCK})`,
+        value: item.productItemId,
+        disabled: !item.available,
+        selected: item.productItemId === this.selectedItemId
+      };
+    });
   }
 
   get hasNoStock() {
     return this.stockLoaded && this.stock.length === 0;
+  }
+
+  get stockFieldClass() {
+    return this.stockError
+      ? "slds-form-element slds-has-error"
+      : "slds-form-element";
   }
 
   // DESC: 고른 재고의 단위를 수량 칸 이름에 붙임 ("수량 (kg)")
@@ -89,7 +110,8 @@ export default class PartAddForm extends LightningElement {
   }
 
   handleStockChange(event) {
-    this.selectedItemId = event.detail.value;
+    this.selectedItemId = event.target.value;
+    this.stockError = undefined;
   }
 
   handleQuantityChange(event) {
@@ -97,12 +119,13 @@ export default class PartAddForm extends LightningElement {
   }
 
   async handleAdd() {
-    // DESC: 필수·범위 검사는 Base Component에 맡기고, 서버에서도 한 번 더 검사(addPart)
-    const inputs = [
-      ...this.template.querySelectorAll("lightning-combobox, lightning-input")
-    ];
-    const valid = inputs.every((input) => input.reportValidity());
-    if (!valid) {
+    // DESC: 재고 미선택은 직접, 수량 필수·범위는 Base Component가 검사. 서버(addPart)도 한 번 더 검사
+    this.stockError = this.selectedItemId
+      ? undefined
+      : MSG_PART_SELECT_REQUIRED;
+    const quantityInput = this.template.querySelector("lightning-input");
+    const quantityValid = quantityInput ? quantityInput.reportValidity() : true;
+    if (this.stockError || !quantityValid) {
       return;
     }
     this.isSaving = true;
@@ -112,11 +135,25 @@ export default class PartAddForm extends LightningElement {
         productItemId: this.selectedItemId,
         quantity: Number(this.quantity)
       });
-      this.selectedItemId = undefined;
+      this.selectedItemId = "";
       this.quantity = 1;
-      // DESC: 보유 수량이 줄었으므로 선택지도 다시 읽음
+      const select = this.template.querySelector("select");
+      if (select) {
+        select.value = "";
+      }
+      // DESC: 남은 수량이 줄었으므로 선택지도 다시 읽음 (0이 되면 비활성으로 바뀜)
       await refreshApex(this.wiredStockResult);
-      this.dispatchEvent(new CustomEvent("partadded", { detail: { partId } }));
+      // DESC: 자식 → 부모 이벤트. bubbles: false · composed: false (기본값)
+      //       부모가 <c-part-add-form onpartadded={...}>로 이 요소에 직접 리스너를 달므로 위로 퍼질 필요가 없음.
+      //       bubbles를 켜면 부모 template 안의 다른 요소에서도 보이고, composed를 켜면 그림자 DOM 경계를 넘어
+      //       부모 바깥(레코드 페이지)까지 새어 나감 → 의도하지 않은 곳이 같은 이름 이벤트를 받을 수 있음
+      this.dispatchEvent(
+        new CustomEvent("partadded", {
+          detail: { partId },
+          bubbles: false,
+          composed: false
+        })
+      );
     } catch (error) {
       this.showToast(MSG_SAVE_ERROR, reduceErrors(error).join(", "), "error");
     } finally {

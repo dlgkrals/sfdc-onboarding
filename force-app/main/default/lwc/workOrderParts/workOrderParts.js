@@ -140,6 +140,8 @@ export default class WorkOrderParts extends LightningElement {
   }
 
   // DESC: 자식이 저장을 끝냈다는 신호. 판정은 트리거가 했으므로 저장된 결과를 다시 읽어 그 판정을 알려 줌
+  //       html의 <c-part-add-form onpartadded={handlePartAdded}>로 자식 요소에 직접 리스너를 닮
+  //       → 자식은 bubbles·composed 없이(기본 false) 보내도 받음. 이 컴포넌트 밖으로는 새어 나가지 않음
   async handlePartAdded(event) {
     const { partId } = event.detail;
     await this.refreshAll();

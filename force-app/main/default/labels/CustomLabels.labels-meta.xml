@@ -594,8 +594,26 @@
         <categories>HG_WorkOrderParts</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>{0} ({1}) · 보유 {2} {3}</shortDescription>
-        <value>{0} ({1}) · 보유 {2} {3}</value>
+        <shortDescription>{0} · {1} · {2} {3}</shortDescription>
+        <value>{0} · {1} · {2} {3}</value>
+    </labels>
+    <labels>
+        <fullName>MISC_OUT_OF_STOCK</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>재고 없음</shortDescription>
+        <value>재고 없음</value>
+    </labels>
+    <labels>
+        <fullName>MSG_STOCK_EMPTY</fullName>
+        <categories>HG_WorkOrderParts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >남은 수량이 0인 재고는 쓸 수 없습니다. 재고 이동으로 먼저 채우세요.</shortDescription>
+        <value
+    >남은 수량이 0인 재고는 쓸 수 없습니다. 재고 이동으로 먼저 채우세요.</value>
     </labels>
     <labels>
         <fullName>MSG_NO_PARTS</fullName>

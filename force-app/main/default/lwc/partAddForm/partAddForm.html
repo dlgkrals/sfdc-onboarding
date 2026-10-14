@@ -11,15 +11,44 @@
       class="slds-grid slds-wrap slds-gutters_small slds-grid_vertical-align-end"
     >
       <div class="slds-col slds-size_1-of-1 slds-medium-size_7-of-12">
-        <lightning-combobox
-          name="stock"
-          label={labels.LABEL_STOCK}
-          placeholder={labels.MSG_PART_SELECT_REQUIRED}
-          options={stockOptions}
-          value={selectedItemId}
-          onchange={handleStockChange}
-          required
-        ></lightning-combobox>
+        <!-- 재고 선택: 이 출동 담당 기사 차량의 재고만. 남은 수량 0은 보이되 고를 수 없음(disabled) -->
+        <div class={stockFieldClass}>
+          <label class="slds-form-element__label" for="stock">
+            <abbr class="slds-required" title="required">* </abbr
+            >{labels.LABEL_STOCK}
+          </label>
+          <div class="slds-form-element__control">
+            <div class="slds-select_container">
+              <select
+                class="slds-select"
+                id="stock"
+                name="stock"
+                required
+                aria-describedby="stock-help"
+                onchange={handleStockChange}
+              >
+                <option value="">{labels.MSG_PART_SELECT_REQUIRED}</option>
+                <template for:each={stockOptions} for:item="option">
+                  <option
+                    key={option.value}
+                    value={option.value}
+                    disabled={option.disabled}
+                    selected={option.selected}
+                  >
+                    {option.label}
+                  </option>
+                </template>
+              </select>
+            </div>
+          </div>
+          <div
+            lwc:if={stockError}
+            class="slds-form-element__help"
+            id="stock-help"
+          >
+            {stockError}
+          </div>
+        </div>
       </div>
       <div class="slds-col slds-size_1-of-2 slds-medium-size_3-of-12">
         <lightning-input

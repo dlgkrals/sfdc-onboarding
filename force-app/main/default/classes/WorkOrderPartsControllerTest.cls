@@ -7,6 +7,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 LWC: 출동 사용 부품 화면)
+ * 1.1    2026-10-14    Edwin     빈 재고 비활성·저장 거부, 기사 runAs 자기 차량만·빈 재고 거부 (D8 화면 개선)
  * ----------------------------------------------------------------------------
  * @see WorkOrderPartsController
  */
@@ -109,9 +110,9 @@ private class WorkOrderPartsControllerTest {
     }
   }
 
-  // 정상: 차량 재고 선택지 = 출동 소유자의 차량, 보유 수량 > 0만 (창고·빈 재고 제외)
+  // 정상: 차량 재고 선택지 = 출동 소유자의 차량 재고 (창고 제외), 남은 수량 0도 보이되 고를 수 없음(available=false)
   @isTest
-  static void normalVanStockOnlyAvailableVanItems() {
+  static void normalVanStockIncludesEmptyAsUnavailable() {
     ProductItem compressor = getItem('Compressor');
     update new ProductItem(Id = compressor.Id, QuantityOnHand = 0);
     Schema.Location warehouse = new Schema.Location(
@@ -132,21 +133,43 @@ private class WorkOrderPartsControllerTest {
     );
     Test.stopTest();
 
-    Assert.areEqual(
-      1,
-      options.size(),
-      '빈 압축기·창고 재고 제외 → 일반 부품 1건'
-    );
-    Assert.areEqual(
-      getItem('General').Id,
-      options[0].productItemId,
-      '차량 일반 부품'
-    );
-    Assert.areEqual(
-      System.Label.MISC_UNIT_KG,
-      options[0].unitLabel,
-      '단위 표기'
-    );
+    Assert.areEqual(2, options.size(), '차량 재고 2건 (창고 재고 제외)');
+    for (WorkOrderPartsController.StockOption option : options) {
+      Assert.areEqual(
+        TestDataFactory.VAN_NAME,
+        option.locationName,
+        '위치 = 차량'
+      );
+      if (option.productItemId == compressor.Id) {
+        Assert.isFalse(option.available, '남은 수량 0 → 고를 수 없음');
+      } else {
+        Assert.isTrue(option.available, '일반 부품은 고를 수 있음');
+        Assert.areEqual(
+          System.Label.MISC_UNIT_KG,
+          option.unitLabel,
+          '단위 표기'
+        );
+      }
+    }
+  }
+
+  // 불허: 남은 수량 0인 재고로는 저장하지 않음 (화면 비활성을 우회해도 서버에서 거부)
+  @isTest
+  static void rejectEmptyStockNotSaved() {
+    ProductItem compressor = getItem('Compressor');
+    update new ProductItem(Id = compressor.Id, QuantityOnHand = 0);
+    String message;
+
+    Test.startTest();
+    try {
+      WorkOrderPartsController.addPart(getWorkOrder().Id, compressor.Id, 1);
+    } catch (AuraHandledException e) {
+      message = e.getMessage();
+    }
+    Test.stopTest();
+
+    Assert.areEqual(System.Label.MSG_STOCK_EMPTY, message, '안내 문구');
+    Assert.areEqual(0, [SELECT COUNT() FROM ProductConsumed], '저장 안 됨');
   }
 
   // 정상: 부품 추가 → 저장, 트리거가 유·무상 판정, 표준이 차량 재고 차감
@@ -211,14 +234,15 @@ private class WorkOrderPartsControllerTest {
     Assert.areEqual(0, [SELECT COUNT() FROM ProductConsumed], '저장 안 됨');
   }
 
-  // 정상: 협력 기사가 자기 출동·자기 차량 재고로 화면에서 부품 추가 (USER_MODE 저장)
+  // 정상: 협력 기사(최민호와 같은 권한 집합 HG_Technician) runAs — 자기 출동에서 자기 차량 재고만 보이고(다른 사람 차량 제외),
+  //       빈 재고는 비활성, 남은 재고로 저장 성공·차감, 빈 재고로 저장은 거부 (USER_MODE 조회·저장)
   @isTest
   static void normalTechnicianAddsFromOwnVan() {
     User technician = getUser('HG_Technician');
     WorkOrder wo = getWorkOrder();
     wo.OwnerId = technician.Id;
     update wo;
-    // DESC: 실제 org처럼 기사 차량·차량 재고를 처음부터 기사 소유로 생성
+    // DESC: 실제 org처럼 기사 차량·차량 재고를 처음부터 기사 소유로 생성. setup의 차량(관리자 소유)은 다른 사람 차량 역할
     Schema.Location van = new Schema.Location(
       Name = '기사 차량',
       LocationType = 'Van',
@@ -232,19 +256,48 @@ private class WorkOrderPartsControllerTest {
       QuantityOnHand = 10,
       OwnerId = technician.Id
     );
-    insert item;
+    ProductItem empty = new ProductItem(
+      LocationId = van.Id,
+      Product2Id = getItem('Compressor').Product2Id,
+      QuantityOnHand = 0,
+      OwnerId = technician.Id
+    );
+    insert new List<ProductItem>{ item, empty };
     Id partId;
+    String emptyMessage;
     List<WorkOrderPartsController.StockOption> options;
 
     Test.startTest();
     System.runAs(technician) {
       options = WorkOrderPartsController.getVanStock(wo.Id);
       partId = WorkOrderPartsController.addPart(wo.Id, item.Id, 1);
+      try {
+        WorkOrderPartsController.addPart(wo.Id, empty.Id, 1);
+      } catch (AuraHandledException e) {
+        emptyMessage = e.getMessage();
+      }
     }
     Test.stopTest();
 
-    Assert.areEqual(1, options.size(), '기사 차량 재고만 보임');
+    Assert.areEqual(
+      2,
+      options.size(),
+      '기사 차량 재고 2건만 (다른 사람 차량 제외)'
+    );
+    for (WorkOrderPartsController.StockOption option : options) {
+      Assert.areEqual('기사 차량', option.locationName, '자기 차량');
+      Assert.areEqual(
+        option.productItemId == item.Id,
+        option.available,
+        '빈 재고만 비활성'
+      );
+    }
     Assert.isNotNull(partId, '기사 저장 성공');
+    Assert.areEqual(
+      System.Label.MSG_STOCK_EMPTY,
+      emptyMessage,
+      '빈 재고 저장 거부'
+    );
     Assert.areEqual(
       9,
       [SELECT QuantityOnHand FROM ProductItem WHERE Id = :item.Id]

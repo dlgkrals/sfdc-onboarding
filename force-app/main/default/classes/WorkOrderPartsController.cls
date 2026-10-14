@@ -1,7 +1,7 @@
 /**
  * @description 출동 사용 부품 화면(workOrderParts · partAddForm) 컨트롤러
  *              - getParts    : 출동의 사용 부품 목록(유·무상 판정·ERP 전송 상태·단위) + 유상 부품비·총 청구액·승인 필요
- *              - getVanStock : 출동 담당 기사 차량의 재고(보유 수량 > 0) — 부품 추가 선택지
+ *              - getVanStock : 출동 담당 기사 차량의 재고 — 부품 추가 선택지 (남은 수량 0도 포함, 화면에서 비활성)
  *              - addPart     : 사용 부품 1건 저장 (판정은 트리거, ERP 전송은 Queueable)
  * @layer       Controller
  * @author      Edwin
@@ -10,6 +10,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 LWC: 자식 → 부모 이벤트 화면)
+ * 1.1    2026-10-14    Edwin     차량 재고 선택지에 남은 수량 0 포함(available), 0인 재고로 저장 거부 (D8 화면 개선)
  * ----------------------------------------------------------------------------
  * @see workOrderParts, partAddForm (LWC), ProductConsumedTriggerHandler, docs/d7_lwc_memo.md 3절
  */
@@ -90,7 +91,8 @@ public with sharing class WorkOrderPartsController {
   }
 
   /**
-   * @description 출동 담당 기사 차량의 재고 (보유 수량 > 0, 부품 이름순)
+   * @description 출동 담당 기사 차량의 재고 (부품 이름·위치순). 남은 수량 0도 돌려주고 available=false로 표시
+   *              (빈 재고를 목록에서 숨기면 "왜 안 보이지?"가 되므로 보이되 고를 수 없게)
    * @param workOrderId 출동 Id
    * @return 재고 선택지
    */
@@ -122,9 +124,8 @@ public with sharing class WorkOrderPartsController {
         WHERE
           OwnerId = :workOrders[0].OwnerId
           AND Location.LocationType = :LOCATION_TYPE_VAN
-          AND QuantityOnHand > 0
         WITH USER_MODE
-        ORDER BY Product2.Name
+        ORDER BY Product2.Name, Location.Name
         LIMIT :MAX_ROWS
       ]) {
         options.add(new StockOption(item));
@@ -149,6 +150,19 @@ public with sharing class WorkOrderPartsController {
     }
     if (quantity == null || quantity <= 0) {
       throw toAuraException(System.Label.MSG_QUANTITY_INVALID);
+    }
+    // DESC: 화면에서 비활성이어도 서버에서 한 번 더 (화면 검사는 우회할 수 있음). 사용자 권한으로 보이는 재고만
+    List<ProductItem> items = [
+      SELECT QuantityOnHand
+      FROM ProductItem
+      WHERE Id = :productItemId
+      WITH USER_MODE
+    ];
+    if (items.isEmpty()) {
+      throw toAuraException(System.Label.MSG_PART_SELECT_REQUIRED);
+    }
+    if (items[0].QuantityOnHand == null || items[0].QuantityOnHand <= 0) {
+      throw toAuraException(System.Label.MSG_STOCK_EMPTY);
     }
     ProductConsumed part = new ProductConsumed(
       WorkOrderId = workOrderId,
@@ -285,6 +299,8 @@ public with sharing class WorkOrderPartsController {
     @AuraEnabled
     public Decimal quantityOnHand;
     @AuraEnabled
+    public Boolean available;
+    @AuraEnabled
     public String unitLabel;
 
     public StockOption(ProductItem item) {
@@ -294,6 +310,7 @@ public with sharing class WorkOrderPartsController {
       locationName = item.Location?.Name;
       quantityOnHand = item.QuantityOnHand;
       unitLabel = unitLabelOf(item.QuantityUnitOfMeasure);
+      available = item.QuantityOnHand != null && item.QuantityOnHand > 0;
     }
   }
 }
