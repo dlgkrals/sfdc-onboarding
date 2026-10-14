@@ -29,7 +29,7 @@
         </assignmentItems>
     </assignments>
     <description
-  >26-10-14 장비 저장 전(생성·수정): 이름 = 모델/고객사/사업장/시리얼 끝자리(마지막 하이픈 뒤), 빈 칸은 건너뜀·모두 비면 "미지정 장비". 시리얼 키 = 일련번호(외부 ID·고유. 일련번호가 비면 시리얼 키를 일련번호로 채워 두 값을 같게). 모든 저장에서 다시 만듦 → 사업장·고객사 이름 변경 Flow가 장비를 저장만 하면 새 이름 by Edwin</description>
+  >26-10-14 장비 저장 전(생성·수정): 이름 = 모델/고객사/사업장/시리얼 끝자리(마지막 하이픈 뒤), 빈 칸은 건너뜀·모두 비면 "미지정 장비". 시리얼 키 = 일련번호(외부 ID·고유. 일련번호가 비면 시리얼 키를 일련번호로 채워 두 값을 같게). 생성, 또는 모델·고객사·사업장·일련번호·시리얼 키·이름이 바뀔 때 다시 만듦(장비 집계 저장 등에는 안 돎). 사업장·고객사 이름 변경 Flow는 이름을 "-"로 저장해 다시 만들게 함 by Edwin</description>
     <environments>Default</environments>
     <formulas>
         <description
@@ -158,6 +158,8 @@
         <connector>
             <targetReference>Get_Product</targetReference>
         </connector>
+        <filterFormula
+    >OR(ISNEW(), ISCHANGED({!$Record.Product2Id}), ISCHANGED({!$Record.AccountId}), ISCHANGED({!$Record.CustomerSite__c}), ISCHANGED({!$Record.SerialNumber}), ISCHANGED({!$Record.SerialKey__c}), ISCHANGED({!$Record.Name}))</filterFormula>
         <object>Asset</object>
         <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordBeforeSave</triggerType>
