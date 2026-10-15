@@ -19,6 +19,9 @@
  *
  * 업무 결과(성공·거부)는 HTTP 200 + 건별 status. 인증 실패 401, 요청 형식 오류 400, 장애 모드 503
  * 같은 refId(Salesforce 레코드 Id)가 다시 오면 처음 결과를 그대로 돌려줌 (재전송해도 두 번 차감 안 됨)
+ * IF-02 푸시(2026-10-15): ERP 입고·조정(origin = ERP)이 생기면 바로 Salesforce Apex REST(/services/apexrest/hg/erp/movements)로 1건 보냄
+ *   - 인증: OAuth 2.0 Client Credentials(외부 클라이언트 앱, Run As = 연동 사용자). 비밀 값은 Cloudflare secret SF_CLIENT_ID · SF_CLIENT_SECRET
+ *   - 실패해도 ERP 저장은 그대로, 재시도하지 않음 → Salesforce가 매시 가져오기(Pull)로 다시 가져감. Salesforce 출처 변동은 보내지 않음(재귀 방지)
  */
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
@@ -227,7 +230,7 @@ async function decrease(
   )
     .bind(locationCode, partCode)
     .first();
-  await env.DB.prepare(
+  const ins = await env.DB.prepare(
     "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   )
     .bind(
@@ -243,7 +246,12 @@ async function decrease(
       origin
     )
     .run();
-  return { quantity: round(row.quantity), unit: row.unit };
+  return {
+    quantity: round(row.quantity),
+    unit: row.unit,
+    movementId: ins.meta ? ins.meta.last_row_id : null,
+    createdAt: stamp
+  };
 }
 
 async function increase(
@@ -269,7 +277,7 @@ async function increase(
   )
     .bind(locationCode, partCode)
     .first();
-  await env.DB.prepare(
+  const ins = await env.DB.prepare(
     "INSERT INTO movements (ref_id, type, location_code, part_code, quantity_change, quantity_after, unit, reference, created_at, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   )
     .bind(
@@ -285,7 +293,12 @@ async function increase(
       origin
     )
     .run();
-  return { quantity: round(row.quantity), unit: row.unit };
+  return {
+    quantity: round(row.quantity),
+    unit: row.unit,
+    movementId: ins.meta ? ins.meta.last_row_id : null,
+    createdAt: stamp
+  };
 }
 
 function validQuantity(q) {
@@ -551,7 +564,14 @@ async function receive(request, env) {
     body.note || "ERP 입고",
     "ERP"
   );
-  return json({ status: "OK", remainingQty: after.quantity, unit: after.unit });
+  const push = await pushMovement(env, "RECEIPT", body, body.quantity, after);
+  return json({
+    status: "OK",
+    remainingQty: after.quantity,
+    unit: after.unit,
+    movementId: after.movementId,
+    push
+  });
 }
 
 // IF-02 ERP 재고 조정 (실사 차이 등, ±). 줄이는 조정은 재고보다 많이 줄일 수 없음
@@ -587,10 +607,13 @@ async function adjust(request, env) {
       note,
       "ERP"
     );
+    const push = await pushMovement(env, "ADJUST", body, change, after);
     return json({
       status: "OK",
       remainingQty: after.quantity,
-      unit: after.unit
+      unit: after.unit,
+      movementId: after.movementId,
+      push
     });
   }
   const after = await decrease(
@@ -612,7 +635,147 @@ async function adjust(request, env) {
       )
     );
   }
-  return json({ status: "OK", remainingQty: after.quantity, unit: after.unit });
+  const push = await pushMovement(env, "ADJUST", body, change, after);
+  return json({
+    status: "OK",
+    remainingQty: after.quantity,
+    unit: after.unit,
+    movementId: after.movementId,
+    push
+  });
+}
+
+// ── IF-02 푸시: ERP 입고·조정 → Salesforce ──────────────────────────────
+// DESC: 토큰은 이 Worker 인스턴스 메모리에만 보관(만료 전 재사용). 비밀 값·토큰은 응답·로그에 내보내지 않음
+const SF_PUSH_PATH = "/services/apexrest/hg/erp/movements";
+const SF_TIMEOUT_MS = 8000;
+const SF_TOKEN_REUSE_MS = 10 * 60 * 1000;
+let sfToken = null;
+
+function pushEnabled(env) {
+  return !!(env.SF_CLIENT_ID && env.SF_CLIENT_SECRET && env.SF_INSTANCE_URL);
+}
+
+async function fetchWithTimeout(url, init) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SF_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// DESC: OAuth 2.0 Client Credentials → 액세스 토큰 (Run As = 연동 사용자)
+async function getSalesforceToken(env, forceNew) {
+  if (!forceNew && sfToken && sfToken.expiresAt > Date.now()) {
+    return sfToken;
+  }
+  const res = await fetchWithTimeout(
+    env.SF_INSTANCE_URL.replace(/\/$/, "") + "/services/oauth2/token",
+    {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: env.SF_CLIENT_ID,
+        client_secret: env.SF_CLIENT_SECRET
+      })
+    }
+  );
+  if (!res.ok) {
+    let reason = "";
+    try {
+      const err = await res.json();
+      reason = err.error || "";
+    } catch {
+      reason = "";
+    }
+    throw new Error("TOKEN_" + res.status + (reason ? " " + reason : ""));
+  }
+  const data = await res.json();
+  sfToken = {
+    accessToken: data.access_token,
+    instanceUrl: data.instance_url || env.SF_INSTANCE_URL,
+    expiresAt: Date.now() + SF_TOKEN_REUSE_MS
+  };
+  return sfToken;
+}
+
+async function postToSalesforce(env, payload, forceNewToken) {
+  const token = await getSalesforceToken(env, forceNewToken);
+  return fetchWithTimeout(token.instanceUrl.replace(/\/$/, "") + SF_PUSH_PATH, {
+    method: "POST",
+    headers: {
+      authorization: "Bearer " + token.accessToken,
+      "content-type": "application/json; charset=utf-8"
+    },
+    body: JSON.stringify(payload)
+  });
+}
+
+// DESC: ERP 출처 변동 1건을 Salesforce로. 결과만 돌려주고 ERP 저장에는 영향 없음(실패 시 매시 가져오기가 다시 가져감)
+async function pushMovement(env, type, body, quantityChange, after) {
+  if (!pushEnabled(env)) {
+    return {
+      status: "DISABLED",
+      message: "Salesforce 푸시 설정 없음(가져오기만)"
+    };
+  }
+  if (!after || !after.movementId) {
+    return { status: "FAILED", message: "이력 번호를 알 수 없어 보내지 않음" };
+  }
+  const payload = {
+    movements: [
+      {
+        id: after.movementId,
+        type,
+        origin: "ERP",
+        locationCode: body.locationCode,
+        partCode: body.partCode,
+        quantityChange: round(quantityChange),
+        unit: after.unit,
+        reference: body.note || null,
+        createdAt: after.createdAt
+      }
+    ]
+  };
+  try {
+    let res = await postToSalesforce(env, payload, false);
+    if (res.status === 401) {
+      // DESC: 토큰 만료·폐기 → 한 번만 새로 받아 다시 보냄
+      res = await postToSalesforce(env, payload, true);
+    }
+    let data = null;
+    try {
+      data = await res.json();
+    } catch {
+      data = null;
+    }
+    if (res.status !== 200 || !data || !Array.isArray(data.results)) {
+      const message =
+        data && data.error
+          ? data.error.code + " " + (data.error.message || "")
+          : "";
+      return {
+        status: "FAILED",
+        message: ("HTTP " + res.status + " " + message).trim()
+      };
+    }
+    const r = data.results[0] || {};
+    return {
+      status: "SENT",
+      result: r.result,
+      code: r.code,
+      message: r.message
+    };
+  } catch (e) {
+    const reason =
+      e && e.name === "AbortError"
+        ? "시간 초과"
+        : String(e && e.message ? e.message : e);
+    return { status: "FAILED", message: reason };
+  }
 }
 
 // 초기 재고 적재: reset=true면 재고·이력·처리 기록을 비우고 다시 채움
@@ -786,7 +949,7 @@ document.getElementById("opForm").addEventListener("submit", async (e) => {
   try {
     const res = await fetch("/ui/stock/" + kind, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const data = await res.json();
-    if (res.ok && data.status === "OK") { out.textContent = "반영됨: 남은 수량 " + data.remainingQty; setTimeout(() => location.reload(), 800); }
+    if (res.ok && data.status === "OK") { const p = data.push || {}; const sf = p.status === "SENT" ? (p.result === "APPLIED" ? "즉시 반영됨" : p.result + " " + (p.message || "")) : p.status === "DISABLED" ? "푸시 꺼짐(1시간 안에 가져오기)" : "실패(1시간 안에 가져오기) " + (p.message || ""); out.textContent = "반영됨: 남은 수량 " + data.remainingQty + " · 이력 #" + data.movementId + " · Salesforce: " + sf; setTimeout(() => location.reload(), 4000); }
     else { out.textContent = "거부: " + (data.message || data.error || res.status); }
   } catch (err) { out.textContent = "오류: " + err.message; }
 });

@@ -12,3 +12,8 @@ preview_urls = false
 binding = "DB"
 database_name = "hg-erp-mock"
 database_id = "7b49ab61-c809-4cd4-9b6c-3a10fe6b5b92"
+
+[vars]
+# DESC: IF-02 푸시 대상 Salesforce(My Domain). 비밀 값 아님. 고객 키·암호는 secret으로만:
+#       npx wrangler secret put SF_CLIENT_ID / npx wrangler secret put SF_CLIENT_SECRET (값은 직접 입력, 파일·Git에 남기지 않음)
+SF_INSTANCE_URL = "https://orgfarm-68b5e672a0-dev-ed.develop.my.salesforce.com"
