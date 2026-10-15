@@ -10,7 +10,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - Windows + PowerShell(Git Bash도 있음), 프로젝트 루트 C:\project\my-first-project (SFDX, sourceApiVersion 67.0, Apex 클래스·트리거 API 67.0)
 - 대상 org 별칭: devorg (Developer Edition, Field Service 활성화). sf CLI가 느리면 `$env:SF_DISABLE_AUTOUPDATE='true'`
 - Git: 브랜치 feature/onboarding-dN(일자별), 현재 feature/onboarding-d8. .husky 커밋 훅(lint-staged → Prettier, LWC는 ESLint·Jest)
-- 포맷: Prettier(prettier-plugin-apex, 2칸). retrieve 후 CRLF·LF가 섞이면 `npx prettier --write "force-app/**/*.{cls,trigger}"`
+- 포맷: Prettier(prettier-plugin-apex, 2칸, XML은 embeddedLanguageFormatting off — 켜 두면 권한 집합 <flow> 값을 JS로 포맷해 망가뜨림). retrieve 후 CRLF·LF가 섞이면 `npx prettier --write "force-app/**/*.{cls,trigger}"`
 - 사용자: 이서연(콜센터 상담원), 김병철(경기남부센터장), 최민호(경기남부 협력 기사, Manager = 김병철), 관리자 "이 학민"(= Edwin, 서비스운영팀장 역할, 시스템 관리자)
 - 역할 계층: 서비스운영팀장 → 콜센터 상담원 / 센터장(경기남부 등) → 각 센터 기사
 - 권한 집합: HG_CallCenter, HG_CenterManager, HG_Technician, HG_Admin. 프로필은 상담원·센터장·기사 모두 Minimum Access - Salesforce(같은 프로필), 관리자는 시스템 관리자
@@ -42,7 +42,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - Flow: Case_BeforeSave_FillFromAsset(장비 → 고객사·사업장·센터·긴급), Case_AfterSave_UrgentAlert, Case_Screen_Cancel, Asset_BeforeSave_NameAndSerialKey(이름 = 모델/고객사/사업장/시리얼 끝자리, 시리얼 키 = 일련번호, 생성 또는 관련 값 변경 시만), CustomerSite_AfterSave_RenameAssets·Account_AfterSave_RenameAssets(이름 바뀌면 장비 이름 다시 생성)
 - 할당 규칙 HG_CaseByServiceCenter, 센터 Queue: 서울·경기남부·충청·경기북부(구성원 없음). 그 밖은 기본 사례 소유자(관리자)
 - Validation Rule 다수. Case.Closed_Lock(종결·취소 접수 수정 차단, 예외 사용자 지정 권한 HG_BypassValidation = HG_Admin만) — Apex도 영향을 받으므로 종결·취소 접수는 갱신 대상에서 제외
-- 승인 프로세스 1 `WorkOrder.HG_WorkOrderApproval` "출동 승인 (예외 무상·고액 유상)"(10/07 설정 화면 생성, 활성, 저장소에 있음): 진입 = 상태 Arrived + 승인 요청 사유 + (HasExceptionFree__c 또는 fmTotalCharge__c > 500000) + (500000 이하이거나 CustomerConsent__c). **500000이 숫자로 박혀 있음**(진입 조건은 $CustomMetadata 수식을 못 씀, 플랫폼 제약). 기준값과의 일치는 WorkOrderApprovalTest(값·값+1로 승인 요청)로 검증 — 기준액을 바꾸면 진입 조건 두 곳과 ApprovalAmount를 함께 바꿀 것. 제출자 = 소유자(기사), 승인자 = 제출자의 Manager(센터장, 단계 "센터장 승인", 위임 허용). 제출 시 승인 대기·상태 PendingApproval, 승인·반려·회수 시 상태 Arrived + 승인 상태 필드 갱신, 결과 메일 알림. 필드 업데이트·메일 알림은 workflows/WorkOrder.workflow-meta.xml, 메일 템플릿은 email/unfiled$public/HG_WO_ApprovalRequest·HG_WO_ApprovalResult
+- 승인 프로세스 1 `WorkOrder.HG_WorkOrderApproval` "출동 승인 (예외 무상·고액 유상)"(10/07 설정 화면 생성, 활성, 저장소에 있음): 진입 = 상태 Arrived + 승인 요청 사유 + (HasExceptionFree__c 또는 fmTotalCharge__c > 500000) + (500000 이하이거나 CustomerConsent__c). **500000이 숫자로 박혀 있음**(진입 조건은 $CustomMetadata 수식을 못 씀, 플랫폼 제약). 기준값과의 일치는 WorkOrderApprovalTest(값·값+1로 승인 요청)로 검증 — 기준액을 바꾸면 진입 조건 두 곳과 ApprovalAmount를 함께 바꿀 것. 제출자 = 소유자(기사), 승인자 = 제출자의 Manager(센터장, 단계 "센터장 승인", 위임 허용). 기사는 출동 빠른 작업 "승인 요청"(Screen Flow WorkOrder_Screen_RequestApproval → 하위 Flow WorkOrder_Sub_SubmitApproval: 사유·동의 저장 → 제출, 실패 시 화면 Flow가 Roll Back Records, 표준 승인 요청 버튼은 레이아웃에서 제거, Flow 재정의 + HG_Technician·HG_Admin flowAccesses — 기사에게 RunFlow 없음). 제출 시 승인 대기·상태 PendingApproval, 승인·반려·회수 시 상태 Arrived + 승인 상태 필드 갱신, 결과 메일 알림. 필드 업데이트·메일 알림은 workflows/WorkOrder.workflow-meta.xml, 메일 템플릿은 email/unfiled$public/HG_WO_ApprovalRequest·HG_WO_ApprovalResult
 - 승인 프로세스 2 `Asset.HG_WarrantyCorrectionApproval` "보증 기준일 정정 승인"(10/07, 활성, 저장소에 있음): 진입 = 요청 설치일·요청 근거·정정 사유 입력 + 정정 상태가 Requested 아님. 승인자 = 김병철 사용자 직접 지정(org별 Username, 다른 org 배포 시 바꿔야 함). 필드 업데이트 4개는 workflows/Asset.workflow-meta.xml, 메일 템플릿 HG_Asset_CorrectionRequest
 - 리포트 3 + 동적 대시보드(HangyeolOpsReports / HangyeolOpsDashboards)
 
@@ -64,9 +64,9 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - 출동 레코드 페이지 HG_WorkOrderRecordPage: workOrderParts(부모, @wire getParts) ⊃ partAddForm(자식, 기사 차량 재고 목록·남은 0 비활성, 저장 후 partadded 이벤트). WorkOrderPartsController. 출동 페이지 표준 "사용 부품 새로 만들기"는 숨김(사용 부품 탭 등 다른 곳엔 남음)
 - 고객사·사업장 새로 만들기 재정의(데스크톱만, 모바일은 표준): Aura 래퍼 accountNewOverride·customerSiteNewOverride(lightning:actionOverride + isUrlAddressable, pageReference 변화 시 LWC 다시 그림) ⊃ accountNew·customerSiteNew(LDS record-edit-form, 저장·취소 때 초기화). 관련 목록에서 열면 고객사 자동 입력(inContextOfRef), 고객사 유형은 표준 선택 화면에서 전달
 - 도로명주소 검색(IF-07): 공통 addressSearch(검색·선택만, addressselected 이벤트, Enter = 바로 검색) — 사업장 등록·고객사 등록·빠른 작업 "주소 검색"(addressEditAction) 세 곳에서 사용. AddressSearchController(Named Credential HG_JusoApi), CustomerSiteAddressService
-- 공통 c/ldsUtils.reduceErrors. 화면 문구는 Custom Label(140개, 기본 언어 en_US에 한국어 값). 원본은 labels/CustomLabels.labels-meta.xml을 직접 편집(예전 생성 스크립트는 세션 임시 폴더라 저장소에 없음). 라벨 파일을 배포해도 저장소에서 지운 라벨은 org에서 안 지워짐(지울 땐 따로 삭제). 컨트롤러는 with sharing + USER_MODE
+- 공통 c/ldsUtils.reduceErrors. 화면 문구는 Custom Label(173개, 기본 언어 en_US에 한국어 값). 원본은 labels/CustomLabels.labels-meta.xml을 직접 편집(예전 생성 스크립트는 세션 임시 폴더라 저장소에 없음). 라벨 파일을 배포해도 저장소에서 지운 라벨은 org에서 안 지워짐(지울 땐 따로 삭제). 컨트롤러는 with sharing + USER_MODE
 - 사용자 라이선스 Salesforce Integration 권한 집합은 오브젝트 권한을 check-only로 받아도 저장하지 않음, 권한 집합 라이선스 Salesforce API Integration 권한 집합은 Apex 클래스 접근 불가 → 연동 사용자 권한은 둘로 나눔
-- CTI 가상 착신 시뮬레이터(2026-10-15 합침): 유틸리티 바 HG_AS_UtilityBar "가상 착신"(callSimulator) → CallIntakeController·CallerMatchService(SOSL IN PHONE FIELDS: 사업장 현장 → 보조 → 고객사 대표 번호, 찾은 범위 안에서만 시리얼 뒤 4자리) → 접수 작성 팝업 caseIntakeModal(LightningModal, 1건 채움·여러 건 후보·없음 검색, 자동 저장 없음, 경로 전화·발신 번호 CallerPhone__c(SuppliedPhone은 웹 접수용·FLS 없음)·증상·제목·설명·장비만 저장). 장비 검색 시리얼 클릭 = 장비 요약 팝업 assetSummaryModal ⊃ assetSummary. 실제 운영은 Service Cloud Voice/Open CTI. 클래스 접근 HG_CallCenter·HG_Admin
+- CTI 가상 착신 시뮬레이터(2026-10-15 합침): 유틸리티 바 HG_AS_UtilityBar "가상 착신"(callSimulator) → CallIntakeController·CallerMatchService(SOSL IN PHONE FIELDS: 사업장 현장 → 보조 → 고객사 대표 번호, 찾은 범위 안에서만 시리얼 뒤 4자리) → 접수 작성 팝업 caseIntakeModal(LightningModal, 1건 채움·여러 건 후보·없음 검색, 자동 저장 없음, 경로 전화·발신 번호 CallerPhone__c(SuppliedPhone은 웹 접수용·FLS 없음)·증상·제목·설명·장비만 저장). 접수 작성 팝업은 large + 오른쪽 카드 intakeContextCards(고객사 거래 상태·사업장 긴급 용도·장비·진행 중 접수 수) + 고른 장비의 진행 중 접수 경고(BR-11, 종결·취소 제외·완료 포함, 새 탭 열기, 저장은 막지 않음) — IntakeContextService(USER_MODE). 제목 기본값 "{증상} · {사업장} · {시리얼}"(직접 고치면 유지). 모델 없는 장비는 "모델 미지정". 장비 검색 시리얼 클릭 = 장비 요약 팝업 assetSummaryModal ⊃ assetSummary. 실제 운영은 Service Cloud Voice/Open CTI. 클래스 접근 HG_CallCenter·HG_Admin
 - 주의: 일반 HTML 요소(option 등)에 불리언 속성을 바인딩할 때 false 대신 null(LWC가 disabled="false"를 남김)
 
 ### ERP 연동 (Mock ERP, docs/interface_definition.md IF-01~07)
@@ -91,15 +91,16 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 ## 일정 · 현황
 
 - D4~D8 완료(브랜치 feature/onboarding-d4 a15d9a5, d5 9070a35, d6 a24d1a2, d7 63abe71, d8 진행 중 최신 375728a). D11(10/19) 발표 완료
-- 테스트 192개 통과, org 커버리지 94%(2026-10-15, CTI·ERP 푸시 합친 뒤)
+- 테스트 214개 통과, org 커버리지 96%(2026-10-15, 피드백 개선 5가지 후)
 - 삭제됨: CaseRejectPracticeTest(저장소·org), AccountController(저장소·org), 루트 schema.sql
-- 문서: docs/decision-log.md, docs/interface_definition.md(IF-01~07: 구현 02·03·06·07, 범위 밖 01·04·05), docs/d8_security_review.md(보안 결과표, 남은 위험 R2·R4·R6), docs/d8_lwc_memo.md, docs/d7_lwc_memo.md, docs/d6_screen_design.md(SC-01~06), docs/d6_test_report.md, docs/d6_config_externalization.md, docs/d5_*.md, docs/org_inventory.md(10/6 점검)
+- 문서: docs/decision-log.md, docs/interface_definition.md(IF-01~07: 구현 02·03·06·07, 범위 밖 01·04·05), docs/d8_security_review.md(보안 결과표, 남은 위험 R2·R4·R6), docs/d8_lwc_memo.md, docs/d7_lwc_memo.md, docs/d6_screen_design.md(SC-01~10), docs/d6_test_report.md, docs/d6_config_externalization.md, docs/d5_*.md, docs/org_inventory.md(10/6 점검)
 - 산출물(요건서·권한 매트릭스 V1.1 → V2.0, ERD 재작성 중, 배포 절차 미작성)은 저장소 밖(다운로드·바탕 화면)
 
 ### 대기 중인 일
 
 - R6: ProductConsumedTriggerHandler after delete의 restoreStockForDeleted 제거(삭제 허용·복원 거부 규칙은 유지)
-- CTI 가상 착신: 완료(2026-10-15 합침). 다음 단계 후보 장비 QR, 통화 활동(Task) 기록
+- CTI 가상 착신: 완료(2026-10-15 합침, 같은 날 개선 5가지). 다음 단계 후보 장비 QR, 통화 활동(Task) 기록
+- 장비 모델 필수 검증 규칙: 후보(대리점 장비 등 모델을 나중에 아는 경우 업무 확인 필요)
 
 ## 권한 (V1.1 매트릭스 + D8)
 
