@@ -788,4 +788,378 @@
         <shortDescription>kg</shortDescription>
         <value>kg</value>
     </labels>
+    <labels>
+        <fullName>LABEL_CALL_SIM_TITLE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>가상 착신</shortDescription>
+        <value>가상 착신</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_CALLER_PHONE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>발신 번호</shortDescription>
+        <value>발신 번호</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CALLER_PHONE_PLACEHOLDER</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>예: 010-1111-2002</shortDescription>
+        <value>예: 010-1111-2002</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_IVR_SYMPTOM</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IVR 증상 선택</shortDescription>
+        <value>IVR 증상 선택</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SERIAL_SUFFIX</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>시리얼 뒤 4자리</shortDescription>
+        <value>시리얼 뒤 4자리</value>
+    </labels>
+    <labels>
+        <fullName>MSG_SERIAL_SUFFIX_HINT</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>숫자 4자리를 누르거나, 모르면 #</shortDescription>
+        <value>숫자 4자리를 누르거나, 모르면 #</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SERIAL_UNKNOWN</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>모름 (#)</shortDescription>
+        <value>모름 (#)</value>
+    </labels>
+    <labels>
+        <fullName>BTN_CALL_CONNECT</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>전화 연결</shortDescription>
+        <value>전화 연결</value>
+    </labels>
+    <labels>
+        <fullName>BTN_KEYPAD_BACK</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>지우기</shortDescription>
+        <value>지우기</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CALL_NO_ACCESS</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>상담원·관리자만 사용할 수 있습니다</shortDescription>
+        <value>상담원·관리자만 사용할 수 있습니다</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CALLER_PHONE_REQUIRED</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>발신 번호를 입력하세요</shortDescription>
+        <value>발신 번호를 입력하세요</value>
+    </labels>
+    <labels>
+        <fullName>MSG_SERIAL_INCOMPLETE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >시리얼은 4자리를 모두 누르거나 #을 누르세요</shortDescription>
+        <value>시리얼은 4자리를 모두 누르거나 #을 누르세요</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_CASE_INTAKE_TITLE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>접수 작성</shortDescription>
+        <value>접수 작성</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_CALL_SUMMARY</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>통화 요약</shortDescription>
+        <value>통화 요약</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ASSET</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>장비</shortDescription>
+        <value>장비</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SITE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>사업장</shortDescription>
+        <value>사업장</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SUBJECT</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>제목</shortDescription>
+        <value>제목</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_DESCRIPTION</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>설명</shortDescription>
+        <value>설명</value>
+    </labels>
+    <labels>
+        <fullName>BTN_ASSET_SUMMARY</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>장비 요약 보기</shortDescription>
+        <value>장비 요약 보기</value>
+    </labels>
+    <labels>
+        <fullName>BTN_ASSET_SUMMARY_HIDE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>장비 요약 접기</shortDescription>
+        <value>장비 요약 접기</value>
+    </labels>
+    <labels>
+        <fullName>BTN_SAVE_CASE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>접수 저장</shortDescription>
+        <value>접수 저장</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_CALL_SUBJECT</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>전화 접수 · {0}</shortDescription>
+        <value>전화 접수 · {0}</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_CALL_SUBJECT_PLAIN</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>전화 접수</shortDescription>
+        <value>전화 접수</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_CALL_DESCRIPTION</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >[가상 착신] 발신 번호 {0} · IVR 증상 {1} · 시리얼 뒤 4자리 {2}</shortDescription>
+        <value
+    >[가상 착신] 발신 번호 {0} · IVR 증상 {1} · 시리얼 뒤 4자리 {2}</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CASE_CREATED</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>접수를 저장했습니다</shortDescription>
+        <value>접수를 저장했습니다</value>
+    </labels>
+    <labels>
+        <fullName>MSG_MATCH_ONSITE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >사업장 현장 담당자 번호로 찾았습니다</shortDescription>
+        <value>사업장 현장 담당자 번호로 찾았습니다</value>
+    </labels>
+    <labels>
+        <fullName>MSG_MATCH_SECONDARY</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>사업장 보조 연락처로 찾았습니다</shortDescription>
+        <value>사업장 보조 연락처로 찾았습니다</value>
+    </labels>
+    <labels>
+        <fullName>MSG_MATCH_ACCOUNT</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>고객사 대표 번호로 찾았습니다</shortDescription>
+        <value>고객사 대표 번호로 찾았습니다</value>
+    </labels>
+    <labels>
+        <fullName>MSG_MATCH_NONE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >등록되지 않은 번호입니다. 고객사·사업장·장비를 검색해서 선택하세요</shortDescription>
+        <value
+    >등록되지 않은 번호입니다. 고객사·사업장·장비를 검색해서 선택하세요</value>
+    </labels>
+    <labels>
+        <fullName>MSG_OUTCOME_CONFIRMED</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >장비를 채웠습니다. 확인 후 저장하세요</shortDescription>
+        <value>장비를 채웠습니다. 확인 후 저장하세요</value>
+    </labels>
+    <labels>
+        <fullName>MSG_OUTCOME_SERIAL_CONFIRMED</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >시리얼 뒤 4자리 {0} 일치로 장비를 채웠습니다. 확인 후 저장하세요</shortDescription>
+        <value
+    >시리얼 뒤 4자리 {0} 일치로 장비를 채웠습니다. 확인 후 저장하세요</value>
+    </labels>
+    <labels>
+        <fullName>MSG_OUTCOME_ASSET_CANDIDATES</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>장비 후보 {0}대 중에서 고르세요</shortDescription>
+        <value>장비 후보 {0}대 중에서 고르세요</value>
+    </labels>
+    <labels>
+        <fullName>MSG_OUTCOME_SERIAL_CANDIDATES</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >시리얼 뒤 4자리 {0} 일치 장비 {1}대 중에서 고르세요</shortDescription>
+        <value>시리얼 뒤 4자리 {0} 일치 장비 {1}대 중에서 고르세요</value>
+    </labels>
+    <labels>
+        <fullName>MSG_OUTCOME_SITE_CANDIDATES</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>사업장 후보 {0}곳 중에서 고르세요</shortDescription>
+        <value>사업장 후보 {0}곳 중에서 고르세요</value>
+    </labels>
+    <labels>
+        <fullName>MSG_OUTCOME_ACCOUNT_CANDIDATES</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>고객사 후보 {0}곳 중에서 고르세요</shortDescription>
+        <value>고객사 후보 {0}곳 중에서 고르세요</value>
+    </labels>
+    <labels>
+        <fullName>MSG_SERIAL_NO_MATCH</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >시리얼 뒤 4자리 {0}와 일치하는 장비가 없습니다</shortDescription>
+        <value>시리얼 뒤 4자리 {0}와 일치하는 장비가 없습니다</value>
+    </labels>
+    <labels>
+        <fullName>MSG_SELECT_PLACEHOLDER</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>선택하세요</shortDescription>
+        <value>선택하세요</value>
+    </labels>
+    <labels>
+        <fullName>MSG_SEARCH_RECORD</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>이름으로 검색</shortDescription>
+        <value>이름으로 검색</value>
+    </labels>
+    <labels>
+        <fullName>MSG_ASSET_SAVE_HINT</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >고객사·사업장·서비스센터는 저장할 때 장비 기준으로 채워집니다</shortDescription>
+        <value
+    >고객사·사업장·서비스센터는 저장할 때 장비 기준으로 채워집니다</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SERIAL_MATCH</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>시리얼 일치</shortDescription>
+        <value>시리얼 일치</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ASSET_SUMMARY_TITLE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>장비 요약</shortDescription>
+        <value>장비 요약</value>
+    </labels>
+    <labels>
+        <fullName>BTN_OPEN_ASSET</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>장비 열기</shortDescription>
+        <value>장비 열기</value>
+    </labels>
+    <labels>
+        <fullName>BTN_INTAKE_WITH_ASSET</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>이 장비로 접수</shortDescription>
+        <value>이 장비로 접수</value>
+    </labels>
+    <labels>
+        <fullName>BTN_CLOSE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>닫기</shortDescription>
+        <value>닫기</value>
+    </labels>
+    <labels>
+        <fullName>MSG_REPEAT_FAILURE_WARNING</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >반복 고장 장비입니다 (최근 90일 접수 {0}건)</shortDescription>
+        <value>반복 고장 장비입니다 (최근 90일 접수 {0}건)</value>
+    </labels>
 </CustomLabels>

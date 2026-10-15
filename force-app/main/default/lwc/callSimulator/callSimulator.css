@@ -1,0 +1,14 @@
+/* 키패드 버튼 줄 간격, 누르기 쉽게 높이 확보 */
+.keypad .slds-grid + .slds-grid {
+  margin-top: 0.25rem;
+}
+
+.keypad-key {
+  min-height: 2.5rem;
+  font-size: 1rem;
+}
+
+.serial-display {
+  letter-spacing: 0.25rem;
+  font-family: monospace;
+}

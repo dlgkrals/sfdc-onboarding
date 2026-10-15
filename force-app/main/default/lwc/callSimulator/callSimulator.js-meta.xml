@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>가상 착신</masterLabel>
+    <description
+  >26-10-15 가상 착신 시뮬레이터(유틸리티 바): 발신 번호·IVR 증상·시리얼 뒤 4자리 → 접수 작성 팝업 by Edwin</description>
+    <targets>
+        <target>lightning__UtilityBar</target>
+    </targets>
+</LightningComponentBundle>

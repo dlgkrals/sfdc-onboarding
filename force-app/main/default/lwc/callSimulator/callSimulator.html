@@ -1,0 +1,79 @@
+<template>
+  <div class="slds-p-around_small">
+    <p lwc:if={showNoAccess} class="slds-text-color_weak">
+      {labels.MSG_CALL_NO_ACCESS}
+    </p>
+
+    <template lwc:if={showPanel}>
+      <lightning-input
+        class="caller-phone slds-m-bottom_small"
+        type="tel"
+        label={labels.LABEL_CALLER_PHONE}
+        placeholder={labels.MSG_CALLER_PHONE_PLACEHOLDER}
+        value={callerPhone}
+        required
+        onchange={handlePhoneChange}
+      ></lightning-input>
+
+      <lightning-combobox
+        class="slds-m-bottom_small"
+        label={labels.LABEL_IVR_SYMPTOM}
+        placeholder={labels.MSG_SELECT_PLACEHOLDER}
+        options={symptomOptions}
+        value={symptom}
+        onchange={handleSymptomChange}
+      ></lightning-combobox>
+
+      <div class="slds-form-element slds-m-bottom_small">
+        <span class="slds-form-element__label"
+          >{labels.LABEL_SERIAL_SUFFIX}</span
+        >
+        <div
+          class="serial-display slds-text-heading_medium slds-m-bottom_x-small"
+        >
+          {serialDisplay}
+        </div>
+        <p
+          class="slds-text-body_small slds-text-color_weak slds-m-bottom_x-small"
+        >
+          {labels.MSG_SERIAL_SUFFIX_HINT}
+        </p>
+        <div class="keypad">
+          <template for:each={keypadRows} for:item="row">
+            <div key={row.key} class="slds-grid slds-gutters_xx-small">
+              <template for:each={row.keys} for:item="keyItem">
+                <div key={keyItem.value} class="slds-col slds-size_1-of-3">
+                  <button
+                    class="slds-button slds-button_neutral slds-button_stretch keypad-key"
+                    data-value={keyItem.value}
+                    title={keyItem.title}
+                    onclick={handleKey}
+                  >
+                    {keyItem.label}
+                  </button>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <p
+        lwc:if={errorMessage}
+        class="slds-text-color_error slds-m-bottom_small"
+        role="alert"
+      >
+        {errorMessage}
+      </p>
+
+      <lightning-button
+        variant="success"
+        icon-name="utility:call"
+        label={labels.BTN_CALL_CONNECT}
+        stretch
+        disabled={isConnectDisabled}
+        onclick={handleConnect}
+      ></lightning-button>
+    </template>
+  </div>
+</template>

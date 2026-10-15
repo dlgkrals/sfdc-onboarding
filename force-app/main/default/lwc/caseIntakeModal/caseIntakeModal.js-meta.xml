@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <isExposed>false</isExposed>
+    <description
+  >26-10-15 접수 작성 팝업(LightningModal): 착신 판정 결과·장비로 접수, 1건 채움·여러 건 후보·없음 검색 by Edwin</description>
+</LightningComponentBundle>

@@ -1,0 +1,11 @@
+/* 스피너가 본문 위에 겹치도록 기준 위치 */
+.body-area {
+  position: relative;
+  min-height: 10rem;
+}
+
+/* 장비 후보가 많아도(사업장 장비 수백 대) 팝업이 길어지지 않게 표 안에서 스크롤 */
+.asset-table {
+  max-height: 14rem;
+  overflow-y: auto;
+}

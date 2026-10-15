@@ -1,0 +1,26 @@
+<template>
+  <lightning-modal-header
+    label={labels.LABEL_ASSET_SUMMARY_TITLE}
+  ></lightning-modal-header>
+  <lightning-modal-body>
+    <c-asset-summary asset-id={assetId}></c-asset-summary>
+  </lightning-modal-body>
+  <lightning-modal-footer>
+    <lightning-button
+      label={labels.BTN_CLOSE}
+      onclick={handleClose}
+      class="slds-m-right_x-small"
+    ></lightning-button>
+    <lightning-button
+      label={labels.BTN_OPEN_ASSET}
+      onclick={handleOpen}
+      class="slds-m-right_x-small"
+    ></lightning-button>
+    <lightning-button
+      lwc:if={canIntake}
+      variant="brand"
+      label={labels.BTN_INTAKE_WITH_ASSET}
+      onclick={handleIntake}
+    ></lightning-button>
+  </lightning-modal-footer>
+</template>
