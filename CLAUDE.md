@@ -65,6 +65,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - 고객사·사업장 새로 만들기 재정의(데스크톱만, 모바일은 표준): Aura 래퍼 accountNewOverride·customerSiteNewOverride(lightning:actionOverride + isUrlAddressable, pageReference 변화 시 LWC 다시 그림) ⊃ accountNew·customerSiteNew(LDS record-edit-form, 저장·취소 때 초기화). 관련 목록에서 열면 고객사 자동 입력(inContextOfRef), 고객사 유형은 표준 선택 화면에서 전달
 - 도로명주소 검색(IF-07): 공통 addressSearch(검색·선택만, addressselected 이벤트, Enter = 바로 검색) — 사업장 등록·고객사 등록·빠른 작업 "주소 검색"(addressEditAction) 세 곳에서 사용. AddressSearchController(Named Credential HG_JusoApi), CustomerSiteAddressService
 - 공통 c/ldsUtils.reduceErrors. 화면 문구는 Custom Label(95개, 기본 언어 en_US에 한국어 값, 생성 스크립트로 관리). 컨트롤러는 with sharing + USER_MODE
+- 사용자 라이선스 Salesforce Integration 권한 집합은 오브젝트 권한을 check-only로 받아도 저장하지 않음, 권한 집합 라이선스 Salesforce API Integration 권한 집합은 Apex 클래스 접근 불가 → 연동 사용자 권한은 둘로 나눔
 - 주의: 일반 HTML 요소(option 등)에 불리언 속성을 바인딩할 때 false 대신 null(LWC가 disabled="false"를 남김)
 
 ### ERP 연동 (Mock ERP, docs/interface_definition.md IF-01~07)
@@ -74,7 +75,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - 재고 원칙: Salesforce 재고를 ERP 값으로 덮어쓰지 않음. ERP 응답 남은 수량은 기록만(불일치 표시). ERP에서만 생긴 변동은 변동량만큼 조정
 - IF-03 사용 부품 → ERP 차감 / IF-06 재고 이동(수령) → ERP: 트리거 after insert/update → ErpSyncQueueable → ErpInventoryService(200건 = 콜아웃 1번, 결과 SYSTEM_MODE 저장, 메시지 "[코드] 내용"). 일시적 실패(5xx·시간 초과·연결·401) = Failed → 재전송, 영구적(재고 부족·없는 코드)·상한 초과 = NeedsReview. 재전송 ErpRetryBatch ← ErpRetrySchedulable(매시 정각, 예약 "HG ERP 재전송", 상한 ErpMaxRetry 3, 10분 넘은 Pending도 대상, Batch를 Type.forName으로 생성해 배포 막힘 회피)
 - 사용 부품 삭제: 실패·ERP 거부(NeedsReview)만 허용, 대기·완료는 before delete 거부, 휴지통 복원 거부. **삭제 시 Salesforce 표준도 재고를 되돌리는데 Apex(restoreStockForDeleted)도 되돌려 이중 증가(R6)** → 표준에 맡기기로 결정, 코드 수정 대기
-- IF-02 ERP → Salesforce 역방향(현재 Pull): ErpStockSyncSchedulable(00·15·30·45분 예약 4개 "HG ERP 재고 동기화 :00" 등) → ErpStockSyncBatch(쪽 단위) → ErpStockSyncService. `GET /api/movements?after={LastMovementId}`. 이력 출처 SALESFORCE·ERP·SEED 중 **ERP 출처 RECEIPT·ADJUST만** 변동량만큼 반영, 없는 재고는 새로 생성. 데이터 문제(없는 코드·0 미만)는 ErpInboundLog__c에 오류 기록 후 건너뜀, 통신·저장 실패는 Savepoint로 되돌리고 번호 유지. 스크립트 d7_erp_inbound_preview·baseline·run·schedule.apex
+- IF-02 ERP → Salesforce 역방향 = **Push + Pull**(2026-10-15). Push(주 경로): ERP Mock이 입고·조정 직후 `POST /services/apexrest/hg/erp/movements`(ErpMovementResource, without sharing — 입력 검증이 관문) → ErpStockSyncService.applyPushed. 인증 OAuth Client Credentials(외부 클라이언트 앱 "HG ERP Mock", Run As = 연동 사용자 "ERP 연동": 사용자 라이선스 Salesforce Integration + 권한 집합 라이선스 Salesforce API Integration, 권한 집합 HG_ErpIntegration(클래스 실행만)·HG_ErpIntegrationData(재고·위치·제품 읽기만 — Field Service 플랫폼 검사가 요구)). ERP 쪽 재시도 없음. Pull(안전망): ErpStockSyncSchedulable(예약 1개 "HG ERP 재고 동기화 :30 (매시, 푸시 안전망)") → ErpStockSyncBatch → syncNextPage, `GET /api/movements?after={LastMovementId}`. 공통 규칙: ERP 출처 RECEIPT·ADJUST만 변동량만큼, 없는 재고는 생성, **이미 기록된 이력 번호는 중복으로 건너뜀**(Push·Pull이 같은 변동을 받아도 한 번), 데이터 문제는 ErpInboundLog__c 오류 기록, 통신·저장 실패는 Savepoint로 되돌림. 기록 메시지 끝에 "· 푸시"/"· 가져오기". 기준 번호는 Pull만 올림. 스크립트 d7_erp_inbound_preview·baseline·run·schedule(APPLY 미리 보기)
 - 초기 적재·시연 초기화 scripts/apex/d7_erp_seed.apex(대기·실패 건이 있으면 중단). 재전송 수동 d7_erp_retry_run.apex. 창고 WH-GS-001(경기남부, 기사 읽기 공유)
 
 ## 코딩 규칙 (사내 Naming Convention v3.0)
@@ -98,7 +99,6 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 
 - R6: ProductConsumedTriggerHandler after delete의 restoreStockForDeleted 제거(삭제 허용·복원 거부 규칙은 유지)
 - CTI 가상 착신 시뮬레이터: 설계 완료·구현 대기. 유틸리티 바 패널(발신 번호 + IVR 증상 + 시리얼 뒤 4자리) → SOSL로 사업장 현장·보조 번호 → 고객사 대표 번호 순 조회 → LightningModal 접수 작성 팝업(1건 채움·여러 건 후보·없음 검색, 자동 저장 없음). 장비 검색 시리얼 클릭 = 장비 요약 모달. 새 필드·오브젝트 없음
-- ERP → Salesforce 즉시 반영(Push) 검토: 다른 세션에서 진행 예정
 
 ## 권한 (V1.1 매트릭스 + D8)
 

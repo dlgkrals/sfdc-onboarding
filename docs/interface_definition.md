@@ -11,18 +11,19 @@
 | V1.0 | 2026-10-13 | 이학민 | 최초 작성: 도로명주소 검색                                                                                                                                                             |
 | V1.2 | 2026-10-13 | 이학민 | IF-01(부품 마스터 동기화)·IF-02(차량 재고 동기화) 채움, 둘 다 범위 밖                                                                                                                  |
 | V1.1 | 2026-10-13 | 이학민 | 설계 번호 체계 반영: IF-01~05 유지, 재고 이동 → ERP는 IF-06, 도로명주소 검색은 IF-07(옛 IF-05). 목록에 IF-01~07 전체와 상태 표시. 상담원 주소 저장 시 센터 자동 반영(Apex SYSTEM_MODE) |
+| V1.3 | 2026-10-15 | 이학민 | IF-02 Pull → **Push + Pull**: ERP가 변동 직후 Apex REST로 푸시(OAuth Client Credentials, 연동 사용자), 가져오기는 매시 30분 안전망, 중복 번호 건너뜀                                   |
 
 ## 1. 인터페이스 목록
 
-| No  | I/F ID | 인터페이스 명        | 설명                                                             | 송신       | 수신                      | 방향                               | 방식                                     | 처리형태                                | 주기                            | 상태                                                                                                                                                                       |
-| --- | ------ | -------------------- | ---------------------------------------------------------------- | ---------- | ------------------------- | ---------------------------------- | ---------------------------------------- | --------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | IF-01  | IF_ERP_PART_0001     | ERP → Product2 부품 마스터 동기화 (부품 코드·이름·분류·단가)     | ERP        | Salesforce                | 수신(Inbound)                      | 배치 동기화                              | Batch                                   | 매일                            | **범위 밖** (초기 이관 Data Loader로 대체, External ID `ErpPartCode__c` upsert)                                                                                            |
-| 2   | IF-02  | IF_ERP_VANSTOCK_0001 | ERP → Salesforce 재고 변동 동기화 (ERP에서만 생긴 입고·조정)     | ERP        | Salesforce                | 수신(Inbound, Salesforce가 가져옴) | REST(HTTPS GET, JSON, x-api-key)         | Batch + Schedulable                     | 15분마다(시연은 수동)           | **구현 완료** (2026-10-13: 이력 번호 이후 변동 조회 → 입고·조정만 변동량만큼 조정, 새 재고 생성, 기록 ErpInboundLog__c. 기준점 17, 미리 보기로 반영 대상 0건 확인 후 예약) |
-| 3   | IF-03  | IF_ERP_CONSUME_0001  | 사용 부품 → ERP 재고 차감 (창고·기사 차량)                       | Salesforce | ERP (Mock)                | 송신(Outbound)                     | REST(HTTPS POST, JSON, x-api-key)        | Online(Queueable 비동기) + 재전송 Batch | 사용 부품 저장 시 · 매시 재전송 | **구현 완료** (5번: 트리거 → Queueable, 200건 = 콜아웃 1번, 2026-10-13 실제 연동 확인. 재전송 Batch는 7번)                                                                 |
-| 4   | IF-04  | IF_ERP_STOCK_0001    | ERP 창고 재고 조회                                               | Salesforce | ERP (Mock)                | 송신(Outbound)                     | REST(HTTPS GET, JSON)                    | Online                                  | 조회 시                         | **범위 밖** (Mock 서버에 `GET /api/stock`만 있음, Salesforce 화면 연동 없음)                                                                                               |
-| 5   | IF-05  | IF_ERP_SHIPMENT_0001 | 출하 조회 (장비 출하일 등)                                       | Salesforce | ERP                       | 송신(Outbound)                     | —                                        | —                                       | —                               | **범위 밖**                                                                                                                                                                |
-| 6   | IF-06  | IF_ERP_TRANSFER_0001 | 재고 이동 → ERP (창고 → 기사 차량 보충, ProductTransfer 수령 시) | Salesforce | ERP (Mock)                | 송신(Outbound)                     | REST(HTTPS POST, JSON, x-api-key)        | Online(Queueable 비동기) + 재전송 Batch | 재고 이동 수령 시 · 매시 재전송 | **구현 완료** (6번: 수령 시 트리거 → Queueable, 200건 = 콜아웃 1번, 기사 수령 테스트 포함. 실제 연동 확인은 9번 리허설, 재전송 Batch는 7번)                                |
-| 7   | IF-07  | IF_JUSO_ADDRESS_0001 | 도로명주소 검색 (사업장·고객사 주소 입력, 사업장 센터 자동 지정) | Salesforce | 행정안전부 도로명주소 API | 송신(Outbound)                     | REST(HTTPS POST, form-urlencoded → JSON) | Online                                  | 사용자 검색 시                  | **구현 완료** (2026-10-13, 실제 호출 확인)                                                                                                                                 |
+| No  | I/F ID | 인터페이스 명        | 설명                                                             | 송신       | 수신                      | 방향                                                        | 방식                                                                                    | 처리형태                                                          | 주기                                               | 상태                                                                                                                                        |
+| --- | ------ | -------------------- | ---------------------------------------------------------------- | ---------- | ------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | IF-01  | IF_ERP_PART_0001     | ERP → Product2 부품 마스터 동기화 (부품 코드·이름·분류·단가)     | ERP        | Salesforce                | 수신(Inbound)                                               | 배치 동기화                                                                             | Batch                                                             | 매일                                               | **범위 밖** (초기 이관 Data Loader로 대체, External ID `ErpPartCode__c` upsert)                                                             |
+| 2   | IF-02  | IF_ERP_VANSTOCK_0001 | ERP → Salesforce 재고 변동 동기화 (ERP에서만 생긴 입고·조정)     | ERP        | Salesforce                | 수신(Inbound): ERP가 보냄(Push) + Salesforce가 가져옴(Pull) | Push: REST(HTTPS POST, JSON, OAuth 2.0 Bearer) · Pull: REST(HTTPS GET, JSON, x-api-key) | Push: Apex REST `ErpMovementResource` · Pull: Batch + Schedulable | Push: ERP 입고·조정 직후 · Pull: 매시 30분(안전망) | **구현 완료** (2026-10-13 Pull, 2026-10-15 Push 추가·실제 호출 확인: 입고 +1·조정 −5 "즉시 반영됨", 가져오기 중복 건너뜀)                   |
+| 3   | IF-03  | IF_ERP_CONSUME_0001  | 사용 부품 → ERP 재고 차감 (창고·기사 차량)                       | Salesforce | ERP (Mock)                | 송신(Outbound)                                              | REST(HTTPS POST, JSON, x-api-key)                                                       | Online(Queueable 비동기) + 재전송 Batch                           | 사용 부품 저장 시 · 매시 재전송                    | **구현 완료** (5번: 트리거 → Queueable, 200건 = 콜아웃 1번, 2026-10-13 실제 연동 확인. 재전송 Batch는 7번)                                  |
+| 4   | IF-04  | IF_ERP_STOCK_0001    | ERP 창고 재고 조회                                               | Salesforce | ERP (Mock)                | 송신(Outbound)                                              | REST(HTTPS GET, JSON)                                                                   | Online                                                            | 조회 시                                            | **범위 밖** (Mock 서버에 `GET /api/stock`만 있음, Salesforce 화면 연동 없음)                                                                |
+| 5   | IF-05  | IF_ERP_SHIPMENT_0001 | 출하 조회 (장비 출하일 등)                                       | Salesforce | ERP                       | 송신(Outbound)                                              | —                                                                                       | —                                                                 | —                                                  | **범위 밖**                                                                                                                                 |
+| 6   | IF-06  | IF_ERP_TRANSFER_0001 | 재고 이동 → ERP (창고 → 기사 차량 보충, ProductTransfer 수령 시) | Salesforce | ERP (Mock)                | 송신(Outbound)                                              | REST(HTTPS POST, JSON, x-api-key)                                                       | Online(Queueable 비동기) + 재전송 Batch                           | 재고 이동 수령 시 · 매시 재전송                    | **구현 완료** (6번: 수령 시 트리거 → Queueable, 200건 = 콜아웃 1번, 기사 수령 테스트 포함. 실제 연동 확인은 9번 리허설, 재전송 Batch는 7번) |
+| 7   | IF-07  | IF_JUSO_ADDRESS_0001 | 도로명주소 검색 (사업장·고객사 주소 입력, 사업장 센터 자동 지정) | Salesforce | 행정안전부 도로명주소 API | 송신(Outbound)                                              | REST(HTTPS POST, form-urlencoded → JSON)                                                | Online                                                            | 사용자 검색 시                                     | **구현 완료** (2026-10-13, 실제 호출 확인)                                                                                                  |
 
 - IF-01(수신): 이번 온보딩 범위 밖, 초기 이관으로 대신함. IF-02(수신) 상세는 3절
 - IF-03·IF-06 상세(요청·응답 매핑)는 ERP 연동 구현 후 추가
@@ -92,20 +93,20 @@
 - `ServiceCenterMappingServiceTest`: 시군구 우선, 시도, 최신·옛 시도 코드(강원 51/42, 전북 52/45, 군위 27720/47720), 매핑 없음, 매핑 값이 서비스센터 picklist 값인지
 - 실제 데이터 확인(2026-10-13): 기존 사업장 50곳의 행정구역 코드를 매핑에 넣은 결과 50곳 모두 실제 센터와 일치
 
-## 3. IF-02 ERP 재고 변동 → Salesforce (역방향)
+## 3. IF-02 ERP 재고 변동 → Salesforce (역방향, Push + Pull)
 
 ### ■ 개요
 
-| 항목           | 내용                                                                                                                                                                                       |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 목적           | 구매 입고·실사 조정처럼 **ERP에서만 생기는 재고 변동**을 Salesforce 재고(ProductItem)에 반영                                                                                               |
-| 방식           | Salesforce가 주기적으로 가져옴(pull). ERP 이력 번호(movements.id) 기준 "마지막으로 가져온 번호 이후"만 조회                                                                                |
-| 호출 프로그램  | `ErpStockSyncSchedulable`(00·15·30·45분 예약 4개) → `ErpStockSyncBatch`(scope 1 = 한 쪽 200건, 최대 10쪽) → `ErpStockSyncService.syncNextPage`                                             |
-| 대상 URL       | `callout:HG_ErpMock/api/movements?after={번호}&limit=200` (GET)                                                                                                                            |
-| 인증           | IF-03과 같음: External Credential `HG_ErpMock` 보안 주체 `HG_ErpPrincipal`의 `ApiKey` → `x-api-key` 헤더                                                                                   |
-| 이력 번호 저장 | Custom Setting `ErpSyncState__c.LastMovementId__c`(조직 기본값). 반영·기록과 **같은 저장**에서만 올림                                                                                      |
-| 기록           | `ErpInboundLog__c`: ERP 입고·조정 1건마다 반영/오류, 변동량, 반영 후 수량, 메시지. `MovementId__c` 고유(외부 ID)                                                                           |
-| 운영 스크립트  | 미리 보기 `d7_erp_inbound_preview.apex`(반영 없이 건수) · 기준점 `d7_erp_inbound_baseline.apex`(운영 시작 1회) · 즉시 실행 `d7_erp_inbound_run.apex` · 예약 `d7_erp_inbound_schedule.apex` |
+| 항목           | 내용                                                                                                                                                                                                                                                                        |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 목적           | 구매 입고·실사 조정처럼 **ERP에서만 생기는 재고 변동**을 Salesforce 재고(ProductItem)에 반영                                                                                                                                                                                |
+| 방식           | **Push(주 경로, 2026-10-15)**: ERP 입고·조정 직후 ERP가 Salesforce Apex REST로 1건 전송 · **Pull(안전망)**: Salesforce가 매시 30분 ERP 이력 번호(movements.id) 기준 "마지막으로 가져온 번호 이후"만 조회. 둘이 같은 변동을 받아도 이력 번호(`MovementId__c`)로 한 번만 반영 |
+| 호출 프로그램  | Pull: `ErpStockSyncSchedulable`(예약 1개 "HG ERP 재고 동기화 :30 (매시, 푸시 안전망)") → `ErpStockSyncBatch`(scope 1 = 한 쪽 200건, 최대 10쪽) → `ErpStockSyncService.syncNextPage` · Push: 아래 "■ 푸시" 참고                                                              |
+| 대상 URL       | `callout:HG_ErpMock/api/movements?after={번호}&limit=200` (GET)                                                                                                                                                                                                             |
+| 인증           | IF-03과 같음: External Credential `HG_ErpMock` 보안 주체 `HG_ErpPrincipal`의 `ApiKey` → `x-api-key` 헤더                                                                                                                                                                    |
+| 이력 번호 저장 | Custom Setting `ErpSyncState__c.LastMovementId__c`(조직 기본값). 반영·기록과 **같은 저장**에서만 올림                                                                                                                                                                       |
+| 기록           | `ErpInboundLog__c`: ERP 입고·조정 1건마다 반영/오류, 변동량, 반영 후 수량, 메시지. `MovementId__c` 고유(외부 ID)                                                                                                                                                            |
+| 운영 스크립트  | 미리 보기 `d7_erp_inbound_preview.apex`(반영 없이 건수) · 기준점 `d7_erp_inbound_baseline.apex`(운영 시작 1회) · 즉시 실행 `d7_erp_inbound_run.apex` · 예약 `d7_erp_inbound_schedule.apex`                                                                                  |
 
 ### ■ 응답 (IN: ERP → Salesforce)
 
@@ -131,7 +132,47 @@
 | 같은 변동이 다시 들어옴              | 번호 이후만 조회하므로 정상적으로는 없음. 번호가 되돌려져도 `MovementId__c` 고유키로 저장 거부 → 이중 반영 없음  |
 | 기준점 없음                          | `[NO_BASELINE]` 가져오지 않음 (초기 적재·과거 이력 반영 방지)                                                    |
 
+### ■ 푸시 (Push, 2026-10-15)
+
+| 항목             | 내용                                                                                                                                                                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 입구 주소        | `POST https://{My Domain}/services/apexrest/hg/erp/movements` (Apex REST `ErpMovementResource`, without sharing — 연동 사용자는 공유로 볼 레코드가 없음)                                                                                                                             |
+| 인증             | OAuth 2.0 Client Credentials: `POST /services/oauth2/token` (grant_type=client_credentials, 외부 클라이언트 앱 "HG ERP Mock"의 소비자 키·비밀) → Bearer 토큰. Run As = 연동 사용자 "ERP 연동"(사용자 라이선스 Salesforce Integration, 권한 집합 라이선스 Salesforce API Integration) |
+| 연동 사용자 권한 | `HG_ErpIntegration`: 입구 클래스 실행만 · `HG_ErpIntegrationData`: 재고·위치·제품 **읽기만**(Field Service 플랫폼 검사가 재고 읽기를 요구). 저장은 클래스가 SYSTEM_MODE                                                                                                              |
+| 비밀 값 위치     | Cloudflare secret `SF_CLIENT_ID` · `SF_CLIENT_SECRET`(cmd에서 대화형 입력), 주소는 `wrangler.toml` 변수 `SF_INSTANCE_URL`. 설정 확인은 ERP Mock `/health`의 `push`                                                                                                                   |
+| ERP 쪽 동작      | 입고·조정(origin ERP) 저장 후 1건 전송, 제한 시간 8초, 토큰은 메모리 재사용·401이면 1회 재발급, **재시도 없음**(실패해도 ERP 저장 유지 → 가져오기가 반영). 화면에 "Salesforce: 즉시 반영됨 / 실패(…)"                                                                                |
+
+**요청 (IN: ERP → Salesforce)** — `{ "movements": [ … ] }`, 한 번에 1~200건, 본문 최대 1MB
+
+| Field          | Type   | 필수 | 검증                                                                      |
+| -------------- | ------ | ---- | ------------------------------------------------------------------------- |
+| id             | Number | Y    | ERP 이력 번호, 1 이상 정수                                                |
+| type           | String | Y    | CONSUME · TRANSFER_OUT · TRANSFER_IN · SEED · RECEIPT · ADJUST            |
+| origin         | String | Y    | SALESFORCE · ERP · SEED (반영은 ERP + RECEIPT·ADJUST만)                   |
+| locationCode   | String | Y    | 영문·숫자·`-`·`_`, 40자 이하 → Location.ErpLocationCode__c                |
+| partCode       | String | Y    | 같은 형식 → Product2.ErpPartCode__c                                       |
+| quantityChange | Number | Y    | JSON 숫자(문자열 불가), 0 아님, 소수 둘째 자리까지, 절댓값 1,000,000 이하 |
+| unit           | String | N    | Each · kg                                                                 |
+| reference      | String | N    | 255자 이하                                                                |
+| createdAt      | String | N    | ISO 8601                                                                  |
+
+**응답 (OUT)** — HTTP 200: `{ received, applied, duplicates, skipped, errors, invalid, results: [ { id, result, code, message, quantityAfter } ] }` (요청 순서대로)
+
+| result    | 뜻                                                             | 기록(ErpInboundLog__c) |
+| --------- | -------------------------------------------------------------- | ---------------------- |
+| APPLIED   | 반영됨, quantityAfter = 반영 후 Salesforce 수량                | "[OK] a → b · 푸시"    |
+| DUPLICATE | 이미 기록된 이력 번호 또는 같은 요청 안 반복 → 건너뜀          | 없음                   |
+| SKIPPED   | ERP 출처 입고·조정이 아님(재귀 방지)                           | 없음                   |
+| ERROR     | 데이터 문제(`UNKNOWN_CODE`·`NEGATIVE_STOCK`)                   | 오류 기록              |
+| INVALID   | 건별 형식 오류(`INVALID_FIELD`, 메시지에 `movements[n]: 필드`) | 없음(반영·기록 안 함)  |
+
+| 오류                                                | HTTP                                                   | 처리                                                   |
+| --------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------ |
+| 요청 전체 형식·건수 오류                            | 400 `{ error: { code: "BAD_REQUEST", message } }`      | ERP는 재시도 안 함                                     |
+| 저장 실패(동시에 같은 변동이 들어와 고유키 충돌 등) | 500 `SAVE_FAILED`                                      | 전부 되돌림 → 가져오기가 다시 가져옴                   |
+| 인증·권한(토큰 만료, 권한 없음)                     | 401·403 (Salesforce 플랫폼 `[{ errorCode, message }]`) | ERP는 401이면 토큰 1회 재발급, 그 밖은 가져오기에 맡김 |
+
 ### ■ ERP Mock 입력 (시연용)
 
 - `POST /api/stock/receive` { locationCode, partCode, quantity, note } · `POST /api/stock/adjust` { locationCode, partCode, quantityChange(±), note } — 둘 다 origin = ERP
-- 재고 화면(/)의 "ERP 입고 · 재고 조정" 입력. API 키는 화면에서 입력하고 저장하지 않음
+- 재고 화면(/)의 "ERP 입고 · 재고 조정" 입력은 화면 전용 `/ui/stock/receive`·`adjust`(키 없음, 서버 안에서 같은 로직). 저장 후 Salesforce로 푸시하고 결과를 화면에 표시
