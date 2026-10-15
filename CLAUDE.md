@@ -66,7 +66,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - 도로명주소 검색(IF-07): 공통 addressSearch(검색·선택만, addressselected 이벤트, Enter = 바로 검색) — 사업장 등록·고객사 등록·빠른 작업 "주소 검색"(addressEditAction) 세 곳에서 사용. AddressSearchController(Named Credential HG_JusoApi), CustomerSiteAddressService
 - 공통 c/ldsUtils.reduceErrors. 화면 문구는 Custom Label(140개, 기본 언어 en_US에 한국어 값). 원본은 labels/CustomLabels.labels-meta.xml을 직접 편집(예전 생성 스크립트는 세션 임시 폴더라 저장소에 없음). 라벨 파일을 배포해도 저장소에서 지운 라벨은 org에서 안 지워짐(지울 땐 따로 삭제). 컨트롤러는 with sharing + USER_MODE
 - 사용자 라이선스 Salesforce Integration 권한 집합은 오브젝트 권한을 check-only로 받아도 저장하지 않음, 권한 집합 라이선스 Salesforce API Integration 권한 집합은 Apex 클래스 접근 불가 → 연동 사용자 권한은 둘로 나눔
-- CTI 가상 착신 시뮬레이터(2026-10-15 합침): 유틸리티 바 HG_AS_UtilityBar "가상 착신"(callSimulator) → CallIntakeController·CallerMatchService(SOSL IN PHONE FIELDS: 사업장 현장 → 보조 → 고객사 대표 번호, 찾은 범위 안에서만 시리얼 뒤 4자리) → 접수 작성 팝업 caseIntakeModal(LightningModal, 1건 채움·여러 건 후보·없음 검색, 자동 저장 없음, 경로 전화·발신 번호 CallerPhone__c·증상·제목·설명·장비만 저장). 장비 검색 시리얼 클릭 = 장비 요약 팝업 assetSummaryModal ⊃ assetSummary. 실제 운영은 Service Cloud Voice/Open CTI. 클래스 접근 HG_CallCenter·HG_Admin
+- CTI 가상 착신 시뮬레이터(2026-10-15 합침): 유틸리티 바 HG_AS_UtilityBar "가상 착신"(callSimulator) → CallIntakeController·CallerMatchService(SOSL IN PHONE FIELDS: 사업장 현장 → 보조 → 고객사 대표 번호, 찾은 범위 안에서만 시리얼 뒤 4자리) → 접수 작성 팝업 caseIntakeModal(LightningModal, 1건 채움·여러 건 후보·없음 검색, 자동 저장 없음, 경로 전화·발신 번호 CallerPhone__c(SuppliedPhone은 웹 접수용·FLS 없음)·증상·제목·설명·장비만 저장). 장비 검색 시리얼 클릭 = 장비 요약 팝업 assetSummaryModal ⊃ assetSummary. 실제 운영은 Service Cloud Voice/Open CTI. 클래스 접근 HG_CallCenter·HG_Admin
 - 주의: 일반 HTML 요소(option 등)에 불리언 속성을 바인딩할 때 false 대신 null(LWC가 disabled="false"를 남김)
 
 ### ERP 연동 (Mock ERP, docs/interface_definition.md IF-01~07)
@@ -99,8 +99,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 ### 대기 중인 일
 
 - R6: ProductConsumedTriggerHandler after delete의 restoreStockForDeleted 제거(삭제 허용·복원 거부 규칙은 유지)
-- CTI: 발신 번호 저장 필드 확인(설계는 SuppliedPhone, 구현은 기존 CallerPhone__c), 통화 활동(Task) 기록·장비 QR은 다음 단계 후보
-- org에만 남은 옛 라벨 5개(MSG_CENTER_AFTER_SAVE·AUTO·MANUAL·READONLY·READONLY_NONE, 쓰는 곳 없음) 삭제 여부
+- CTI 가상 착신: 완료(2026-10-15 합침). 다음 단계 후보 장비 QR, 통화 활동(Task) 기록
 
 ## 권한 (V1.1 매트릭스 + D8)
 
