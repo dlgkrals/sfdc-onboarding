@@ -32,7 +32,19 @@ export default {
     const url = new URL(request.url);
     try {
       if (request.method === "GET" && url.pathname === "/health") {
-        return json({ status: "ok", service: "hg-erp-mock", time: now() });
+        // DESC: 푸시 설정이 있는지만(값은 내보내지 않음) — 비어 있는 이름을 알려 줌
+        const missing = [
+          "SF_CLIENT_ID",
+          "SF_CLIENT_SECRET",
+          "SF_INSTANCE_URL"
+        ].filter((k) => !env[k]);
+        return json({
+          status: "ok",
+          service: "hg-erp-mock",
+          time: now(),
+          push: missing.length ? "off" : "configured",
+          pushMissing: missing
+        });
       }
       if (request.method === "GET" && url.pathname === "/") {
         return await renderPage(env);
