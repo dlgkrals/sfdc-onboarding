@@ -765,10 +765,15 @@ async function pushMovement(env, type, body, quantityChange, after) {
       data = null;
     }
     if (res.status !== 200 || !data || !Array.isArray(data.results)) {
+      // DESC: 우리 입구 오류는 { error: { code, message } }, Salesforce 플랫폼 오류(401·403 등)는 [{ errorCode, message }]
+      const platformError =
+        Array.isArray(data) && data[0]
+          ? data[0].errorCode + " " + (data[0].message || "")
+          : "";
       const message =
         data && data.error
           ? data.error.code + " " + (data.error.message || "")
-          : "";
+          : platformError;
       return {
         status: "FAILED",
         message: ("HTTP " + res.status + " " + message).trim()

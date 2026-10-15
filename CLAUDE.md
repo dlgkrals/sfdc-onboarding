@@ -116,6 +116,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - 배포는 폴더(-d objects) 말고 -m 메타데이터 이름으로. 오브젝트 정의 일부·Global Value Set은 저장소에 없음
 - 화면 확인은 실제 사용자 동작으로(스크립트로 값을 넣으면 disabled 같은 문제를 못 잡음). 레이블 변경 후 Ctrl+Shift+R
 - 키·logs/는 커밋 금지
+- Cloudflare 비밀 값(`npx wrangler secret put …`)은 **명령 프롬프트(cmd)에서 대화형으로** 입력. PowerShell에서 붙여 넣기·파이프(Get-Clipboard |)는 빈 값으로 들어갈 수 있음(secret list엔 이름이 보여도 값은 비어 있음). 넣은 뒤 ERP Mock `/health`가 `push: configured`, `pushMissing: []`인지 확인
 
 ## 여러 세션 작업 규칙
 
