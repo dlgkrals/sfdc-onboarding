@@ -47,4 +47,5 @@
     <tabs>standard-Location</tabs>
     <tabs>standard-Product2</tabs>
     <uiType>Lightning</uiType>
+    <utilityBar>HG_AS_UtilityBar</utilityBar>
 </CustomApplication>

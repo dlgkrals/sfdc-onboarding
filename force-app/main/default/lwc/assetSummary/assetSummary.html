@@ -1,0 +1,41 @@
+<template>
+  <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_x-small">
+    <span class="slds-text-heading_small slds-m-right_small">{serialKey}</span>
+    <lightning-badge
+      lwc:if={warrantyStatus}
+      label={warrantyStatus}
+      class={badgeClass}
+    ></lightning-badge>
+  </div>
+
+  <div
+    lwc:if={repeatFailure}
+    class="slds-box slds-box_x-small slds-theme_error slds-m-bottom_small"
+    role="alert"
+  >
+    <lightning-icon
+      icon-name="utility:warning"
+      size="x-small"
+      variant="inverse"
+      class="slds-m-right_x-small"
+    ></lightning-icon>
+    {repeatMessage}
+  </div>
+
+  <lightning-record-view-form record-id={assetId} object-api-name="Asset">
+    <div class="slds-grid slds-wrap">
+      <template for:each={summaryFields} for:item="field">
+        <div
+          key={field}
+          class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2"
+        >
+          <lightning-output-field field-name={field}></lightning-output-field>
+        </div>
+      </template>
+    </div>
+  </lightning-record-view-form>
+
+  <div class="slds-m-top_small">
+    <c-asset-recent-cases asset-id={assetId}></c-asset-recent-cases>
+  </div>
+</template>

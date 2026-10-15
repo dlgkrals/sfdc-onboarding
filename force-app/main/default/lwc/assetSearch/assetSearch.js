@@ -1,9 +1,14 @@
 /**
  * @description SC-01 장비 검색 목록 — 상담원이 전화 받으며 고객사·사업장·시리얼로 장비를 찾고 반복 고장 장비를 알아봄
- *              검색(300ms 디바운스, 2글자 이상) · "반복 고장 장비만" 필터 · 서버 정렬 · 20건 페이징 · 행 클릭 → 장비 상세
+ *              검색(300ms 디바운스, 2글자 이상) · "반복 고장 장비만" 필터 · 서버 정렬 · 20건 페이징
+ *              시리얼 클릭 → 장비 요약 팝업 → [장비 열기] / [이 장비로 접수](접수 작성 팝업) / [닫기]
  * @layer       LWC
  * @author      Edwin
  * @date        2026-10-13
+ * ----------------------------------------------------------------------------
+ * 변경 이력
+ * 1.0  2026-10-13  Edwin  최초 작성 (D7)
+ * 1.1  2026-10-15  Edwin  시리얼 클릭 시 이동하지 않고 장비 요약 팝업, "이 장비로 접수" 추가 (CTI 가상 착신)
  * ----------------------------------------------------------------------------
  * 데이터 방식: imperative Apex (AssetSearchController.searchAssets)
  *   - 검색어 입력·필터·정렬·페이지 이동이 모두 "사용자 동작"이라 호출 시점을 컴포넌트가 정해야 함
@@ -12,10 +17,13 @@
  * ----------------------------------------------------------------------------
  * @see AssetSearchController, docs/d6_screen_design.md SC-01
  */
-import { LightningElement } from "lwc";
+import { LightningElement, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import searchAssets from "@salesforce/apex/AssetSearchController.searchAssets";
+import canCreateCase from "@salesforce/apex/CallIntakeController.canCreateCase";
+import AssetSummaryModal from "c/assetSummaryModal";
+import CaseIntakeModal from "c/caseIntakeModal";
 import { reduceErrors } from "c/ldsUtils";
 
 import LABEL_ASSET_SEARCH_TITLE from "@salesforce/label/c.LABEL_ASSET_SEARCH_TITLE";
@@ -37,12 +45,18 @@ import BTN_NEXT from "@salesforce/label/c.BTN_NEXT";
 import LABEL_PAGE_INFO from "@salesforce/label/c.LABEL_PAGE_INFO";
 import MSG_ASSET_NOT_FOUND from "@salesforce/label/c.MSG_ASSET_NOT_FOUND";
 import MSG_LOAD_ERROR from "@salesforce/label/c.MSG_LOAD_ERROR";
+import LABEL_ASSET_SUMMARY_TITLE from "@salesforce/label/c.LABEL_ASSET_SUMMARY_TITLE";
+import LABEL_CASE_INTAKE_TITLE from "@salesforce/label/c.LABEL_CASE_INTAKE_TITLE";
+import MSG_CASE_CREATED from "@salesforce/label/c.MSG_CASE_CREATED";
 
 const SEARCH_DELAY_MS = 300;
 const MIN_SEARCH_LENGTH = 2;
 const DEFAULT_SORT_FIELD = "lastCaseDate";
 const DEFAULT_SORT_DIRECTION = "desc";
 const ACTION_VIEW = "view";
+// DESC: assetSummaryModal 닫기 결과 값과 같게
+const SUMMARY_RESULT_OPEN = "open";
+const SUMMARY_RESULT_INTAKE = "intake";
 
 const DATE_FORMAT = { year: "numeric", month: "2-digit", day: "2-digit" };
 // DESC: 반복 고장 장비는 시리얼·반복 고장 칸을 빨간 글씨로 강조
@@ -115,10 +129,17 @@ export default class AssetSearch extends NavigationMixin(LightningElement) {
   sortedDirection = DEFAULT_SORT_DIRECTION;
   isLoading = false;
   hasLoaded = false;
+  // DESC: 접수 생성 권한(상담원·관리자). 클래스 접근이 없는 센터장은 호출 실패 → false → "이 장비로 접수" 숨김
+  canIntake = false;
 
   searchTimer;
   // DESC: 빠르게 연속 호출될 때 늦게 도착한 이전 응답이 최신 결과를 덮지 않도록 요청 번호로 구분
   requestSeq = 0;
+
+  @wire(canCreateCase)
+  wiredCanIntake({ data }) {
+    this.canIntake = data === true;
+  }
 
   connectedCallback() {
     this.loadPage();
@@ -189,17 +210,41 @@ export default class AssetSearch extends NavigationMixin(LightningElement) {
     this.loadPage();
   }
 
-  handleRowAction(event) {
-    if (event.detail.action.name === ACTION_VIEW) {
-      this[NavigationMixin.Navigate]({
-        type: "standard__recordPage",
-        attributes: {
-          recordId: event.detail.row.id,
-          objectApiName: "Asset",
-          actionName: "view"
-        }
-      });
+  // DESC: 시리얼 클릭 → 바로 이동하지 않고 장비 요약 팝업 (통화 중 목록을 벗어나지 않게)
+  async handleRowAction(event) {
+    if (event.detail.action.name !== ACTION_VIEW) {
+      return;
     }
+    const assetId = event.detail.row.id;
+    const choice = await AssetSummaryModal.open({
+      size: "medium",
+      label: LABEL_ASSET_SUMMARY_TITLE,
+      assetId,
+      canIntake: this.canIntake
+    });
+    if (choice === SUMMARY_RESULT_OPEN) {
+      this.navigateToRecord(assetId, "Asset");
+    } else if (choice === SUMMARY_RESULT_INTAKE) {
+      // DESC: 모달 안에서 모달을 열지 않고, 요약 팝업이 닫힌 뒤 여기서 접수 작성 팝업(장비만 채움)
+      const result = await CaseIntakeModal.open({
+        size: "medium",
+        label: LABEL_CASE_INTAKE_TITLE,
+        assetId
+      });
+      if (result?.caseId) {
+        this.dispatchEvent(
+          new ShowToastEvent({ title: MSG_CASE_CREATED, variant: "success" })
+        );
+        this.navigateToRecord(result.caseId, "Case");
+      }
+    }
+  }
+
+  navigateToRecord(recordId, objectApiName) {
+    this[NavigationMixin.Navigate]({
+      type: "standard__recordPage",
+      attributes: { recordId, objectApiName, actionName: "view" }
+    });
   }
 
   async loadPage() {
