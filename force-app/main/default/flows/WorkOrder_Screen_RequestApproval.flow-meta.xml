@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>67.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <decisions>
         <name>Check_State</name>
         <label>승인 요청할 수 있는 출동인가</label>
@@ -82,8 +83,27 @@
         </rules>
     </decisions>
     <description
-  >26-10-15 출동 빠른 작업 "승인 요청"(기사, 데스크톱): 승인이 필요한 이유(예외 무상 건수·청구 합계 vs ServiceSetting ApprovalAmount)를 보여 주고 사유(필수)·고객 동의(기준 초과 시 필수)·센터장 메모를 받아 WorkOrder_Sub_SubmitApproval 호출. 도착 상태가 아니거나 승인이 필요 없으면 안내만 by Edwin</description>
+  >26-10-15 출동 빠른 작업 &quot;승인 요청&quot;(기사, 데스크톱): 승인이 필요한 이유(예외 무상 건수·청구 합계 vs ServiceSetting ApprovalAmount)를 보여 주고 사유(필수)·고객 동의(기준 초과 시 필수)·센터장 메모를 받아 WorkOrder_Sub_SubmitApproval 호출. 도착 상태가 아니거나 승인이 필요 없으면 안내만 by Edwin</description>
     <environments>Default</environments>
+    <formulas>
+        <description
+    >고객 동의 입력은 기준 초과일 때만 보임 → 아니면 기존 값 유지</description>
+        <name>fxConsent</name>
+        <dataType>Boolean</dataType>
+        <expression
+    >IF({!fxOverThreshold}, {!ConsentInput}, {!Get_WorkOrder.CustomerConsent__c})</expression>
+    </formulas>
+    <formulas>
+        <name>fxNeedsApproval</name>
+        <dataType>Boolean</dataType>
+        <expression
+    >{!Get_WorkOrder.HasExceptionFree__c} || {!fxOverThreshold}</expression>
+    </formulas>
+    <formulas>
+        <name>fxOverThreshold</name>
+        <dataType>Boolean</dataType>
+        <expression>{!fxTotalCharge} &gt; {!fxThreshold}</expression>
+    </formulas>
     <formulas>
         <description
     >승인 프로세스 진입 조건과 같은 기준 (기준 금액 없으면 진입 조건의 숫자 500000)</description>
@@ -98,25 +118,6 @@
         <expression
     >BLANKVALUE({!Get_WorkOrder.fmTotalCharge__c}, 0)</expression>
         <scale>0</scale>
-    </formulas>
-    <formulas>
-        <name>fxOverThreshold</name>
-        <dataType>Boolean</dataType>
-        <expression>{!fxTotalCharge} &gt; {!fxThreshold}</expression>
-    </formulas>
-    <formulas>
-        <name>fxNeedsApproval</name>
-        <dataType>Boolean</dataType>
-        <expression
-    >{!Get_WorkOrder.HasExceptionFree__c} || {!fxOverThreshold}</expression>
-    </formulas>
-    <formulas>
-        <description
-    >고객 동의 입력은 기준 초과일 때만 보임 → 아니면 기존 값 유지</description>
-        <name>fxConsent</name>
-        <dataType>Boolean</dataType>
-        <expression
-    >IF({!fxOverThreshold}, {!ConsentInput}, {!Get_WorkOrder.CustomerConsent__c})</expression>
     </formulas>
     <interviewLabel>출동 승인 요청 {!$Flow.CurrentDateTime}</interviewLabel>
     <isAdditionalPermissionRequiredToRun
@@ -141,6 +142,30 @@
         </value>
     </processMetadataValues>
     <processType>Flow</processType>
+    <recordLookups>
+        <name>Get_Threshold</name>
+        <label>승인 기준 금액 가져오기</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound
+    >false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Check_State</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>ApprovalAmount</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>ServiceSetting__mdt</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Value__c</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
     <recordLookups>
         <name>Get_WorkOrder</name>
         <label>출동 가져오기</label>
@@ -171,30 +196,6 @@
         <queriedFields>CustomerConsent__c</queriedFields>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
-    <recordLookups>
-        <name>Get_Threshold</name>
-        <label>승인 기준 금액 가져오기</label>
-        <locationX>0</locationX>
-        <locationY>0</locationY>
-        <assignNullValuesIfNoRecordsFound
-    >false</assignNullValuesIfNoRecordsFound>
-        <connector>
-            <targetReference>Check_State</targetReference>
-        </connector>
-        <filterLogic>and</filterLogic>
-        <filters>
-            <field>DeveloperName</field>
-            <operator>EqualTo</operator>
-            <value>
-                <stringValue>ApprovalAmount</stringValue>
-            </value>
-        </filters>
-        <getFirstRecordOnly>true</getFirstRecordOnly>
-        <object>ServiceSetting__mdt</object>
-        <queriedFields>Id</queriedFields>
-        <queriedFields>Value__c</queriedFields>
-        <storeOutputAutomatically>true</storeOutputAutomatically>
-    </recordLookups>
     <recordRollbacks>
         <description
     >하위 Flow가 저장한 사유·고객 동의를 되돌림 (승인 제출 실패 시, 같은 트랜잭션)</description>
@@ -219,6 +220,14 @@
             <fieldText
       >&lt;p&gt;{!$Label.MSG_APPROVAL_SUBMIT_FAILED}&lt;/p&gt;&lt;p&gt;{!Call_Submit.errorMessage}&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
         </fields>
         <showFooter>true</showFooter>
         <showHeader>true</showHeader>
@@ -236,6 +245,14 @@
             <fieldText
       >&lt;p&gt;{!$Label.MSG_APPROVAL_NOT_ARRIVED}: {!Get_WorkOrder.Status}&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
         </fields>
         <showFooter>true</showFooter>
         <showHeader>true</showHeader>
@@ -253,6 +270,14 @@
             <fieldText
       >&lt;p&gt;{!$Label.MSG_APPROVAL_NOT_NEEDED}&lt;/p&gt;&lt;p&gt;{!$Label.LABEL_APPROVAL_TOTAL}: {!fxTotalCharge} / {!$Label.LABEL_APPROVAL_THRESHOLD}: {!fxThreshold}&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
         </fields>
         <showFooter>true</showFooter>
         <showHeader>true</showHeader>
@@ -270,6 +295,14 @@
             <fieldText
       >&lt;p&gt;{!$Label.MSG_APPROVAL_PENDING}&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
         </fields>
         <showFooter>true</showFooter>
         <showHeader>true</showHeader>
@@ -290,12 +323,28 @@
             <fieldText
       >&lt;p&gt;&lt;strong&gt;{!$Label.LABEL_APPROVAL_WHY}&lt;/strong&gt;&lt;/p&gt;&lt;ul&gt;&lt;li&gt;{!$Label.LABEL_APPROVAL_EXCEPTION_FREE}: {!Get_WorkOrder.ruExceptionFreeCount__c}{!$Label.LABEL_COUNT_SUFFIX}&lt;/li&gt;&lt;li&gt;{!$Label.LABEL_APPROVAL_TOTAL}: {!fxTotalCharge} / {!$Label.LABEL_APPROVAL_THRESHOLD}: {!fxThreshold}&lt;/li&gt;&lt;/ul&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
         </fields>
         <fields>
             <name>MsgOverThreshold</name>
             <fieldText
       >&lt;p&gt;&lt;span style=&quot;color: rgb(186, 5, 23);&quot;&gt;{!$Label.MSG_APPROVAL_OVER_THRESHOLD}&lt;/span&gt;&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
             <visibilityRule>
                 <conditionLogic>and</conditionLogic>
                 <conditions>
@@ -317,6 +366,14 @@
             <fieldText>{!$Label.LABEL_APPROVAL_REASON}</fieldText>
             <fieldType>InputField</fieldType>
             <isRequired>true</isRequired>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
             <validationRule>
                 <errorMessage>{!$Label.MSG_REASON_TOO_LONG}</errorMessage>
                 <formulaExpression
@@ -333,6 +390,14 @@
             <fieldText>{!$Label.LABEL_CUSTOMER_CONSENT}</fieldText>
             <fieldType>InputField</fieldType>
             <isRequired>true</isRequired>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
             <validationRule>
                 <errorMessage>{!$Label.MSG_CONSENT_REQUIRED}</errorMessage>
                 <formulaExpression>{!ConsentInput}</formulaExpression>
@@ -353,6 +418,14 @@
             <fieldText>{!$Label.LABEL_MANAGER_MEMO}</fieldText>
             <fieldType>LargeTextArea</fieldType>
             <isRequired>false</isRequired>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
             <validationRule>
                 <errorMessage>{!$Label.MSG_MEMO_TOO_LONG}</errorMessage>
                 <formulaExpression
@@ -375,6 +448,14 @@
             <fieldText
       >&lt;p&gt;{!$Label.MSG_APPROVAL_SUBMITTED}&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
         </fields>
         <showFooter>true</showFooter>
         <showHeader>true</showHeader>

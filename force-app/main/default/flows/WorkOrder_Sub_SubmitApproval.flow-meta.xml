@@ -41,6 +41,7 @@
         <nameSegment>submit</nameSegment>
     </actionCalls>
     <apiVersion>67.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <assignments>
         <name>Assign_Error</name>
         <label>실패 결과</label>

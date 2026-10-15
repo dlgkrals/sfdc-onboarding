@@ -381,15 +381,11 @@
     </fieldPermissions>
     <flowAccesses>
         <enabled>true</enabled>
-        <flow>
-WorkOrder_Screen_RequestApproval;
-    </flow>
+        <flow>WorkOrder_Screen_RequestApproval</flow>
     </flowAccesses>
     <flowAccesses>
         <enabled>true</enabled>
-        <flow>
-WorkOrder_Sub_SubmitApproval;
-    </flow>
+        <flow>WorkOrder_Sub_SubmitApproval</flow>
     </flowAccesses>
     <hasActivationRequired>false</hasActivationRequired>
     <label>HG 협력 기사</label>
