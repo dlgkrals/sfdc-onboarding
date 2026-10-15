@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <classAccesses>
+        <apexClass>ErpMovementResource</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <description
+  >26-10-15 ERP 푸시(IF-02) 연동 전용 사용자. Apex REST 입구(ErpMovementResource) 실행 권한만. 재고·기록 저장은 클래스가 SYSTEM_MODE로 처리하므로 오브젝트·필드 권한 없음 by Edwin</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>HG ERP 연동</label>
+    <license>Salesforce Integration</license>
+</PermissionSet>
