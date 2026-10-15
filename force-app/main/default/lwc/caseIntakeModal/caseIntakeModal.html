@@ -11,135 +11,203 @@
         size="small"
       ></lightning-spinner>
 
-      <!-- 통화 요약: 착신 정보 + 판정 결과 (착신 모드만) -->
-      <div
-        lwc:if={isCallMode}
-        class="slds-box slds-theme_shade slds-m-bottom_small"
-      >
-        <h3 class="slds-text-heading_small slds-m-bottom_x-small">
-          {labels.LABEL_CALL_SUMMARY}
-        </h3>
-        <dl class="slds-list_horizontal slds-wrap slds-m-bottom_x-small">
-          <template for:each={callFacts} for:item="fact">
-            <dt
-              key={fact.labelKey}
-              class="slds-item_label slds-text-color_weak slds-truncate"
+      <!-- 왼쪽 접수 입력 · 오른쪽 고객사·사업장 카드 (데스크톱, 좁으면 위아래) -->
+      <div class="slds-grid slds-wrap slds-gutters">
+        <div class="slds-col slds-size_1-of-1 slds-large-size_7-of-12">
+          <!-- 통화 요약: 착신 정보 + 판정 결과 (착신 모드만) -->
+          <div
+            lwc:if={isCallMode}
+            class="slds-box slds-theme_shade slds-m-bottom_small"
+          >
+            <h3 class="slds-text-heading_small slds-m-bottom_x-small">
+              {labels.LABEL_CALL_SUMMARY}
+            </h3>
+            <dl class="slds-list_horizontal slds-wrap slds-m-bottom_x-small">
+              <template for:each={callFacts} for:item="fact">
+                <dt
+                  key={fact.labelKey}
+                  class="slds-item_label slds-text-color_weak slds-truncate"
+                >
+                  {fact.label}
+                </dt>
+                <dd key={fact.valueKey} class="slds-item_detail">
+                  {fact.value}
+                </dd>
+              </template>
+            </dl>
+            <ul class="slds-list_dotted">
+              <template for:each={summaryLines} for:item="line">
+                <li key={line.key}>{line.text}</li>
+              </template>
+            </ul>
+          </div>
+
+          <!-- 고객사: 후보 여러 곳 → 목록, 아니면 검색(채워진 값 포함) -->
+          <div class="slds-m-bottom_small">
+            <template lwc:if={hasAccountCandidates}>
+              <lightning-combobox
+                label={labels.LABEL_COL_ACCOUNT}
+                placeholder={labels.MSG_SELECT_PLACEHOLDER}
+                options={accountComboOptions}
+                value={accountId}
+                onchange={handleAccountSelect}
+              ></lightning-combobox>
+            </template>
+            <template lwc:else>
+              <lightning-record-picker
+                label={labels.LABEL_COL_ACCOUNT}
+                placeholder={labels.MSG_SEARCH_RECORD}
+                object-api-name="Account"
+                value={accountId}
+                onchange={handleAccountPick}
+              ></lightning-record-picker>
+            </template>
+          </div>
+
+          <!-- 사업장: 고른 고객사의 사업장 목록. 고르면 장비 후보 갱신 -->
+          <div class="slds-m-bottom_small">
+            <lightning-combobox
+              label={labels.LABEL_SITE}
+              placeholder={labels.MSG_SELECT_PLACEHOLDER}
+              options={siteComboOptions}
+              value={siteId}
+              disabled={isSiteDisabled}
+              onchange={handleSiteSelect}
+            ></lightning-combobox>
+          </div>
+
+          <!-- 장비: 후보 목록(1대 선택) + 다른 장비 검색 -->
+          <div class="slds-m-bottom_small">
+            <div
+              class="slds-grid slds-grid_align-spread slds-grid_vertical-align-end"
             >
-              {fact.label}
-            </dt>
-            <dd key={fact.valueKey} class="slds-item_detail">{fact.value}</dd>
-          </template>
-        </dl>
-        <ul class="slds-list_dotted">
-          <template for:each={summaryLines} for:item="line">
-            <li key={line.key}>{line.text}</li>
-          </template>
-        </ul>
-      </div>
+              <span class="slds-form-element__label">{labels.LABEL_ASSET}</span>
+              <lightning-button
+                variant="base"
+                label={summaryButtonLabel}
+                disabled={isSummaryDisabled}
+                onclick={handleToggleSummary}
+              ></lightning-button>
+            </div>
+            <div lwc:if={hasAssetCandidates} class="asset-table">
+              <lightning-datatable
+                key-field="id"
+                data={assetRows}
+                columns={assetColumns}
+                max-row-selection="1"
+                selected-rows={selectedAssetRows}
+                onrowselection={handleAssetRowSelect}
+                column-widths-mode="auto"
+              ></lightning-datatable>
+            </div>
+            <lightning-record-picker
+              class="slds-m-top_x-small"
+              label={labels.LABEL_ASSET}
+              variant="label-hidden"
+              placeholder={labels.MSG_SEARCH_RECORD}
+              object-api-name="Asset"
+              filter={assetFilter}
+              display-info={assetDisplayInfo}
+              matching-info={assetMatchingInfo}
+              onchange={handleAssetPick}
+            ></lightning-record-picker>
+            <p
+              class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small"
+            >
+              {labels.MSG_ASSET_SAVE_HINT}
+            </p>
+          </div>
 
-      <!-- 고객사: 후보 여러 곳 → 목록, 아니면 검색(채워진 값 포함) -->
-      <div class="slds-m-bottom_small">
-        <template lwc:if={hasAccountCandidates}>
-          <lightning-combobox
-            label={labels.LABEL_COL_ACCOUNT}
-            placeholder={labels.MSG_SELECT_PLACEHOLDER}
-            options={accountComboOptions}
-            value={accountId}
-            onchange={handleAccountSelect}
-          ></lightning-combobox>
-        </template>
-        <template lwc:else>
-          <lightning-record-picker
-            label={labels.LABEL_COL_ACCOUNT}
-            placeholder={labels.MSG_SEARCH_RECORD}
-            object-api-name="Account"
-            value={accountId}
-            onchange={handleAccountPick}
-          ></lightning-record-picker>
-        </template>
-      </div>
+          <!-- BR-11 중복 접수 경고: 고른 장비에 종결·취소가 아닌 접수 (저장은 막지 않음) -->
+          <div
+            lwc:if={hasOpenCases}
+            class="slds-box slds-box_x-small slds-theme_warning slds-m-bottom_small"
+            role="alert"
+          >
+            <p class="slds-m-bottom_x-small">
+              <lightning-icon
+                icon-name="utility:warning"
+                size="x-small"
+                class="slds-m-right_x-small"
+              ></lightning-icon>
+              {openCasesMessage}
+            </p>
+            <ul>
+              <template for:each={openCases.cases} for:item="openCase">
+                <li
+                  key={openCase.id}
+                  class="slds-grid slds-grid_vertical-align-center slds-m-bottom_xx-small"
+                >
+                  <span class="slds-m-right_x-small"
+                    >{openCase.caseNumber}</span
+                  >
+                  <lightning-badge
+                    label={openCase.statusLabel}
+                    class="slds-m-right_x-small"
+                  ></lightning-badge>
+                  <span
+                    class="slds-truncate slds-m-right_x-small"
+                    title={openCase.subject}
+                    >{openCase.subject}</span
+                  >
+                  <lightning-formatted-date-time
+                    value={openCase.createdDate}
+                    year="numeric"
+                    month="2-digit"
+                    day="2-digit"
+                    class="slds-m-right_x-small"
+                  ></lightning-formatted-date-time>
+                  <lightning-button
+                    variant="base"
+                    label={labels.BTN_OPEN_EXISTING_CASE}
+                    icon-name="utility:new_window"
+                    icon-position="right"
+                    data-id={openCase.id}
+                    onclick={handleOpenCase}
+                  ></lightning-button>
+                </li>
+              </template>
+            </ul>
+            <p lwc:if={openCasesMoreMessage} class="slds-text-body_small">
+              {openCasesMoreMessage}
+            </p>
+          </div>
 
-      <!-- 사업장: 고른 고객사의 사업장 목록. 고르면 장비 후보 갱신 -->
-      <div class="slds-m-bottom_small">
-        <lightning-combobox
-          label={labels.LABEL_SITE}
-          placeholder={labels.MSG_SELECT_PLACEHOLDER}
-          options={siteComboOptions}
-          value={siteId}
-          disabled={isSiteDisabled}
-          onchange={handleSiteSelect}
-        ></lightning-combobox>
-      </div>
+          <div lwc:if={showSummary} class="slds-box slds-m-bottom_small">
+            <c-asset-summary asset-id={selectedAssetId}></c-asset-summary>
+          </div>
 
-      <!-- 장비: 후보 목록(1대 선택) + 다른 장비 검색 -->
-      <div class="slds-m-bottom_small">
-        <div
-          class="slds-grid slds-grid_align-spread slds-grid_vertical-align-end"
-        >
-          <span class="slds-form-element__label">{labels.LABEL_ASSET}</span>
-          <lightning-button
-            variant="base"
-            label={summaryButtonLabel}
-            disabled={isSummaryDisabled}
-            onclick={handleToggleSummary}
-          ></lightning-button>
+          <!-- 접수 내용 -->
+          <div class="slds-m-bottom_small">
+            <lightning-combobox
+              label={labels.LABEL_COL_SYMPTOM}
+              placeholder={labels.MSG_SELECT_PLACEHOLDER}
+              options={symptomOptions}
+              value={symptom}
+              onchange={handleSymptomChange}
+            ></lightning-combobox>
+          </div>
+          <div class="slds-m-bottom_small">
+            <lightning-input
+              label={labels.LABEL_SUBJECT}
+              value={subject}
+              max-length="255"
+              onchange={handleSubjectChange}
+            ></lightning-input>
+          </div>
+          <lightning-textarea
+            label={labels.LABEL_DESCRIPTION}
+            value={description}
+            onchange={handleDescriptionChange}
+          ></lightning-textarea>
         </div>
-        <div lwc:if={hasAssetCandidates} class="asset-table">
-          <lightning-datatable
-            key-field="id"
-            data={assetRows}
-            columns={assetColumns}
-            max-row-selection="1"
-            selected-rows={selectedAssetRows}
-            onrowselection={handleAssetRowSelect}
-            column-widths-mode="auto"
-          ></lightning-datatable>
+        <div class="slds-col slds-size_1-of-1 slds-large-size_5-of-12">
+          <c-intake-context-cards
+            account-id={accountId}
+            site-id={siteId}
+          ></c-intake-context-cards>
         </div>
-        <lightning-record-picker
-          class="slds-m-top_x-small"
-          label={labels.LABEL_ASSET}
-          variant="label-hidden"
-          placeholder={labels.MSG_SEARCH_RECORD}
-          object-api-name="Asset"
-          filter={assetFilter}
-          display-info={assetDisplayInfo}
-          matching-info={assetMatchingInfo}
-          onchange={handleAssetPick}
-        ></lightning-record-picker>
-        <p
-          class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small"
-        >
-          {labels.MSG_ASSET_SAVE_HINT}
-        </p>
       </div>
-
-      <div lwc:if={showSummary} class="slds-box slds-m-bottom_small">
-        <c-asset-summary asset-id={selectedAssetId}></c-asset-summary>
-      </div>
-
-      <!-- 접수 내용 -->
-      <div class="slds-m-bottom_small">
-        <lightning-combobox
-          label={labels.LABEL_COL_SYMPTOM}
-          placeholder={labels.MSG_SELECT_PLACEHOLDER}
-          options={symptomOptions}
-          value={symptom}
-          onchange={handleSymptomChange}
-        ></lightning-combobox>
-      </div>
-      <div class="slds-m-bottom_small">
-        <lightning-input
-          label={labels.LABEL_SUBJECT}
-          value={subject}
-          max-length="255"
-          onchange={handleSubjectChange}
-        ></lightning-input>
-      </div>
-      <lightning-textarea
-        label={labels.LABEL_DESCRIPTION}
-        value={description}
-        onchange={handleDescriptionChange}
-      ></lightning-textarea>
 
       <div
         lwc:if={errorMessage}

@@ -10,6 +10,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-15    Edwin     최초 작성 (CTI 가상 착신 시뮬레이터)
  * 1.1    2026-10-15    Edwin     제목 기본값 "{증상} · {사업장} · {시리얼}" (피드백 개선 ②)
+ * 1.2    2026-10-15    Edwin     고객사·사업장 카드, 진행 중 접수 조회 (피드백 개선 ①③, IntakeContextService)
  * ----------------------------------------------------------------------------
  * @see CallerMatchService, callSimulator · caseIntakeModal · assetSummaryModal (LWC)
  */
@@ -87,6 +88,35 @@ public with sharing class CallIntakeController {
     requireAccess();
     try {
       return CallerMatchService.getAssets(accountId, siteId, serialSuffix);
+    } catch (Exception e) {
+      throw newAuraException(e.getMessage());
+    }
+  }
+
+  /**
+   * @description 접수 작성 팝업 오른쪽 고객사·사업장 카드 (고객사·사업장을 바꿀 때마다)
+   */
+  @AuraEnabled
+  public static IntakeContextService.ContextCards getContextCards(
+    Id accountId,
+    Id siteId
+  ) {
+    requireAccess();
+    try {
+      return IntakeContextService.getCards(accountId, siteId);
+    } catch (Exception e) {
+      throw newAuraException(e.getMessage());
+    }
+  }
+
+  /**
+   * @description 고른 장비의 진행 중 접수 (BR-11 중복 접수 경고, 저장은 막지 않음)
+   */
+  @AuraEnabled
+  public static IntakeContextService.OpenCases getOpenCases(Id assetId) {
+    requireAccess();
+    try {
+      return IntakeContextService.getOpenCases(assetId);
     } catch (Exception e) {
       throw newAuraException(e.getMessage());
     }

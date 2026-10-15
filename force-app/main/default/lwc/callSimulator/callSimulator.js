@@ -8,6 +8,7 @@
  * ----------------------------------------------------------------------------
  * 변경 이력
  * 1.0  2026-10-15  Edwin  최초 작성 (CTI 가상 착신 시뮬레이터)
+ * 1.1  2026-10-15  Edwin  접수 작성 팝업 크기 large (오른쪽 카드, 피드백 개선 ①)
  * ----------------------------------------------------------------------------
  * 데이터 방식
  *   - 사용 가능 여부: @wire Apex (CallIntakeController.canCreateCase). 클래스 접근이 없는 사용자(기사 등)는
@@ -190,7 +191,7 @@ export default class CallSimulator extends NavigationMixin(LightningElement) {
         serialSuffix: this.serialInput || KEY_UNKNOWN
       });
       const result = await CaseIntakeModal.open({
-        size: "medium",
+        size: "large",
         label: LABEL_CASE_INTAKE_TITLE,
         intake,
         symptomType: this.symptom

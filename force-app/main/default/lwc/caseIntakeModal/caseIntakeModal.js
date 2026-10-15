@@ -8,6 +8,7 @@
  * ----------------------------------------------------------------------------
  * 변경 이력
  * 1.0  2026-10-15  Edwin  최초 작성 (CTI 가상 착신 시뮬레이터)
+ * 1.2  2026-10-15  Edwin  넓은 팝업 + 오른쪽 고객사·사업장 카드(intakeContextCards), 고른 장비의 진행 중 접수 경고(BR-11, 저장은 막지 않음, 새 탭으로 열기) (피드백 개선 ①③)
  * 1.1  2026-10-15  Edwin  제목 기본값 "{증상} · {사업장} · {시리얼}", 장비·사업장이 바뀌면 다시 만듦 (피드백 개선 ②)
  * ----------------------------------------------------------------------------
  * 데이터 방식
@@ -29,6 +30,7 @@ import getIntakeForAsset from "@salesforce/apex/CallIntakeController.getIntakeFo
 import getSiteCandidates from "@salesforce/apex/CallIntakeController.getSiteCandidates";
 import getAssetCandidates from "@salesforce/apex/CallIntakeController.getAssetCandidates";
 import createCase from "@salesforce/apex/CallIntakeController.createCase";
+import getOpenCases from "@salesforce/apex/CallIntakeController.getOpenCases";
 import { reduceErrors } from "c/ldsUtils";
 
 import LABEL_CASE_INTAKE_TITLE from "@salesforce/label/c.LABEL_CASE_INTAKE_TITLE";
@@ -68,6 +70,9 @@ import MSG_SEARCH_RECORD from "@salesforce/label/c.MSG_SEARCH_RECORD";
 import MSG_ASSET_SAVE_HINT from "@salesforce/label/c.MSG_ASSET_SAVE_HINT";
 import MSG_LOAD_ERROR from "@salesforce/label/c.MSG_LOAD_ERROR";
 import MSG_SAVE_ERROR from "@salesforce/label/c.MSG_SAVE_ERROR";
+import MSG_OPEN_CASES_WARNING from "@salesforce/label/c.MSG_OPEN_CASES_WARNING";
+import MSG_OPEN_CASES_MORE from "@salesforce/label/c.MSG_OPEN_CASES_MORE";
+import BTN_OPEN_EXISTING_CASE from "@salesforce/label/c.BTN_OPEN_EXISTING_CASE";
 
 // DESC: CallerMatchService 상수와 같게
 const MATCHED_BY_MESSAGE = {
@@ -125,7 +130,8 @@ export default class CaseIntakeModal extends LightningModal {
     BTN_CANCEL,
     MSG_SELECT_PLACEHOLDER,
     MSG_SEARCH_RECORD,
-    MSG_ASSET_SAVE_HINT
+    MSG_ASSET_SAVE_HINT,
+    BTN_OPEN_EXISTING_CASE
   };
   assetColumns = ASSET_COLUMNS;
 
@@ -148,6 +154,10 @@ export default class CaseIntakeModal extends LightningModal {
   isLoading = false;
   isSaving = false;
   errorMessage;
+  // DESC: 고른 장비의 진행 중 접수 (BR-11 경고). 같은 장비면 다시 조회하지 않음
+  openCases = { totalCount: 0, cases: [] };
+  openCasesAssetId;
+  openCasesSeq = 0;
 
   symptomOptions = [];
   symptomLabelsByValue = {};
@@ -179,7 +189,7 @@ export default class CaseIntakeModal extends LightningModal {
     if (this.intake) {
       this.isCallMode = true;
       this.applyResult(this.intake);
-      this.refreshDefaultText();
+      this.refreshForSelection();
     } else if (this.assetId) {
       this.loadForAsset(this.assetId);
     }
@@ -354,6 +364,56 @@ export default class CaseIntakeModal extends LightningModal {
     }
   }
 
+  // DESC: 고객사·사업장·장비가 바뀐 뒤 — 제목 기본값 + 진행 중 접수
+  refreshForSelection() {
+    this.refreshDefaultText();
+    this.syncOpenCases();
+  }
+
+  async syncOpenCases() {
+    const assetId = this.selectedAssetId || null;
+    if (assetId === this.openCasesAssetId) {
+      return;
+    }
+    this.openCasesAssetId = assetId;
+    this.openCases = { totalCount: 0, cases: [] };
+    if (!assetId) {
+      return;
+    }
+    const seq = ++this.openCasesSeq;
+    try {
+      const result = await getOpenCases({ assetId });
+      if (seq === this.openCasesSeq) {
+        this.openCases = result;
+      }
+    } catch (error) {
+      // DESC: 경고 조회 실패는 접수 작성을 막지 않음 — 오류 문구만
+      if (seq === this.openCasesSeq) {
+        this.errorMessage = `${MSG_LOAD_ERROR}: ${reduceErrors(error).join(", ")}`;
+      }
+    }
+  }
+
+  get hasOpenCases() {
+    return this.openCases.totalCount > 0;
+  }
+
+  get openCasesMessage() {
+    return format(MSG_OPEN_CASES_WARNING, this.openCases.totalCount);
+  }
+
+  get openCasesMoreMessage() {
+    return this.openCases.totalCount > this.openCases.cases.length
+      ? format(MSG_OPEN_CASES_MORE, this.openCases.cases.length)
+      : null;
+  }
+
+  // DESC: 새 탭으로 열어 입력 중인 팝업은 그대로 (Edwin 결정)
+  handleOpenCase(event) {
+    const caseId = event.currentTarget.dataset.id;
+    window.open(`/lightning/r/Case/${caseId}/view`, "_blank");
+  }
+
   // ---------- 사용자 동작 ----------
 
   handleAccountPick(event) {
@@ -371,7 +431,7 @@ export default class CaseIntakeModal extends LightningModal {
     this.siteOptions = [];
     this.assetRows = [];
     this.showSummary = false;
-    this.refreshDefaultText();
+    this.refreshForSelection();
     if (!accountId) {
       return;
     }
@@ -398,7 +458,7 @@ export default class CaseIntakeModal extends LightningModal {
     }
     this.selectedAssetId = null;
     this.showSummary = false;
-    this.refreshDefaultText();
+    this.refreshForSelection();
     const seq = ++this.requestSeq;
     await this.run(() => this.loadAssets(seq));
   }
@@ -414,7 +474,7 @@ export default class CaseIntakeModal extends LightningModal {
     }
     this.setAssetRows(choice.assets);
     this.selectedAssetId = choice.selectedAssetId;
-    this.refreshDefaultText();
+    this.refreshForSelection();
   }
 
   handleAssetRowSelect(event) {
@@ -423,7 +483,7 @@ export default class CaseIntakeModal extends LightningModal {
     if (!this.selectedAssetId) {
       this.showSummary = false;
     }
-    this.refreshDefaultText();
+    this.refreshForSelection();
   }
 
   // DESC: 검색으로 고른 장비는 그 장비 기준으로 고객사·사업장·후보를 다시 채움 (통화 요약은 유지)
@@ -444,14 +504,14 @@ export default class CaseIntakeModal extends LightningModal {
       this.accountOptions = r.accounts || [];
       this.siteOptions = r.sites || [];
       this.setAssetRows(r.assets || []);
-      this.refreshDefaultText();
+      this.refreshForSelection();
     });
   }
 
   async loadForAsset(assetId) {
     await this.run(async () => {
       this.applyResult(await getIntakeForAsset({ assetId }));
-      this.refreshDefaultText();
+      this.refreshForSelection();
     });
   }
 

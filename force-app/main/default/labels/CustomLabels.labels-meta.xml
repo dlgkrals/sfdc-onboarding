@@ -1315,4 +1315,135 @@
         <value
     >승인 요청을 보내지 못했습니다. 입력한 값은 저장하지 않았습니다.</value>
     </labels>
+    <labels>
+        <fullName>LABEL_ACCOUNT_CARD</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>고객사 정보</shortDescription>
+        <value>고객사 정보</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SITE_CARD</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>사업장 정보</shortDescription>
+        <value>사업장 정보</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_CUSTOMER_TYPE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>고객 유형</shortDescription>
+        <value>고객 유형</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_MAIN_PHONE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>대표 번호</shortDescription>
+        <value>대표 번호</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_TRADE_STATUS</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>거래 상태</shortDescription>
+        <value>거래 상태</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SITE_COUNT</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>사업장 수</shortDescription>
+        <value>사업장 수</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ASSET_COUNT</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>장비 수</shortDescription>
+        <value>장비 수</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_ONSITE_CONTACT</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>현장 담당자</shortDescription>
+        <value>현장 담당자</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_SECONDARY_PHONE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>보조 연락처</shortDescription>
+        <value>보조 연락처</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_USAGE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>용도</shortDescription>
+        <value>용도</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_OPEN_CASE_COUNT</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>진행 중 접수</shortDescription>
+        <value>진행 중 접수</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_URGENT_USAGE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>긴급 용도</shortDescription>
+        <value>긴급 용도</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CARD_EMPTY</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >고객사·사업장을 고르면 정보가 보입니다.</shortDescription>
+        <value>고객사·사업장을 고르면 정보가 보입니다.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_OPEN_CASES_WARNING</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >이 장비에 진행 중인 접수가 {0}건 있습니다. 같은 고장인지 확인한 뒤 저장하세요.</shortDescription>
+        <value
+    >이 장비에 진행 중인 접수가 {0}건 있습니다. 같은 고장인지 확인한 뒤 저장하세요.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_OPEN_CASES_MORE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>최근 {0}건만 표시합니다.</shortDescription>
+        <value>최근 {0}건만 표시합니다.</value>
+    </labels>
+    <labels>
+        <fullName>BTN_OPEN_EXISTING_CASE</fullName>
+        <categories>HG_CallIntake</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>기존 접수 열기</shortDescription>
+        <value>기존 접수 열기</value>
+    </labels>
 </CustomLabels>

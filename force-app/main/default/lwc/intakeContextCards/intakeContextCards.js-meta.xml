@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <isExposed>false</isExposed>
+    <description
+  >26-10-15 접수 작성 팝업 오른쪽 고객사·사업장 카드(거래 상태·용도 긴급·장비·진행 중 접수 수) by Edwin</description>
+</LightningComponentBundle>

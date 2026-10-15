@@ -9,6 +9,7 @@
  * 변경 이력
  * 1.0  2026-10-13  Edwin  최초 작성 (D7)
  * 1.1  2026-10-15  Edwin  시리얼 클릭 시 이동하지 않고 장비 요약 팝업, "이 장비로 접수" 추가 (CTI 가상 착신)
+ * 1.2  2026-10-15  Edwin  접수 작성 팝업 크기 large (오른쪽 카드, 피드백 개선 ①)
  * ----------------------------------------------------------------------------
  * 데이터 방식: imperative Apex (AssetSearchController.searchAssets)
  *   - 검색어 입력·필터·정렬·페이지 이동이 모두 "사용자 동작"이라 호출 시점을 컴포넌트가 정해야 함
@@ -227,7 +228,7 @@ export default class AssetSearch extends NavigationMixin(LightningElement) {
     } else if (choice === SUMMARY_RESULT_INTAKE) {
       // DESC: 모달 안에서 모달을 열지 않고, 요약 팝업이 닫힌 뒤 여기서 접수 작성 팝업(장비만 채움)
       const result = await CaseIntakeModal.open({
-        size: "medium",
+        size: "large",
         label: LABEL_CASE_INTAKE_TITLE,
         assetId
       });
