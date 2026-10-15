@@ -1,0 +1,10 @@
+출동 승인 요청이 도착했습니다.
+
+출동 번호: {!WorkOrder.WorkOrderNumber}
+사업장: {!WorkOrder.fmSiteName__c}
+총 청구액: {!WorkOrder.fmTotalCharge__c}
+예외 무상 포함: {!WorkOrder.HasExceptionFree__c}
+고객 유상 동의: {!WorkOrder.CustomerConsent__c}
+승인 요청 사유: {!WorkOrder.ApprovalRequestReason__c}
+
+출동 보기: {!WorkOrder.Link}

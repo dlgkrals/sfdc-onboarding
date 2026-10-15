@@ -1,0 +1,10 @@
+보증 기준일 정정 요청이 도착했습니다.
+
+장비: {!Asset.Name} ({!Asset.SerialNumber})
+현재 설치일: {!Asset.InstallDate}
+현재 근거: {!Asset.InstallationDateSource__c}
+요청 설치일: {!Asset.RequestedInstallDate__c}
+요청 근거: {!Asset.RequestedDateSource__c}
+정정 사유: {!Asset.CorrectionReason__c}
+
+장비 보기: {!Asset.Link}

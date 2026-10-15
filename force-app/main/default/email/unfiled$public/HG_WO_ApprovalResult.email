@@ -1,0 +1,7 @@
+출동 승인 결과입니다.
+
+출동 번호: {!WorkOrder.WorkOrderNumber}
+승인 상태: {!WorkOrder.ApprovalStatus__c}
+반려 사유: {!WorkOrder.ApprovalRejectReason__c}
+
+출동 보기: {!WorkOrder.Link}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <description
+  >26-10-07 보증 기준일 정정 요청을 센터장에게 알림 by Edwin</description>
+    <encodingKey>UTF-8</encodingKey>
+    <name>보증 기준일 정정 요청</name>
+    <style>none</style>
+    <subject
+  >[보증 기준일 정정 요청] {!Asset.Name} {!Asset.SerialNumber}</subject>
+    <type>text</type>
+    <uiType>Aloha</uiType>
+</EmailTemplate>

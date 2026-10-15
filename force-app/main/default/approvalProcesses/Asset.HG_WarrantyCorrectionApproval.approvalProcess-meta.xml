@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ApprovalProcess xmlns="http://soap.sforce.com/2006/04/metadata">
+    <active>true</active>
+    <allowRecall>true</allowRecall>
+    <allowedSubmitters>
+        <submitter>HG_CallCenter</submitter>
+        <type>group</type>
+    </allowedSubmitters>
+    <allowedSubmitters>
+        <submitter>HG_GyeonggiSouthCenterManager</submitter>
+        <type>role</type>
+    </allowedSubmitters>
+    <approvalPageFields>
+        <field>Name</field>
+        <field>SerialNumber</field>
+        <field>SalesChannel__c</field>
+        <field>InstallDate</field>
+        <field>InstallationDateSource__c</field>
+        <field>RequestedInstallDate__c</field>
+        <field>RequestedDateSource__c</field>
+        <field>CorrectionReason__c</field>
+        <field>Owner</field>
+    </approvalPageFields>
+    <approvalStep>
+        <allowDelegate>true</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>epic.c3b435533985@orgfarm.salesforce.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <label>센터장 승인</label>
+        <name>CenterManagerApproval</name>
+    </approvalStep>
+    <description
+  >26-10-07 설치일·근거 정정을 센터장 승인 후 반영 by Edwin</description>
+    <emailTemplate>unfiled$public/HG_Asset_CorrectionRequest</emailTemplate>
+    <enableMobileDeviceAccess>false</enableMobileDeviceAccess>
+    <entryCriteria>
+        <formula>AND(
+  NOT(ISBLANK(RequestedInstallDate__c)),
+  NOT(ISBLANK(TEXT(RequestedDateSource__c))),
+  NOT(ISBLANK(CorrectionReason__c)),
+  NOT(ISPICKVAL(CorrectionStatus__c, &apos;Requested&apos;))
+)</formula>
+    </entryCriteria>
+    <finalApprovalActions>
+        <action>
+            <name>HG_Asset_Correction_Approved</name>
+            <type>FieldUpdate</type>
+        </action>
+    </finalApprovalActions>
+    <finalApprovalRecordLock>false</finalApprovalRecordLock>
+    <finalRejectionActions>
+        <action>
+            <name>HG_Asset_Correction_Rejected</name>
+            <type>FieldUpdate</type>
+        </action>
+    </finalRejectionActions>
+    <finalRejectionRecordLock>false</finalRejectionRecordLock>
+    <initialSubmissionActions>
+        <action>
+            <name>HG_Asset_Correction_Requested</name>
+            <type>FieldUpdate</type>
+        </action>
+    </initialSubmissionActions>
+    <label>보증 기준일 정정 승인</label>
+    <processOrder>1</processOrder>
+    <recallActions>
+        <action>
+            <name>HG_Asset_Correction_Clear</name>
+            <type>FieldUpdate</type>
+        </action>
+    </recallActions>
+    <recordEditability>AdminOrCurrentApprover</recordEditability>
+    <showApprovalHistory>true</showApprovalHistory>
+</ApprovalProcess>

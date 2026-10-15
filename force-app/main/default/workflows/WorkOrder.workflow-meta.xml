@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>HG_WO_ApprovalResultToOwner</fullName>
+        <description
+    >26-10-07 출동 승인 결과를 레코드 소유자(기사)에게 by Edwin</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>unfiled$public/HG_WO_ApprovalResult</template>
+    </alerts>
+    <fieldUpdates>
+        <fullName>HG_WO_Approval_Approved</fullName>
+        <description>26-10-07 승인 상태 = 승인 by Edwin</description>
+        <field>ApprovalStatus__c</field>
+        <literalValue>Approved</literalValue>
+        <name>승인 상태 = 승인</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>true</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>HG_WO_Approval_Pending</fullName>
+        <description>26-10-07 승인 상태 = 대기 by Edwin</description>
+        <field>ApprovalStatus__c</field>
+        <literalValue>Pending</literalValue>
+        <name>승인 상태 = 대기</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>true</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>HG_WO_Approval_Recalled</fullName>
+        <description>26-10-07 승인 상태 = 회수 by Edwin</description>
+        <field>ApprovalStatus__c</field>
+        <literalValue>Recalled</literalValue>
+        <name>승인 상태 = 회수</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>true</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>HG_WO_Approval_Rejected</fullName>
+        <description>26-10-07 승인 상태 = 반려 by Edwin</description>
+        <field>ApprovalStatus__c</field>
+        <literalValue>Rejected</literalValue>
+        <name>승인 상태 = 반려</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>true</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>HG_WO_Status_Arrived</fullName>
+        <description>26-10-07 상태 = 도착 by Edwin</description>
+        <field>Status</field>
+        <literalValue>Arrived</literalValue>
+        <name>상태 = 도착</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>true</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>HG_WO_Status_Pending</fullName>
+        <description>26-10-07 상태 = 승인 대기 by Edwin</description>
+        <field>Status</field>
+        <literalValue>PendingApproval</literalValue>
+        <name>상태 = 승인 대기</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>true</reevaluateOnChange>
+    </fieldUpdates>
+</Workflow>

@@ -33,7 +33,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 
 - 표준 필드 레이블은 설정 → 탭 및 레이블 이름 바꾸기로 바꿨고 objectTranslations/<오브젝트>-ko/*.fieldTranslation-meta.xml로 저장소에 있음. 조회 필드 이름은 가리키는 오브젝트 이름을 따라감(예: 장비의 모델 칸 = "제품"). 레이블 변경 후 화면 확인은 Ctrl+Shift+R
 - 기준값(저장소에 전부 있음): ServiceSetting__mdt.Value__c — ApprovalAmount 500000, VisitFee 30000, RepeatFailureDays 90, RepeatFailureCount 3, SlaHoursDefault 24, SlaHoursJeju 48, SlaWarningHours 6, DealerStartGraceMonths 3, SpecialTermsShipmentMonths 6, WarrantyNoticeDays 30, ErpMaxRetry 3
-- WarrantyPolicy__mdt(General 12, Compressor 36, Extended 24)는 **org에만 있음**(저장소 없음, 확인 필요: retrieve 여부), ServiceCenterMapping__mdt 32건(시군구 5자리·시도 2자리 → 센터), TriggerSetting__mdt 3건(Case·ProductConsumed·ProductTransfer)
+- WarrantyPolicy__mdt(General 12, Compressor 36, Extended 24)는 저장소에 있음, ServiceCenterMapping__mdt 32건(시군구 5자리·시도 2자리 → 센터), TriggerSetting__mdt 3건(Case·ProductConsumed·ProductTransfer)
 
 ## 이미 있는 자동화
 
@@ -42,8 +42,8 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - Flow: Case_BeforeSave_FillFromAsset(장비 → 고객사·사업장·센터·긴급), Case_AfterSave_UrgentAlert, Case_Screen_Cancel, Asset_BeforeSave_NameAndSerialKey(이름 = 모델/고객사/사업장/시리얼 끝자리, 시리얼 키 = 일련번호, 생성 또는 관련 값 변경 시만), CustomerSite_AfterSave_RenameAssets·Account_AfterSave_RenameAssets(이름 바뀌면 장비 이름 다시 생성)
 - 할당 규칙 HG_CaseByServiceCenter, 센터 Queue: 서울·경기남부·충청·경기북부(구성원 없음). 그 밖은 기본 사례 소유자(관리자)
 - Validation Rule 다수. Case.Closed_Lock(종결·취소 접수 수정 차단, 예외 사용자 지정 권한 HG_BypassValidation = HG_Admin만) — Apex도 영향을 받으므로 종결·취소 접수는 갱신 대상에서 제외
-- 승인 프로세스 1 `WorkOrder.HG_WorkOrderApproval` "출동 승인 (예외 무상·고액 유상)"(10/07 설정 화면 생성, 활성, 저장소에 있음): 진입 = 상태 Arrived + 승인 요청 사유 + (HasExceptionFree__c 또는 fmTotalCharge__c > 500000) + (500000 이하이거나 CustomerConsent__c). **500000이 숫자로 박혀 있고 fmNeedsApproval__c를 쓰지 않음(확인 필요: 바꿀지 Edwin 결정)**. 제출자 = 소유자(기사), 승인자 = 제출자의 Manager(센터장, 단계 "센터장 승인", 위임 허용). 제출 시 승인 대기·상태 PendingApproval, 승인·반려·회수 시 상태 Arrived + 승인 상태 필드 갱신, 결과 메일 알림. 필드 업데이트·알림·메일 템플릿(HG_WO_ApprovalRequest)은 저장소에 없음(다른 org 재현 시 필요, 확인 필요)
-- 승인 프로세스 2 `Asset.HG_WarrantyCorrectionApproval` "보증 기준일 정정 승인"(활성, 승인자 김병철 지정 사용자) — **org에 있음, 저장소에 없음(확인 필요)**
+- 승인 프로세스 1 `WorkOrder.HG_WorkOrderApproval` "출동 승인 (예외 무상·고액 유상)"(10/07 설정 화면 생성, 활성, 저장소에 있음): 진입 = 상태 Arrived + 승인 요청 사유 + (HasExceptionFree__c 또는 fmTotalCharge__c > 500000) + (500000 이하이거나 CustomerConsent__c). **500000이 숫자로 박혀 있음**. 기준값(ServiceSetting ApprovalAmount)을 따라가게 바꾸기로 했으나, 승인 프로세스 진입 조건은 $CustomMetadata를 쓰는 수식 필드(fmNeedsApproval__c 등)를 참조할 수 없음(배포 오류 "필드가 없습니다") → 방법 결정 대기. 제출자 = 소유자(기사), 승인자 = 제출자의 Manager(센터장, 단계 "센터장 승인", 위임 허용). 제출 시 승인 대기·상태 PendingApproval, 승인·반려·회수 시 상태 Arrived + 승인 상태 필드 갱신, 결과 메일 알림. 필드 업데이트·메일 알림은 workflows/WorkOrder.workflow-meta.xml, 메일 템플릿은 email/unfiled$public/HG_WO_ApprovalRequest·HG_WO_ApprovalResult
+- 승인 프로세스 2 `Asset.HG_WarrantyCorrectionApproval` "보증 기준일 정정 승인"(10/07, 활성, 저장소에 있음): 진입 = 요청 설치일·요청 근거·정정 사유 입력 + 정정 상태가 Requested 아님. 승인자 = 김병철 사용자 직접 지정(org별 Username, 다른 org 배포 시 바꿔야 함). 필드 업데이트 4개는 workflows/Asset.workflow-meta.xml, 메일 템플릿 HG_Asset_CorrectionRequest
 - 리포트 3 + 동적 대시보드(HangyeolOpsReports / HangyeolOpsDashboards)
 
 ### Apex · 트리거
@@ -97,7 +97,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 ### 대기 중인 일
 
 - R6: ProductConsumedTriggerHandler after delete의 restoreStockForDeleted 제거(삭제 허용·복원 거부 규칙은 유지)
-- 승인 프로세스 1 진입 조건의 500000 → fmNeedsApproval__c 사용 여부(Edwin 결정), 승인 프로세스 2·WarrantyPolicy·승인 관련 Workflow/메일 템플릿 retrieve 여부
+- 승인 프로세스 1 진입 조건을 기준값 따라가게: 승인 진입 조건은 $CustomMetadata 수식 필드를 못 씀 → 방법 결정 대기(시험용 수식 필드 WorkOrder.fmConsentSatisfied__c가 org에만 배포돼 있음, 저장소 미커밋)
 - CTI 가상 착신 시뮬레이터: 설계 완료·구현 대기. 유틸리티 바 패널(발신 번호 + IVR 증상 + 시리얼 뒤 4자리) → SOSL로 사업장 현장·보조 번호 → 고객사 대표 번호 순 조회 → LightningModal 접수 작성 팝업(1건 채움·여러 건 후보·없음 검색, 자동 저장 없음). 장비 검색 시리얼 클릭 = 장비 요약 모달. 새 필드·오브젝트 없음
 - ERP → Salesforce 즉시 반영(Push) 검토: 다른 세션에서 진행 예정
 
