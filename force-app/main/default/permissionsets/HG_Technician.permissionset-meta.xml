@@ -379,6 +379,18 @@
         <field>WorkOrder.ruPaidPartsTotal__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <flowAccesses>
+        <enabled>true</enabled>
+        <flow>
+WorkOrder_Screen_RequestApproval;
+    </flow>
+    </flowAccesses>
+    <flowAccesses>
+        <enabled>true</enabled>
+        <flow>
+WorkOrder_Sub_SubmitApproval;
+    </flow>
+    </flowAccesses>
     <hasActivationRequired>false</hasActivationRequired>
     <label>HG 협력 기사</label>
     <objectPermissions>

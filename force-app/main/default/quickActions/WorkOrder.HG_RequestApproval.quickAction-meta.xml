@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<QuickAction xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description
+  >26-10-15 출동 승인 요청 화면 Flow 실행(표준 승인 요청 버튼 대신) by Edwin</description>
+    <flowDefinition>WorkOrder_Screen_RequestApproval</flowDefinition>
+    <label>승인 요청</label>
+    <optionsCreateFeedItem>false</optionsCreateFeedItem>
+    <type>Flow</type>
+</QuickAction>
