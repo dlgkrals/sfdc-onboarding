@@ -10,6 +10,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-15    Edwin     최초 작성 (CTI 가상 착신 시뮬레이터)
  * 1.1    2026-10-15    Edwin     제목 형식·모델 미지정 (피드백 개선 ②④)
+ * 1.2    2026-10-15    Edwin     커버리지 보강: 빈 저장·직접 쓴 제목·짧은 번호·고객사 범위·대표 번호 사업장 1곳·고객사 후보·모델 이름
  * ----------------------------------------------------------------------------
  * @see CallIntakeController, CallerMatchService
  */
@@ -481,6 +482,175 @@ private class CallIntakeControllerTest {
   }
 
   // DESC: 테스트에서 SOSL은 빈 결과 → 모든 사업장·고객사를 후보로 주고 서비스의 번호 비교에 맡김
+  // 불허: 저장 값 없이 저장 → 저장 오류 문구
+  @isTest
+  static void rejectCreateCaseWithoutDraft() {
+    String message;
+    Test.startTest();
+    System.runAs(getUser('HG_CallCenter')) {
+      try {
+        CallIntakeController.createCase(null);
+      } catch (AuraHandledException e) {
+        message = e.getMessage();
+      }
+    }
+    Test.stopTest();
+
+    Assert.areEqual(System.Label.MSG_SAVE_ERROR, message);
+  }
+
+  // 정상: 상담원이 직접 쓴 제목은 그대로(앞뒤 공백만 정리), 발신 번호·증상 없으면 빈 값
+  @isTest
+  static void normalCreateCaseWithTypedSubject() {
+    CallIntakeController.CaseDraft draft = new CallIntakeController.CaseDraft();
+    draft.assetId = getAssetId('TST-CTI-0003');
+    draft.subject = '  고객이 직접 말한 증상  ';
+
+    Id caseId;
+    Test.startTest();
+    System.runAs(getUser('HG_CallCenter')) {
+      caseId = CallIntakeController.createCase(draft);
+    }
+    Test.stopTest();
+
+    Case saved = [
+      SELECT Subject, CallerPhone__c, SymptomType__c
+      FROM Case
+      WHERE Id = :caseId
+    ];
+    Assert.areEqual('고객이 직접 말한 증상', saved.Subject);
+    Assert.isNull(saved.CallerPhone__c);
+    Assert.isNull(saved.SymptomType__c);
+  }
+
+  // 불허: 번호가 너무 짧으면 찾지 않음 / 고객사 없이 사업장 후보 요청은 빈 목록
+  @isTest
+  static void rejectShortPhoneAndEmptyScope() {
+    CallerMatchService.MatchResult result;
+    List<CallerMatchService.SiteOption> sites;
+    Test.startTest();
+    System.runAs(getUser('HG_CallCenter')) {
+      result = CallIntakeController.matchCaller('12', NO_SERIAL);
+      sites = CallIntakeController.getSiteCandidates(null);
+    }
+    Test.stopTest();
+
+    Assert.isNull(result.accountId);
+    Assert.isTrue(result.assets.isEmpty());
+    Assert.isTrue(sites.isEmpty());
+  }
+
+  // 정상: 사업장 없이 고객사 범위로 장비 후보 (사업장을 고르기 전)
+  @isTest
+  static void normalAssetCandidatesByAccount() {
+    Id accountId = [SELECT Id FROM Account LIMIT 1].Id;
+    CallerMatchService.AssetChoice choice;
+    Test.startTest();
+    System.runAs(getUser('HG_CallCenter')) {
+      choice = CallIntakeController.getAssetCandidates(accountId, null, '0003');
+    }
+    Test.stopTest();
+
+    Assert.isFalse(choice.assets.isEmpty(), '고객사 장비에서 후보');
+    Assert.areEqual(
+      getAssetId('TST-CTI-0003'),
+      choice.selectedAssetId,
+      '시리얼 일치 1대 확정'
+    );
+  }
+
+  // 정상: 고객사 대표 번호 + 사업장 1곳 → 그 사업장으로 좁혀 장비 후보 / 같은 번호 고객사 2곳 → 고객사 후보
+  @isTest
+  static void normalAccountPhoneSingleSiteAndTwoAccounts() {
+    String sharedPhone = '02-555-0101';
+    List<Account> accounts = new List<Account>{
+      buildIndividualAccount('개인 고객 A', sharedPhone),
+      buildIndividualAccount('개인 고객 B', sharedPhone)
+    };
+    insert accounts;
+    CustomerSite__c site = TestDataFactory.createSite(accounts[0].Id);
+    Date installDate = Date.today().addMonths(-6);
+    insert new List<Asset>{
+      TestDataFactory.buildAsset(
+        accounts[0].Id,
+        site.Id,
+        'TST-IND-0001',
+        installDate,
+        false
+      ),
+      TestDataFactory.buildAsset(
+        accounts[0].Id,
+        site.Id,
+        'TST-IND-0002',
+        installDate,
+        false
+      )
+    };
+    Test.setFixedSearchResults(new List<Id>{ accounts[0].Id });
+
+    CallerMatchService.MatchResult single;
+    CallerMatchService.MatchResult twoAccounts;
+    Test.startTest();
+    System.runAs(getUser('HG_CallCenter')) {
+      // DESC: SOSL이 고객사 A만 찾은 경우 → 사업장 1곳으로 좁힘
+      single = CallIntakeController.matchCaller(sharedPhone, NO_SERIAL);
+      // DESC: 같은 번호 고객사 2곳을 찾은 경우 → 고객사 후보
+      Test.setFixedSearchResults(
+        new List<Id>{ accounts[0].Id, accounts[1].Id }
+      );
+      twoAccounts = CallIntakeController.matchCaller(sharedPhone, NO_SERIAL);
+    }
+    Test.stopTest();
+
+    Assert.areEqual(
+      CallerMatchService.OUTCOME_ASSET_CANDIDATES,
+      single.outcome
+    );
+    Assert.areEqual(site.Id, single.siteId, '사업장 1곳이면 그 사업장');
+    Assert.areEqual(2, single.assets.size());
+    Assert.areEqual(
+      CallerMatchService.OUTCOME_ACCOUNT_CANDIDATES,
+      twoAccounts.outcome
+    );
+    Assert.areEqual(2, twoAccounts.accounts.size());
+  }
+
+  // 정상: 모델이 있는 장비는 모델 이름 (없으면 "모델 미지정"은 normalIntakeForAsset)
+  @isTest
+  static void normalModelNameShown() {
+    Product2 model = new Product2(
+      Name = 'HAC-500',
+      Family = 'EquipmentModel',
+      IsActive = true
+    );
+    insert model;
+    Id assetId = getAssetId('TST-CTI-0003');
+    update new Asset(Id = assetId, Product2Id = model.Id);
+
+    CallerMatchService.MatchResult result;
+    Test.startTest();
+    System.runAs(getUser('HG_CallCenter')) {
+      result = CallIntakeController.getIntakeForAsset(assetId);
+    }
+    Test.stopTest();
+
+    Assert.areEqual('HAC-500', result.assets[0].model);
+  }
+
+  private static Account buildIndividualAccount(String name, String phone) {
+    return new Account(
+      Name = name,
+      Phone = phone,
+      RecordTypeId = Schema.SObjectType.Account.getRecordTypeInfosByDeveloperName()
+        .get('Individual')
+        .getRecordTypeId(),
+      BillingCountryCode = 'KR',
+      BillingCity = '평택시',
+      BillingStreet = '경기도 평택시 평택로 32, 101호',
+      BillingPostalCode = '17901'
+    );
+  }
+
   private static void setSearchResults() {
     List<Id> ids = new List<Id>();
     for (CustomerSite__c site : [SELECT Id FROM CustomerSite__c]) {

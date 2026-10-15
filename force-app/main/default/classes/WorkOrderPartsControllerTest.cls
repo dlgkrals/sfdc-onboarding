@@ -9,6 +9,7 @@
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 LWC: 출동 사용 부품 화면)
  * 1.1    2026-10-14    Edwin     빈 재고 비활성·저장 거부, 기사 runAs 자기 차량만·빈 재고 거부 (D8 화면 개선)
  * 1.2    2026-10-14    Edwin     남은 수량 초과 거부(불허)·정확히 남은 수량 허용(경계)
+ * 1.3    2026-10-15    Edwin     커버리지 보강: 출동 없이·다른 Id로 호출 시 빈 결과
  * ----------------------------------------------------------------------------
  * @see WorkOrderPartsController
  */
@@ -284,6 +285,28 @@ private class WorkOrderPartsControllerTest {
       '재고 선택 안내'
     );
     Assert.areEqual(0, [SELECT COUNT() FROM ProductConsumed], '저장 안 됨');
+  }
+
+  // 불허: 출동 없이(또는 출동이 아닌 Id로) 부르면 빈 결과 — 화면이 레코드 페이지 밖에서 열린 경우
+  @isTest
+  static void rejectMissingWorkOrderReturnsEmpty() {
+    Id notWorkOrderId = [SELECT Id FROM Case LIMIT 1].Id;
+
+    Test.startTest();
+    WorkOrderPartsController.PartsView emptyView = WorkOrderPartsController.getParts(
+      null
+    );
+    List<WorkOrderPartsController.StockOption> noIdStock = WorkOrderPartsController.getVanStock(
+      null
+    );
+    List<WorkOrderPartsController.StockOption> otherIdStock = WorkOrderPartsController.getVanStock(
+      notWorkOrderId
+    );
+    Test.stopTest();
+
+    Assert.isTrue(emptyView.rows.isEmpty());
+    Assert.isTrue(noIdStock.isEmpty());
+    Assert.isTrue(otherIdStock.isEmpty(), '출동을 못 찾으면 빈 목록');
   }
 
   // 정상: 협력 기사(최민호와 같은 권한 집합 HG_Technician) runAs — 자기 출동에서 자기 차량 재고만 보이고(다른 사람 차량 제외),

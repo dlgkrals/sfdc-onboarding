@@ -10,6 +10,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 IF-02 역방향)
  * 1.1    2026-10-15    Edwin     중복 번호는 쪽 실패 대신 건너뜀(푸시와 함께 쓰기), 기록 메시지 경로 확인
+ * 1.2    2026-10-15    Edwin     커버리지 보강: Batch 실패 시 다음 쪽 호출 안 함
  * ----------------------------------------------------------------------------
  * @see ErpStockSyncService
  */
@@ -418,5 +419,29 @@ private class ErpStockSyncServiceTest {
 
     Assert.areEqual(VAN_GENERAL_QTY + 2, vanQty('TEST-GEN'), 'Batch 반영');
     Assert.isNotNull(jobId, '예약됨');
+  }
+
+  // 불허: ERP 장애면 Batch는 그 쪽에서 멈추고 다음 쪽은 부르지 않음, 이력 번호·재고 그대로
+  // DESC: 테스트에서 Batch execute는 1번만 돌므로 execute를 직접 두 번 호출
+  @isTest
+  static void rejectBatchStopsAfterFailure() {
+    MovementsMock mock = new MovementsMock();
+    mock.statusCode = 503;
+    Test.setMock(HttpCalloutMock.class, mock);
+    ErpStockSyncBatch batch = new ErpStockSyncBatch();
+
+    Test.startTest();
+    batch.execute(null, new List<Integer>{ 1 });
+    batch.execute(null, new List<Integer>{ 2 });
+    batch.finish(null);
+    Test.stopTest();
+
+    Assert.areEqual(1, mock.calls, '실패 뒤 다음 쪽은 호출 안 함');
+    Assert.areEqual(
+      BASELINE,
+      ErpStockSyncService.getLastMovementId(),
+      '번호 그대로'
+    );
+    Assert.areEqual(VAN_GENERAL_QTY, vanQty('TEST-GEN'), '재고 그대로');
   }
 }

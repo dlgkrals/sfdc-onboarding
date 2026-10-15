@@ -178,6 +178,24 @@ private class IntakeContextServiceTest {
     Assert.isTrue(noCases.cases.isEmpty());
   }
 
+  // 불허: 장비 없이·없는 고객사·사업장 Id로 부르면 빈 결과 (오류 아님)
+  @isTest
+  static void rejectMissingRecordsReturnEmpty() {
+    Id notFoundId = [SELECT Id FROM Case LIMIT 1].Id;
+    IntakeContextService.OpenCases noAsset;
+    IntakeContextService.ContextCards notFound;
+    Test.startTest();
+    System.runAs(getUser('HG_CallCenter')) {
+      noAsset = CallIntakeController.getOpenCases(null);
+      notFound = CallIntakeController.getContextCards(notFoundId, notFoundId);
+    }
+    Test.stopTest();
+
+    Assert.areEqual(0, noAsset.totalCount);
+    Assert.isNull(notFound.account);
+    Assert.isNull(notFound.site);
+  }
+
   // 불허: 기사(고객사·사업장·장비·접수 권한 없음) → 카드·진행 중 접수 모두 거부
   @isTest
   static void rejectTechnician() {
