@@ -6,6 +6,7 @@
  * ----------------------------------------------------------------------------
  * 변경 이력
  * 1.0  2026-10-15  Edwin  최초 작성 (CTI 가상 착신 시뮬레이터)
+ * 1.1  2026-10-15  Edwin  모델 없는 장비에 "모델 미지정" 배지 (피드백 개선 ④)
  * ----------------------------------------------------------------------------
  * 데이터 방식
  *   - 필드 표시: LDS (lightning-record-view-form) — 권한 없는 필드는 표시되지 않음
@@ -22,8 +23,10 @@ import SERIAL_KEY_FIELD from "@salesforce/schema/Asset.SerialKey__c";
 import WARRANTY_STATUS_FIELD from "@salesforce/schema/Asset.fmWarrantyStatus__c";
 import REPEAT_FAILURE_FIELD from "@salesforce/schema/Asset.RepeatFailure__c";
 import RECENT_CASE_COUNT_FIELD from "@salesforce/schema/Asset.RecentCaseCount__c";
+import PRODUCT2_FIELD from "@salesforce/schema/Asset.Product2Id";
 
 import MSG_REPEAT_FAILURE_WARNING from "@salesforce/label/c.MSG_REPEAT_FAILURE_WARNING";
+import LABEL_MODEL_UNSPECIFIED from "@salesforce/label/c.LABEL_MODEL_UNSPECIFIED";
 
 // DESC: assetDetail과 같은 배지 색 (보증 상태 Formula 값 기준)
 const BADGE_CLASS_BY_STATUS = {
@@ -47,6 +50,7 @@ export default class AssetSummary extends LightningElement {
   ];
 
   asset;
+  labels = { LABEL_MODEL_UNSPECIFIED };
 
   @wire(getRecord, {
     recordId: "$assetId",
@@ -54,7 +58,8 @@ export default class AssetSummary extends LightningElement {
       SERIAL_KEY_FIELD,
       WARRANTY_STATUS_FIELD,
       REPEAT_FAILURE_FIELD,
-      RECENT_CASE_COUNT_FIELD
+      RECENT_CASE_COUNT_FIELD,
+      PRODUCT2_FIELD
     ]
   })
   wiredAsset({ data }) {
@@ -67,6 +72,11 @@ export default class AssetSummary extends LightningElement {
 
   get warrantyStatus() {
     return this.asset ? getFieldValue(this.asset, WARRANTY_STATUS_FIELD) : null;
+  }
+
+  // DESC: 모델 칸이 비면 표준 출력 칸은 빈칸 → 눈에 띄게 배지로
+  get isModelMissing() {
+    return this.asset ? !getFieldValue(this.asset, PRODUCT2_FIELD) : false;
   }
 
   get badgeClass() {

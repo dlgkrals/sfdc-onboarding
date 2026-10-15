@@ -9,6 +9,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-15    Edwin     최초 작성 (CTI 가상 착신 시뮬레이터)
+ * 1.1    2026-10-15    Edwin     제목 기본값 "{증상} · {사업장} · {시리얼}" (피드백 개선 ②)
  * ----------------------------------------------------------------------------
  * @see CallerMatchService, callSimulator · caseIntakeModal · assetSummaryModal (LWC)
  */
@@ -16,6 +17,8 @@
 public with sharing class CallIntakeController {
   @TestVisible
   private static final String ORIGIN_PHONE = 'Phone';
+  @TestVisible
+  private static final String SUBJECT_SEPARATOR = ' · ';
 
   /**
    * @description 접수 작성 가능 여부 (패널 표시·"이 장비로 접수" 버튼 표시용)
@@ -112,7 +115,7 @@ public with sharing class CallIntakeController {
         ? null
         : draft.symptomType,
       Subject = String.isBlank(draft.subject)
-        ? buildDefaultSubject(draft.symptomType)
+        ? buildDefaultSubject(draft.symptomType, draft.assetId)
         : draft.subject.trim(),
       Description = draft.description
     );
@@ -131,26 +134,42 @@ public with sharing class CallIntakeController {
     }
   }
 
-  // DESC: 제목 기본값 "전화 접수 · {증상}" (증상 없으면 "전화 접수")
+  // DESC: 제목 기본값 "{증상} · {사업장} · {시리얼}" — 빈 값은 건너뜀, 모두 비면 "전화 접수" (화면 caseIntakeModal과 같은 규칙)
   @TestVisible
-  private static String buildDefaultSubject(String symptomType) {
-    String symptomLabel = null;
+  private static String buildDefaultSubject(String symptomType, Id assetId) {
+    List<String> parts = new List<String>();
     if (String.isNotBlank(symptomType)) {
       for (
         Schema.PicklistEntry entry : Case.SymptomType__c.getDescribe()
           .getPicklistValues()
       ) {
         if (entry.getValue() == symptomType) {
-          symptomLabel = entry.getLabel();
+          parts.add(entry.getLabel());
         }
       }
     }
-    return String.isBlank(symptomLabel)
+    if (assetId != null) {
+      List<Asset> assets = [
+        SELECT SerialKey__c, CustomerSite__r.Name
+        FROM Asset
+        WHERE Id = :assetId
+        WITH USER_MODE
+        LIMIT 1
+      ];
+      if (!assets.isEmpty()) {
+        addIfPresent(parts, assets[0].CustomerSite__r?.Name);
+        addIfPresent(parts, assets[0].SerialKey__c);
+      }
+    }
+    return parts.isEmpty()
       ? System.Label.LABEL_CALL_SUBJECT_PLAIN
-      : String.format(
-          System.Label.LABEL_CALL_SUBJECT,
-          new List<Object>{ symptomLabel }
-        );
+      : String.join(parts, SUBJECT_SEPARATOR);
+  }
+
+  private static void addIfPresent(List<String> parts, String value) {
+    if (String.isNotBlank(value)) {
+      parts.add(value);
+    }
   }
 
   // DESC: 접수 생성 + 고객 정보(사업장·장비) 조회가 모두 되는 사용자만 (상담원·관리자)

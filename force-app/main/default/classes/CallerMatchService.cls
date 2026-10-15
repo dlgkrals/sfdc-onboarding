@@ -10,6 +10,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-15    Edwin     최초 작성 (CTI 가상 착신 시뮬레이터)
+ * 1.1    2026-10-15    Edwin     모델 없는 장비 = "모델 미지정" (피드백 개선 ④)
  * ----------------------------------------------------------------------------
  * @see CallIntakeController, callSimulator · caseIntakeModal (LWC)
  */
@@ -498,7 +499,10 @@ public inherited sharing class CallerMatchService {
     public AssetOption(Asset asset, String suffix) {
       this.id = asset.Id;
       this.serialKey = asset.SerialKey__c;
-      this.model = asset.Product2 != null ? asset.Product2.Name : asset.Name;
+      // DESC: 모델 없는 장비는 "모델 미지정" (예전에는 장비 이름을 대신 보여 줘 모델처럼 보였음)
+      this.model = asset.Product2 != null
+        ? asset.Product2.Name
+        : System.Label.LABEL_MODEL_UNSPECIFIED;
       this.siteId = asset.CustomerSite__c;
       this.siteName = asset.CustomerSite__r?.Name;
       this.accountId = asset.AccountId;

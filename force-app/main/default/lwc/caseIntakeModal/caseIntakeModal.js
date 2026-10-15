@@ -8,6 +8,7 @@
  * ----------------------------------------------------------------------------
  * 변경 이력
  * 1.0  2026-10-15  Edwin  최초 작성 (CTI 가상 착신 시뮬레이터)
+ * 1.1  2026-10-15  Edwin  제목 기본값 "{증상} · {사업장} · {시리얼}", 장비·사업장이 바뀌면 다시 만듦 (피드백 개선 ②)
  * ----------------------------------------------------------------------------
  * 데이터 방식
  *   - 판정 결과(intake)는 연 쪽이 넘김. 장비 모드(assetId만)는 열릴 때 getIntakeForAsset으로 같은 모양을 받음
@@ -45,7 +46,6 @@ import LABEL_COL_SYMPTOM from "@salesforce/label/c.LABEL_COL_SYMPTOM";
 import LABEL_SUBJECT from "@salesforce/label/c.LABEL_SUBJECT";
 import LABEL_DESCRIPTION from "@salesforce/label/c.LABEL_DESCRIPTION";
 import LABEL_SERIAL_MATCH from "@salesforce/label/c.LABEL_SERIAL_MATCH";
-import LABEL_CALL_SUBJECT from "@salesforce/label/c.LABEL_CALL_SUBJECT";
 import LABEL_CALL_SUBJECT_PLAIN from "@salesforce/label/c.LABEL_CALL_SUBJECT_PLAIN";
 import LABEL_CALL_DESCRIPTION from "@salesforce/label/c.LABEL_CALL_DESCRIPTION";
 import BTN_ASSET_SUMMARY from "@salesforce/label/c.BTN_ASSET_SUMMARY";
@@ -79,6 +79,8 @@ const OUTCOME_CONFIRMED = "CONFIRMED";
 const OUTCOME_ASSET_CANDIDATES = "ASSET_CANDIDATES";
 const OUTCOME_SITE_CANDIDATES = "SITE_CANDIDATES";
 const OUTCOME_ACCOUNT_CANDIDATES = "ACCOUNT_CANDIDATES";
+// DESC: CallIntakeController.SUBJECT_SEPARATOR와 같게
+const SUBJECT_SEPARATOR = " · ";
 
 const ASSET_COLUMNS = [
   {
@@ -315,13 +317,29 @@ export default class CaseIntakeModal extends LightningModal {
     }));
   }
 
-  // DESC: 제목·설명 기본값. 상담원이 제목을 직접 고쳤으면 증상을 바꿔도 덮어쓰지 않음
+  get selectedAssetRow() {
+    return this.assetRows.find((row) => row.id === this.selectedAssetId);
+  }
+
+  // DESC: 제목 기본값 "{증상} · {사업장} · {시리얼}" — 빈 값은 건너뜀, 모두 비면 "전화 접수"
+  //       사업장은 고른 장비의 사업장 우선, 장비가 없으면 고른 사업장
+  buildDefaultSubject() {
+    const asset = this.selectedAssetRow;
+    const site = this.siteOptions.find((o) => o.id === this.siteId);
+    const parts = [
+      this.symptomLabelsByValue[this.symptom],
+      asset?.siteName || site?.label,
+      asset?.serialKey
+    ].filter((part) => part);
+    return parts.length
+      ? parts.join(SUBJECT_SEPARATOR)
+      : LABEL_CALL_SUBJECT_PLAIN;
+  }
+
+  // DESC: 제목·설명 기본값. 상담원이 제목을 직접 고쳤으면 증상·장비를 바꿔도 덮어쓰지 않음
   refreshDefaultText() {
-    const symptomLabel = this.symptomLabelsByValue[this.symptom];
     if (!this.subjectEdited) {
-      this.subject = symptomLabel
-        ? format(LABEL_CALL_SUBJECT, symptomLabel)
-        : LABEL_CALL_SUBJECT_PLAIN;
+      this.subject = this.buildDefaultSubject();
     }
     if (this.isCallMode && !this.descriptionEdited && !this.description) {
       const ivrLabel = this.symptomLabelsByValue[this.symptomType];
@@ -353,6 +371,7 @@ export default class CaseIntakeModal extends LightningModal {
     this.siteOptions = [];
     this.assetRows = [];
     this.showSummary = false;
+    this.refreshDefaultText();
     if (!accountId) {
       return;
     }
@@ -379,6 +398,7 @@ export default class CaseIntakeModal extends LightningModal {
     }
     this.selectedAssetId = null;
     this.showSummary = false;
+    this.refreshDefaultText();
     const seq = ++this.requestSeq;
     await this.run(() => this.loadAssets(seq));
   }
@@ -394,6 +414,7 @@ export default class CaseIntakeModal extends LightningModal {
     }
     this.setAssetRows(choice.assets);
     this.selectedAssetId = choice.selectedAssetId;
+    this.refreshDefaultText();
   }
 
   handleAssetRowSelect(event) {
@@ -402,6 +423,7 @@ export default class CaseIntakeModal extends LightningModal {
     if (!this.selectedAssetId) {
       this.showSummary = false;
     }
+    this.refreshDefaultText();
   }
 
   // DESC: 검색으로 고른 장비는 그 장비 기준으로 고객사·사업장·후보를 다시 채움 (통화 요약은 유지)
@@ -422,6 +444,7 @@ export default class CaseIntakeModal extends LightningModal {
       this.accountOptions = r.accounts || [];
       this.siteOptions = r.sites || [];
       this.setAssetRows(r.assets || []);
+      this.refreshDefaultText();
     });
   }
 

@@ -9,6 +9,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-15    Edwin     최초 작성 (CTI 가상 착신 시뮬레이터)
+ * 1.1    2026-10-15    Edwin     제목 형식·모델 미지정 (피드백 개선 ②④)
  * ----------------------------------------------------------------------------
  * @see CallIntakeController, CallerMatchService
  */
@@ -307,6 +308,34 @@ private class CallIntakeControllerTest {
     Assert.areEqual(CallerMatchService.OUTCOME_CONFIRMED, result.outcome);
     Assert.areEqual(getSiteId('평택 2창고'), result.siteId);
     Assert.areEqual(3, result.sites.size(), '사업장도 바꿀 수 있게 후보');
+    // DESC: 테스트 장비는 모델이 없음 → 장비 이름 대신 "모델 미지정"
+    for (CallerMatchService.AssetOption option : result.assets) {
+      Assert.areEqual(System.Label.LABEL_MODEL_UNSPECIFIED, option.model);
+    }
+  }
+
+  // 정상: 제목 기본값 — 빈 값은 건너뛰고, 모두 비면 "전화 접수"
+  @isTest
+  static void normalDefaultSubjectSkipsBlankParts() {
+    Id assetId = getAssetId('TST-CTI-0015');
+    String separator = CallIntakeController.SUBJECT_SEPARATOR;
+    Test.startTest();
+    String full = CallIntakeController.buildDefaultSubject('Noise', assetId);
+    String noSymptom = CallIntakeController.buildDefaultSubject(null, assetId);
+    String symptomOnly = CallIntakeController.buildDefaultSubject(
+      'Noise',
+      null
+    );
+    String empty = CallIntakeController.buildDefaultSubject(null, null);
+    Test.stopTest();
+
+    Assert.areEqual(
+      '소음' + separator + '평택 2창고' + separator + 'TST-CTI-0015',
+      full
+    );
+    Assert.areEqual('평택 2창고' + separator + 'TST-CTI-0015', noSymptom);
+    Assert.areEqual('소음', symptomOnly);
+    Assert.areEqual(System.Label.LABEL_CALL_SUBJECT_PLAIN, empty);
   }
 
   // 정상: 상담원이 전화 접수 저장 → 경로·발신 번호·증상·기본 제목, 고객사·사업장은 저장 전 Flow가 채움
@@ -344,11 +373,18 @@ private class CallIntakeControllerTest {
     Assert.areEqual('010-1111-2002', saved.CallerPhone__c);
     Assert.areEqual('Leak', saved.SymptomType__c);
     Assert.areEqual(
-      CallIntakeController.buildDefaultSubject('Leak'),
+      CallIntakeController.buildDefaultSubject('Leak', assetId),
       saved.Subject,
       '제목 비우면 기본 제목'
     );
-    Assert.isTrue(saved.Subject.contains('누수'), '증상 라벨 사용');
+    Assert.areEqual(
+      String.join(
+        new List<String>{ '누수', '인천 물류센터', 'TST-CTI-0003' },
+        CallIntakeController.SUBJECT_SEPARATOR
+      ),
+      saved.Subject,
+      '제목 = 증상 · 사업장 · 시리얼'
+    );
     Assert.areEqual(
       [SELECT Id FROM Account LIMIT 1].Id,
       saved.AccountId,

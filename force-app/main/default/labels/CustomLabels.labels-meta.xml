@@ -50,6 +50,14 @@
         <value>모델</value>
     </labels>
     <labels>
+        <fullName>LABEL_MODEL_UNSPECIFIED</fullName>
+        <categories>HG_AssetSearch</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>모델 미지정</shortDescription>
+        <value>모델 미지정</value>
+    </labels>
+    <labels>
         <fullName>LABEL_COL_ACCOUNT</fullName>
         <categories>HG_AssetSearch</categories>
         <language>en_US</language>
@@ -956,14 +964,6 @@
         <protected>false</protected>
         <shortDescription>접수 저장</shortDescription>
         <value>접수 저장</value>
-    </labels>
-    <labels>
-        <fullName>LABEL_CALL_SUBJECT</fullName>
-        <categories>HG_CallIntake</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>전화 접수 · {0}</shortDescription>
-        <value>전화 접수 · {0}</value>
     </labels>
     <labels>
         <fullName>LABEL_CALL_SUBJECT_PLAIN</fullName>

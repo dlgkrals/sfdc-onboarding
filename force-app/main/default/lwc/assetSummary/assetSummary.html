@@ -6,6 +6,12 @@
       label={warrantyStatus}
       class={badgeClass}
     ></lightning-badge>
+    <lightning-badge
+      lwc:if={isModelMissing}
+      label={labels.LABEL_MODEL_UNSPECIFIED}
+      icon-name="utility:warning"
+      class="slds-theme_warning slds-m-left_x-small"
+    ></lightning-badge>
   </div>
 
   <div
