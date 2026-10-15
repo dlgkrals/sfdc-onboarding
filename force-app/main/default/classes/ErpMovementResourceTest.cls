@@ -8,6 +8,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-15    Edwin     최초 작성 (IF-02 Pull → Push + Pull)
+ * 1.1    2026-10-15    Edwin     레코드 접근 없는 사용자로 호출 (실제 호출 결함 재발 방지)
  * ----------------------------------------------------------------------------
  * @see ErpMovementResource, ErpStockSyncService.applyPushed
  */
@@ -124,6 +125,43 @@ private class ErpMovementResourceTest {
       ErpStockSyncService.getLastMovementId(),
       '푸시는 가져오기 기준 번호를 올리지 않음'
     );
+  }
+
+  // 정상(권한): 레코드를 하나도 못 보는 사용자(연동 사용자와 같은 처지)로 호출해도 위치·재고를 찾아 반영
+  //            (2026-10-15 실제 호출에서 with sharing 때문에 "없는 위치 코드"가 났던 결함의 재발 방지)
+  @isTest
+  static void normalAppliedByUserWithoutRecordAccess() {
+    User noAccess;
+    System.runAs(new User(Id = UserInfo.getUserId())) {
+      noAccess = TestDataFactory.createUser('HG_CallCenter', false);
+    }
+    Id vanId = [SELECT Id FROM Location WHERE ErpLocationCode__c = :VAN_CODE]
+    .Id;
+    Assert.isFalse(
+      [
+        SELECT RecordId, HasReadAccess
+        FROM UserRecordAccess
+        WHERE UserId = :noAccess.Id AND RecordId = :vanId
+      ]
+      .HasReadAccess,
+      '전제: 이 사용자는 차량 위치를 볼 수 없음'
+    );
+    Map<String, Object> res;
+
+    Test.startTest();
+    System.runAs(noAccess) {
+      res = postMovements(
+        new List<Object>{ movement(101, 'RECEIPT', 'ERP', 'TEST-GEN', 3) }
+      );
+    }
+    Test.stopTest();
+
+    Assert.areEqual(
+      'APPLIED',
+      resultAt(res, 0).get('result'),
+      '반영: ' + resultAt(res, 0)
+    );
+    Assert.areEqual(VAN_GENERAL_QTY + 3, vanQty('TEST-GEN'), '10 + 3');
   }
 
   // 정상: Salesforce에 없던 재고(차량 압축기) 입고 → 새로 생성

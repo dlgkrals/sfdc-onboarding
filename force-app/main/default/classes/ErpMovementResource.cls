@@ -14,11 +14,14 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-15    Edwin     최초 작성 (IF-02 Pull → Push + Pull)
+ * 1.1    2026-10-15    Edwin     without sharing (연동 사용자가 위치를 못 찾던 결함)
  * ----------------------------------------------------------------------------
  * @see ErpStockSyncService.applyPushed, erp-mock/src/index.js, docs/interface_definition.md IF-02
  */
+// WARN: without sharing — 연동 사용자는 레코드를 소유하지 않고 위치·재고 공유도 없음. SYSTEM_MODE만으로는 공유가 풀리지 않아
+//       위치를 못 찾았음(2026-10-15 실제 호출). 접근은 이 클래스 실행 권한(HG_ErpIntegration)과 입력 검증으로 제한
 @RestResource(urlMapping='/hg/erp/movements')
-global with sharing class ErpMovementResource {
+global without sharing class ErpMovementResource {
   @TestVisible
   private static final Integer MAX_MOVEMENTS = 200;
   @TestVisible

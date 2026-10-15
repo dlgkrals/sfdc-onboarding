@@ -18,11 +18,14 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 IF-02 역방향)
  * 1.1    2026-10-15    Edwin     푸시 반영(applyPushed) 추가, 이미 기록된 이력 번호 건너뜀(중복), 기록 메시지에 경로(푸시·가져오기)
+ * 1.2    2026-10-15    Edwin     with sharing → inherited sharing (연동 사용자 푸시에서 위치를 못 찾던 결함: SYSTEM_MODE도 공유는 클래스 선언을 따름)
  * ----------------------------------------------------------------------------
  * @see ErpMovementResource, ErpStockSyncBatch, ErpStockSyncSchedulable, erp-mock/src/index.js getMovements, docs/interface_definition.md IF-02
  */
 // DESC: 예약 작업(관리자)으로 돌지만 시스템이 계산하는 반영이므로 조회·저장 모두 SYSTEM_MODE 명시 (API 67 기본 user mode)
-public with sharing class ErpStockSyncService {
+// WARN: SYSTEM_MODE도 레코드 공유는 클래스 공유 선언을 따름 → inherited sharing(호출한 쪽을 따름).
+//       가져오기(Batch, 관리자)는 그대로, 푸시는 ErpMovementResource(without sharing)에서 불러 연동 사용자도 위치·재고를 찾음
+public inherited sharing class ErpStockSyncService {
   public static final String ORIGIN_ERP = 'ERP';
   public static final String TYPE_RECEIPT = 'RECEIPT';
   public static final String TYPE_ADJUST = 'ADJUST';
