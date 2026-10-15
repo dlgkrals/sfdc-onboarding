@@ -9,6 +9,7 @@
  * 1.0  2026-10-13  Edwin  최초 작성 (D7)
  * 1.1  2026-10-14  Edwin  재고 선택을 "부품 이름 · 위치 · 남은 수량(단위)" 목록으로, 남은 수량 0은 비활성 (D8)
  * 1.2  2026-10-14  Edwin  남은 수량보다 많이 쓰면 거부 (화면 + 서버, D8 결정)
+ * 1.3  2026-10-15  Edwin  재고 목록 항목이 모두 선택 불가로 보이던 결함 수정 (disabled·selected에 false 대신 null)
  * ----------------------------------------------------------------------------
  * 데이터 방식
  *   - 재고 선택지: @wire Apex (WorkOrderPartsController.getVanStock, cacheable=true, with sharing + USER_MODE)
@@ -85,8 +86,10 @@ export default class PartAddForm extends LightningElement {
       return {
         label: item.available ? label : `${label} (${MISC_OUT_OF_STOCK})`,
         value: item.productItemId,
-        disabled: !item.available,
-        selected: item.productItemId === this.selectedItemId
+        // WARN: 일반 HTML <option>에 false를 바인딩하면 LWC가 disabled="false" 속성을 남겨 브라우저는 "선택 불가"로 봄
+        //       (불리언 속성은 값과 상관없이 있으면 켜짐) → 끌 때는 null로 넘겨 속성 자체를 지움
+        disabled: item.available ? null : true,
+        selected: item.productItemId === this.selectedItemId ? true : null
       };
     });
   }
