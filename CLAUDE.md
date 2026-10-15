@@ -64,8 +64,9 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - 출동 레코드 페이지 HG_WorkOrderRecordPage: workOrderParts(부모, @wire getParts) ⊃ partAddForm(자식, 기사 차량 재고 목록·남은 0 비활성, 저장 후 partadded 이벤트). WorkOrderPartsController. 출동 페이지 표준 "사용 부품 새로 만들기"는 숨김(사용 부품 탭 등 다른 곳엔 남음)
 - 고객사·사업장 새로 만들기 재정의(데스크톱만, 모바일은 표준): Aura 래퍼 accountNewOverride·customerSiteNewOverride(lightning:actionOverride + isUrlAddressable, pageReference 변화 시 LWC 다시 그림) ⊃ accountNew·customerSiteNew(LDS record-edit-form, 저장·취소 때 초기화). 관련 목록에서 열면 고객사 자동 입력(inContextOfRef), 고객사 유형은 표준 선택 화면에서 전달
 - 도로명주소 검색(IF-07): 공통 addressSearch(검색·선택만, addressselected 이벤트, Enter = 바로 검색) — 사업장 등록·고객사 등록·빠른 작업 "주소 검색"(addressEditAction) 세 곳에서 사용. AddressSearchController(Named Credential HG_JusoApi), CustomerSiteAddressService
-- 공통 c/ldsUtils.reduceErrors. 화면 문구는 Custom Label(95개, 기본 언어 en_US에 한국어 값, 생성 스크립트로 관리). 컨트롤러는 with sharing + USER_MODE
+- 공통 c/ldsUtils.reduceErrors. 화면 문구는 Custom Label(140개, 기본 언어 en_US에 한국어 값). 원본은 labels/CustomLabels.labels-meta.xml을 직접 편집(예전 생성 스크립트는 세션 임시 폴더라 저장소에 없음). 라벨 파일을 배포해도 저장소에서 지운 라벨은 org에서 안 지워짐(지울 땐 따로 삭제). 컨트롤러는 with sharing + USER_MODE
 - 사용자 라이선스 Salesforce Integration 권한 집합은 오브젝트 권한을 check-only로 받아도 저장하지 않음, 권한 집합 라이선스 Salesforce API Integration 권한 집합은 Apex 클래스 접근 불가 → 연동 사용자 권한은 둘로 나눔
+- CTI 가상 착신 시뮬레이터(2026-10-15 합침): 유틸리티 바 HG_AS_UtilityBar "가상 착신"(callSimulator) → CallIntakeController·CallerMatchService(SOSL IN PHONE FIELDS: 사업장 현장 → 보조 → 고객사 대표 번호, 찾은 범위 안에서만 시리얼 뒤 4자리) → 접수 작성 팝업 caseIntakeModal(LightningModal, 1건 채움·여러 건 후보·없음 검색, 자동 저장 없음, 경로 전화·발신 번호 CallerPhone__c·증상·제목·설명·장비만 저장). 장비 검색 시리얼 클릭 = 장비 요약 팝업 assetSummaryModal ⊃ assetSummary. 실제 운영은 Service Cloud Voice/Open CTI. 클래스 접근 HG_CallCenter·HG_Admin
 - 주의: 일반 HTML 요소(option 등)에 불리언 속성을 바인딩할 때 false 대신 null(LWC가 disabled="false"를 남김)
 
 ### ERP 연동 (Mock ERP, docs/interface_definition.md IF-01~07)
@@ -90,7 +91,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 ## 일정 · 현황
 
 - D4~D8 완료(브랜치 feature/onboarding-d4 a15d9a5, d5 9070a35, d6 a24d1a2, d7 63abe71, d8 진행 중 최신 375728a). D11(10/19) 발표 완료
-- 테스트 163개 통과(테스트 클래스 19), org 커버리지 96%(2026-10-14)
+- 테스트 192개 통과, org 커버리지 94%(2026-10-15, CTI·ERP 푸시 합친 뒤)
 - 삭제됨: CaseRejectPracticeTest(저장소·org), AccountController(저장소·org), 루트 schema.sql
 - 문서: docs/decision-log.md, docs/interface_definition.md(IF-01~07: 구현 02·03·06·07, 범위 밖 01·04·05), docs/d8_security_review.md(보안 결과표, 남은 위험 R2·R4·R6), docs/d8_lwc_memo.md, docs/d7_lwc_memo.md, docs/d6_screen_design.md(SC-01~06), docs/d6_test_report.md, docs/d6_config_externalization.md, docs/d5_*.md, docs/org_inventory.md(10/6 점검)
 - 산출물(요건서·권한 매트릭스 V1.1 → V2.0, ERD 재작성 중, 배포 절차 미작성)은 저장소 밖(다운로드·바탕 화면)
@@ -98,7 +99,8 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 ### 대기 중인 일
 
 - R6: ProductConsumedTriggerHandler after delete의 restoreStockForDeleted 제거(삭제 허용·복원 거부 규칙은 유지)
-- CTI 가상 착신 시뮬레이터: 설계 완료·구현 대기. 유틸리티 바 패널(발신 번호 + IVR 증상 + 시리얼 뒤 4자리) → SOSL로 사업장 현장·보조 번호 → 고객사 대표 번호 순 조회 → LightningModal 접수 작성 팝업(1건 채움·여러 건 후보·없음 검색, 자동 저장 없음). 장비 검색 시리얼 클릭 = 장비 요약 모달. 새 필드·오브젝트 없음
+- CTI: 발신 번호 저장 필드 확인(설계는 SuppliedPhone, 구현은 기존 CallerPhone__c), 통화 활동(Task) 기록·장비 QR은 다음 단계 후보
+- org에만 남은 옛 라벨 5개(MSG_CENTER_AFTER_SAVE·AUTO·MANUAL·READONLY·READONLY_NONE, 쓰는 곳 없음) 삭제 여부
 
 ## 권한 (V1.1 매트릭스 + D8)
 
