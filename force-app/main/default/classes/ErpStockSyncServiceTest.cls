@@ -9,6 +9,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 IF-02 역방향)
+ * 1.1    2026-10-15    Edwin     중복 번호는 쪽 실패 대신 건너뜀(푸시와 함께 쓰기), 기록 메시지 경로 확인
  * ----------------------------------------------------------------------------
  * @see ErpStockSyncService
  */
@@ -295,9 +296,10 @@ private class ErpStockSyncServiceTest {
     Assert.areEqual(VAN_GENERAL_QTY, vanQty('TEST-GEN'), '재고 그대로');
   }
 
-  // 불허: 같은 변동은 한 번만 ② 번호가 되돌려져도(이미 반영 기록이 있는 101) 기록 고유키로 저장 거부 → 쪽 전체 취소, 이중 반영 없음
+  // 정상: 같은 변동은 한 번만 ② 이미 기록이 있는 번호(101, 푸시로 먼저 반영된 경우 등)는 건너뜀 → 쪽은 정상 처리, 번호는 101로, 이중 반영 없음
+  //       (1.0에서는 고유키 충돌로 쪽 전체가 실패해 같은 쪽에서 계속 멈췄음 → 푸시와 함께 쓰려고 1.1에서 건너뜀으로 변경)
   @isTest
-  static void rejectDuplicateMovementNotAppliedTwice() {
+  static void normalDuplicateMovementSkippedOnce() {
     insert new ErpInboundLog__c(
       MovementId__c = 101,
       Result__c = 'Applied',
@@ -305,29 +307,28 @@ private class ErpStockSyncServiceTest {
     );
     MovementsMock mock = new MovementsMock();
     mock.add(101, 'RECEIPT', 'ERP', VAN_CODE, 'TEST-GEN', 5, 'Each');
-    String failure;
+    mock.add(102, 'RECEIPT', 'ERP', VAN_CODE, 'TEST-GEN', 2, 'Each');
 
     Test.startTest();
-    try {
-      sync(mock);
-    } catch (ErpStockSyncService.ErpSyncException e) {
-      failure = e.getMessage();
-    }
+    ErpStockSyncService.SyncResult result = sync(mock);
     Test.stopTest();
 
-    Assert.isTrue(
-      failure != null && failure.startsWith('[SAVE_FAILED]'),
-      '저장 거부: ' + failure
-    );
+    Assert.areEqual(1, result.duplicates, '101은 중복으로 건너뜀');
+    Assert.areEqual(1, result.applied, '102만 반영');
     Assert.areEqual(
-      VAN_GENERAL_QTY,
+      VAN_GENERAL_QTY + 2,
       vanQty('TEST-GEN'),
-      '+5 다시 반영 안 됨 (되돌림)'
+      '+5는 다시 반영 안 됨, +2만'
     );
     Assert.areEqual(
-      BASELINE,
+      102,
       ErpStockSyncService.getLastMovementId(),
-      '번호도 그대로'
+      '번호는 102로 (멈추지 않음)'
+    );
+    Assert.isTrue(
+      [SELECT Message__c FROM ErpInboundLog__c WHERE MovementId__c = 102]
+        .Message__c.endsWith('· 가져오기'),
+      '기록 메시지에 경로'
     );
   }
 

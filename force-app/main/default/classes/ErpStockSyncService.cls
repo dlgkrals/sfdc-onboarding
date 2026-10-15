@@ -8,6 +8,8 @@
  *              - 한 쪽의 반영·기록·이력 번호 저장은 한 트랜잭션 → 모두 되거나 모두 안 됨 (같은 변동은 한 번만)
  *              - 통신 실패(연결·HTTP 오류): 예외 → 이력 번호를 올리지 않음 → 다음 실행에서 다시
  *              - 데이터 문제(없는 위치·부품 코드, 음수가 되는 조정): 다시 해도 같은 결과 → 오류로 기록하고 건너뜀
+ *              - 푸시(applyPushed): ERP가 변동 직후 Apex REST(ErpMovementResource)로 보낸 것을 같은 규칙으로 반영. 이력 번호는 올리지 않음
+ *              - 중복: 이미 기록된 이력 번호(MovementId__c)는 건너뜀 → 푸시와 가져오기가 같은 변동을 받아도 한 번만 반영
  * @layer       Service
  * @author      Edwin
  * @date        2026-10-13
@@ -15,8 +17,9 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 IF-02 역방향)
+ * 1.1    2026-10-15    Edwin     푸시 반영(applyPushed) 추가, 이미 기록된 이력 번호 건너뜀(중복), 기록 메시지에 경로(푸시·가져오기)
  * ----------------------------------------------------------------------------
- * @see ErpStockSyncBatch, ErpStockSyncSchedulable, erp-mock/src/index.js getMovements, docs/interface_definition.md IF-02
+ * @see ErpMovementResource, ErpStockSyncBatch, ErpStockSyncSchedulable, erp-mock/src/index.js getMovements, docs/interface_definition.md IF-02
  */
 // DESC: 예약 작업(관리자)으로 돌지만 시스템이 계산하는 반영이므로 조회·저장 모두 SYSTEM_MODE 명시 (API 67 기본 user mode)
 public with sharing class ErpStockSyncService {
@@ -27,6 +30,13 @@ public with sharing class ErpStockSyncService {
   public static final String RESULT_ERROR = 'Error';
   public static final String CODE_UNKNOWN = 'UNKNOWN_CODE';
   public static final String CODE_NEGATIVE = 'NEGATIVE_STOCK';
+  // DESC: 푸시 응답의 건별 결과
+  public static final String PUSH_APPLIED = 'APPLIED';
+  public static final String PUSH_DUPLICATE = 'DUPLICATE';
+  public static final String PUSH_SKIPPED = 'SKIPPED';
+  public static final String PUSH_ERROR = 'ERROR';
+  private static final String CHANNEL_PULL = '가져오기';
+  private static final String CHANNEL_PUSH = '푸시';
 
   @TestVisible
   private static final Integer PAGE_SIZE = 200;
@@ -50,23 +60,50 @@ public with sharing class ErpStockSyncService {
     public Integer applied = 0;
     public Integer errors = 0;
     public Integer skipped = 0;
+    public Integer duplicates = 0;
     public Integer createdItems = 0;
+  }
+
+  /**
+   * @description 푸시 1건 결과 (Apex REST 응답 results[])
+   */
+  public class PushItemResult {
+    public Long id;
+    public String result;
+    public String code;
+    public String message;
+    public Decimal quantityAfter;
+    public PushItemResult(Long id, String result, String code, String message) {
+      this.id = id;
+      this.result = result;
+      this.code = code;
+      this.message = message;
+    }
   }
 
   public class ErpSyncException extends Exception {
   }
 
-  // DESC: ERP 이력 한 건 (API 응답 items[])
-  private class Movement {
-    Long id;
-    String type;
-    String origin;
-    String locationCode;
-    String partCode;
-    Decimal quantityChange;
-    String unit;
-    String reference;
-    Datetime createdAt;
+  // DESC: ERP 이력 한 건 (가져오기 응답 items[] · 푸시 요청 movements[])
+  public class Movement {
+    public Long id;
+    public String type;
+    public String origin;
+    public String locationCode;
+    public String partCode;
+    public Decimal quantityChange;
+    public String unit;
+    public String reference;
+    public Datetime createdAt;
+  }
+
+  /**
+   * @description 반영 대상인지 (ERP 출처의 입고·조정만). 나머지는 이미 Salesforce에 있는 변동
+   */
+  public static Boolean isErpChange(Movement m) {
+    return m.origin == ORIGIN_ERP &&
+      (m.type == TYPE_RECEIPT ||
+      m.type == TYPE_ADJUST);
   }
 
   /**
@@ -109,11 +146,7 @@ public with sharing class ErpStockSyncService {
     List<Movement> movements = parse(body, result, after);
     List<Movement> erpChanges = new List<Movement>();
     for (Movement m : movements) {
-      if (
-        m.origin == ORIGIN_ERP &&
-        (m.type == TYPE_RECEIPT ||
-        m.type == TYPE_ADJUST)
-      ) {
+      if (isErpChange(m)) {
         erpChanges.add(m);
       } else {
         result.skipped++;
@@ -123,7 +156,7 @@ public with sharing class ErpStockSyncService {
     // DESC: 콜아웃은 끝났으므로 여기부터 저장. 하나라도 실패하면 이 쪽 전체를 되돌리고 이력 번호도 그대로
     Savepoint sp = Database.setSavepoint();
     try {
-      apply(erpChanges, result);
+      apply(erpChanges, result, CHANNEL_PULL);
       if (result.lastId > after) {
         saveLastMovementId(result.lastId);
       }
@@ -148,11 +181,7 @@ public with sharing class ErpStockSyncService {
       total.latestId = one.latestId;
       total.fetched += one.fetched;
       for (Movement m : movements) {
-        if (
-          m.origin == ORIGIN_ERP &&
-          (m.type == TYPE_RECEIPT ||
-          m.type == TYPE_ADJUST)
-        ) {
+        if (isErpChange(m)) {
           total.erpChanges++;
         } else {
           total.skipped++;
@@ -166,6 +195,67 @@ public with sharing class ErpStockSyncService {
       }
     }
     return total;
+  }
+
+  /**
+   * @description 푸시 반영: ERP가 보낸 변동을 가져오기와 같은 규칙으로 반영. 이력 번호(LastMovementId)는 올리지 않음
+   *              (번호 사이가 비면 안 되므로 기준 번호는 가져오기만 올림. 가져오기가 나중에 같은 번호를 만나면 중복으로 건너뜀)
+   * @param movements 검증을 통과한 변동 (ErpMovementResource가 형식·필수 값 확인)
+   * @return 요청 순서대로 건별 결과
+   */
+  public static List<PushItemResult> applyPushed(List<Movement> movements) {
+    List<Movement> erpChanges = new List<Movement>();
+    for (Movement m : movements) {
+      if (isErpChange(m)) {
+        erpChanges.add(m);
+      }
+    }
+    ApplyOutcome outcome;
+    Savepoint sp = Database.setSavepoint();
+    try {
+      outcome = apply(erpChanges, new SyncResult(), CHANNEL_PUSH);
+    } catch (Exception e) {
+      Database.rollback(sp);
+      throw new ErpSyncException('[SAVE_FAILED] ' + e.getMessage());
+    }
+    List<PushItemResult> results = new List<PushItemResult>();
+    Set<Long> answered = new Set<Long>();
+    for (Movement m : movements) {
+      if (!isErpChange(m)) {
+        results.add(
+          new PushItemResult(
+            m.id,
+            PUSH_SKIPPED,
+            'NOT_ERP_CHANGE',
+            'ERP 출처의 입고·조정이 아니라 반영하지 않습니다.'
+          )
+        );
+      } else if (
+        outcome.duplicateIds.contains(m.id) || answered.contains(m.id)
+      ) {
+        results.add(
+          new PushItemResult(
+            m.id,
+            PUSH_DUPLICATE,
+            'ALREADY_APPLIED',
+            '이미 기록된 이력 번호입니다.'
+          )
+        );
+      } else {
+        ErpInboundLog__c log = outcome.logsById.get(m.id);
+        Boolean ok = log.Result__c == RESULT_APPLIED;
+        PushItemResult r = new PushItemResult(
+          m.id,
+          ok ? PUSH_APPLIED : PUSH_ERROR,
+          ok ? 'OK' : log.Message__c.substringBetween('[', ']'),
+          log.Message__c
+        );
+        r.quantityAfter = log.QuantityAfter__c;
+        results.add(r);
+      }
+      answered.add(m.id);
+    }
+    return results;
   }
 
   /**
@@ -243,10 +333,46 @@ public with sharing class ErpStockSyncService {
     return movements;
   }
 
+  private class ApplyOutcome {
+    Map<Long, ErpInboundLog__c> logsById = new Map<Long, ErpInboundLog__c>();
+    Set<Long> duplicateIds = new Set<Long>();
+  }
+
   // DESC: 반영 + 기록. 루프 안 SOQL/DML 없이 코드 → Id Map, 재고 잠금 조회 1회, 저장은 마지막에 한 번씩
-  private static void apply(List<Movement> changes, SyncResult result) {
+  //       이미 기록된 이력 번호와 같은 요청 안의 반복 번호는 건너뜀(중복) → 푸시·가져오기가 겹쳐도 한 번만 반영
+  private static ApplyOutcome apply(
+    List<Movement> incoming,
+    SyncResult result,
+    String channel
+  ) {
+    ApplyOutcome outcome = new ApplyOutcome();
+    if (incoming.isEmpty()) {
+      return outcome;
+    }
+    Set<Decimal> incomingIds = new Set<Decimal>();
+    for (Movement m : incoming) {
+      incomingIds.add(Decimal.valueOf(m.id));
+    }
+    for (ErpInboundLog__c existing : [
+      SELECT MovementId__c
+      FROM ErpInboundLog__c
+      WHERE MovementId__c IN :incomingIds
+      WITH SYSTEM_MODE
+    ]) {
+      outcome.duplicateIds.add(existing.MovementId__c.longValue());
+    }
+    List<Movement> changes = new List<Movement>();
+    Set<Long> seen = new Set<Long>();
+    for (Movement m : incoming) {
+      if (outcome.duplicateIds.contains(m.id) || seen.contains(m.id)) {
+        result.duplicates++;
+        continue;
+      }
+      seen.add(m.id);
+      changes.add(m);
+    }
     if (changes.isEmpty()) {
-      return;
+      return outcome;
     }
     Set<String> locationCodes = new Set<String>();
     Set<String> partCodes = new Set<String>();
@@ -296,6 +422,7 @@ public with sharing class ErpStockSyncService {
     for (Movement m : changes) {
       ErpInboundLog__c log = newLog(m);
       logs.add(log);
+      outcome.logsById.put(m.id, log);
       Schema.Location loc = locationsByCode.get(m.locationCode);
       Id productId = productIdByCode.get(m.partCode);
       if (loc == null || productId == null) {
@@ -304,7 +431,8 @@ public with sharing class ErpStockSyncService {
           CODE_UNKNOWN,
           'Salesforce에 없는 ' +
             (loc == null ? '위치 코드' : '부품 코드') +
-            '입니다.'
+            '입니다. · ' +
+            channel
         );
         continue;
       }
@@ -323,7 +451,8 @@ public with sharing class ErpStockSyncService {
           CODE_NEGATIVE,
           '반영하면 Salesforce 재고가 0 미만(' +
             next +
-            ')이 됩니다. 재고를 확인하세요.'
+            ')이 됩니다. 재고를 확인하세요. · ' +
+            channel
         );
         continue;
       }
@@ -343,7 +472,13 @@ public with sharing class ErpStockSyncService {
       item.QuantityOnHand = next;
       log.Result__c = RESULT_APPLIED;
       log.QuantityAfter__c = next;
-      log.Message__c = '[OK] ' + current + ' → ' + next;
+      log.Message__c = ('[OK] ' +
+        current +
+        ' → ' +
+        next +
+        ' · ' +
+        channel)
+        .left(255);
       result.applied++;
     }
     for (ErpInboundLog__c log : logs) {
@@ -354,8 +489,10 @@ public with sharing class ErpStockSyncService {
     // DESC: 하나라도 실패하면 예외 → 이 쪽 전체가 취소되고 이력 번호도 그대로 (다음 실행에서 다시)
     Database.insert(newItemsByKey.values(), true, AccessLevel.SYSTEM_MODE);
     Database.update(changedItemsById.values(), true, AccessLevel.SYSTEM_MODE);
-    // DESC: MovementId__c 고유 → 같은 변동이 두 번 들어오면 저장이 거부돼 이중 반영되지 않음
+    // DESC: MovementId__c 고유 → 위의 건너뜀 뒤 동시에 같은 변동이 들어와도 저장이 거부돼 이중 반영되지 않음
+    //       (거부된 쪽은 되돌려지고, 다음 실행에서 중복으로 건너뜀)
     Database.insert(logs, true, AccessLevel.SYSTEM_MODE);
+    return outcome;
   }
 
   private static ErpInboundLog__c newLog(Movement m) {
