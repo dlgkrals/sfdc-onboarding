@@ -35,10 +35,24 @@
                 <elementReference>fxServiceCenter</elementReference>
             </value>
         </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.VisitFee__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>fxVisitFee</elementReference>
+            </value>
+        </assignmentItems>
     </assignments>
     <description
-  >26-10-16 출동 저장 전(안전망): 장비·고객사·사업장·서비스센터가 비어 있고 접수가 있으면 접수의 값을 복사(이미 있으면 그대로). 서비스센터가 비면 센터장 공유 규칙이 걸리지 않음. 주 경로는 접수 [기사 배정](DispatchService가 같은 값을 채움) by Edwin</description>
+  >26-10-16 출동 저장 전(안전망): 장비·고객사·사업장·서비스센터가 비어 있고 접수가 있으면 접수의 값을 복사(이미 있으면 그대로). 출장비가 비면 ServiceSetting VisitFee(실습 중 발견한 빈 출장비 결함). 서비스센터가 비면 센터장 공유 규칙이 걸리지 않음. 주 경로는 접수 [기사 배정](DispatchService가 같은 값을 채움) by Edwin</description>
     <environments>Default</environments>
+    <formulas>
+        <name>fxVisitFee</name>
+        <dataType>Currency</dataType>
+        <expression
+    >IF(ISBLANK({!$Record.VisitFee__c}), {!Get_VisitFee.Value__c}, {!$Record.VisitFee__c})</expression>
+        <scale>0</scale>
+    </formulas>
     <formulas>
         <name>fxAssetId</name>
         <dataType>String</dataType>
@@ -85,14 +99,38 @@
         </value>
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_VisitFee</name>
+        <label>출장비 기준값</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound
+    >false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Copy_From_Case</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>VisitFee</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>ServiceSetting__mdt</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Value__c</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
     <start>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>Copy_From_Case</targetReference>
+            <targetReference>Get_VisitFee</targetReference>
         </connector>
         <filterFormula
-    >AND(NOT(ISBLANK({!$Record.CaseId})), OR(ISBLANK({!$Record.AssetId}), ISBLANK({!$Record.AccountId}), ISBLANK({!$Record.CustomerSite__c}), ISBLANK(TEXT({!$Record.ServiceCenter__c}))))</filterFormula>
+    >AND(NOT(ISBLANK({!$Record.CaseId})), OR(ISBLANK({!$Record.VisitFee__c}), ISBLANK({!$Record.AssetId}), ISBLANK({!$Record.AccountId}), ISBLANK({!$Record.CustomerSite__c}), ISBLANK(TEXT({!$Record.ServiceCenter__c}))))</filterFormula>
         <object>WorkOrder</object>
         <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordBeforeSave</triggerType>

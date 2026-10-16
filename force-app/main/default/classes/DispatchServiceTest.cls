@@ -8,6 +8,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-16    Edwin     최초 작성 (출동 단일 생성 경로)
+ * 1.1    2026-10-16    Edwin     출장비 기준값 검증
  * ----------------------------------------------------------------------------
  * @see DispatchService
  */
@@ -187,7 +188,8 @@ private class DispatchServiceTest {
         Purpose__c,
         StartDate,
         WorkInstruction__c,
-        VisitNumber__c
+        VisitNumber__c,
+        VisitFee__c
       FROM WorkOrder
       WHERE Id = :result.workOrderId
     ];
@@ -204,6 +206,11 @@ private class DispatchServiceTest {
     Assert.isNotNull(wo.StartDate);
     Assert.areEqual('압축기 점검', wo.WorkInstruction__c);
     Assert.areEqual(1, wo.VisitNumber__c);
+    Assert.areEqual(
+      ServiceSetting__mdt.getInstance('VisitFee').Value__c,
+      wo.VisitFee__c,
+      '출장비 = ServiceSetting VisitFee(실습 중 발견한 빈 출장비 결함)'
+    );
     Assert.areEqual('InProgress', theCase().Status, '접수는 처리 중');
   }
 

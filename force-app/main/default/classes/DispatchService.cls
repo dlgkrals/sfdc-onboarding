@@ -11,6 +11,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-16    Edwin     최초 작성 (출동 단일 생성 경로, 센터장 출동 생성 권한 제거와 함께)
+ * 1.1    2026-10-16    Edwin     출동 출장비 = ServiceSetting VisitFee (실습 중 발견: [기사 배정] 출동 출장비 빈칸)
  * ----------------------------------------------------------------------------
  * @see Case_Screen_DispatchTechnician (화면 Flow, 빠른 작업 Case.HG_DispatchTechnician),
  *      WorkOrder_BeforeSave_FillAsset (다른 경로로 만든 출동의 빈칸 안전망)
@@ -30,6 +31,7 @@ public without sharing class DispatchService {
   };
   private static final String CASE_STATUS_IN_PROGRESS = 'InProgress';
   private static final String WORK_ORDER_STATUS_ASSIGNED = 'Assigned';
+  private static final Decimal DEFAULT_VISIT_FEE = 30000;
 
   /**
    * @description 화면 Flow 입력. action = load | dispatch
@@ -294,6 +296,8 @@ public without sharing class DispatchService {
     Map<Id, User> techniciansById,
     Map<Id, Integer> workOrderCountsByCase
   ) {
+    // DESC: 출장비 = ServiceSetting VisitFee(1.1, 실습 중 발견한 빈 출장비 결함)
+    Decimal visitFee = getVisitFee();
     List<WorkOrder> workOrders = new List<WorkOrder>();
     List<DispatchResult> createdResults = new List<DispatchResult>();
     Map<Id, Case> casesToUpdate = new Map<Id, Case>();
@@ -330,7 +334,8 @@ public without sharing class DispatchService {
           Purpose__c = req.purpose,
           StartDate = req.plannedStart,
           WorkInstruction__c = req.instruction,
-          VisitNumber__c = visitNumber
+          VisitNumber__c = visitNumber,
+          VisitFee__c = visitFee
         )
       );
       createdResults.add(result);
@@ -379,6 +384,19 @@ public without sharing class DispatchService {
         }
       );
     }
+  }
+
+  /**
+   * @description 출장비 기준값 (ServiceSetting__mdt VisitFee, 없으면 기본값)
+   * @return 출장비
+   */
+  @TestVisible
+  private static Decimal getVisitFee() {
+    ServiceSetting__mdt setting = ServiceSetting__mdt.getInstance('VisitFee');
+    return (setting == null ||
+      setting.Value__c == null)
+      ? DEFAULT_VISIT_FEE
+      : setting.Value__c;
   }
 
   // DESC: 선택 목록 API 이름 → 화면 이름(실행 사용자 언어)

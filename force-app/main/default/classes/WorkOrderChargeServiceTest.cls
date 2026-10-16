@@ -10,6 +10,7 @@
  * 1.0    2026-10-16    Edwin     최초 작성 (장비 화면 누적 청구액)
  * 1.1    2026-10-16    Edwin     고객사·사업장 누적 청구액(합계·사업장 변경·벌크·상담원 읽기)
  * 1.2    2026-10-16    Edwin     방문 출동 수(VisitedWorkOrderCount__c) 검증
+ * 1.3    2026-10-16    Edwin     저장 전 Flow 출장비 안전망 검증
  * ----------------------------------------------------------------------------
  * @see WorkOrderChargeService, WorkOrderTriggerHandler
  */
@@ -232,7 +233,7 @@ private class WorkOrderChargeServiceTest {
     Test.stopTest();
 
     WorkOrder saved = [
-      SELECT AssetId, AccountId, CustomerSite__c, ServiceCenter__c
+      SELECT AssetId, AccountId, CustomerSite__c, ServiceCenter__c, VisitFee__c
       FROM WorkOrder
       WHERE Id = :created.Id
     ];
@@ -250,6 +251,11 @@ private class WorkOrderChargeServiceTest {
     );
     Assert.isNotNull(saved.ServiceCenter__c, '서비스센터 복사(공유 규칙 기준)');
     Assert.areEqual(source.ServiceCenter__c, saved.ServiceCenter__c);
+    Assert.areEqual(
+      ServiceSetting__mdt.getInstance('VisitFee').Value__c,
+      saved.VisitFee__c,
+      '출장비가 비면 기준값(안전망)'
+    );
   }
 
   private static Decimal accountTotal() {
