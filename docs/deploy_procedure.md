@@ -139,6 +139,13 @@ sf project deploy start -o hg-uat -m GlobalValueSet:ServiceCenter -m "CustomObje
 
 ## 4. 데이터 이관·검증
 
+- **과거 이력 데이터 생성일(감사 필드)**: 이관·이력 데이터의 생성일을 과거로 넣는 절차(2026-10-16 한빛물류 이력 `scripts/apex/d9_hanbit_history.apex`에 사용)
+  1. 설정 SecuritySettings `enableAuditFieldsInactiveOwner` = true (설정 → 사용자 인터페이스 "레코드 생성 시 감사 필드 설정 … 사용자 권한 사용"). 사용자 권한은 이 설정을 켠 뒤에야 배포 가능(꺼져 있으면 "Unknown user permission")
+  2. 실행 사용자에게 사용자 권한 "레코드 생성 시 감사 필드 설정"(CreateAuditFields)을 임시 권한 집합으로 할당
+  3. 생성일은 insert 때만 지정. 스크립트는 `put('CreatedDate', …)`로 동적 지정(권한이 없을 때도 미리 보기가 컴파일되도록)
+  4. 끝나면 권한 할당 해제 → 임시 권한 집합 삭제 → 설정 false → retrieve로 false·권한 집합 0건 확인
+- **이력 사용 부품은 ERP 상태를 비울 것**: ERP 상태 선택 목록 기본값이 대기(Pending)라, 트리거를 우회해 넣어도 그대로 두면 매시 재전송이 ERP로 보냄 → 저장 직후 비움("연동 전 기존 데이터", decision-log ERP 13). 재고 차감을 피하려면 사용 부품을 재고 대신 가격표 항목에 연결(출동에 같은 가격표 지정)
+
 | 순서 | 오브젝트                             | 키(외부 ID)                              | 방법                                      | 주의                                                     |
 | ---- | ------------------------------------ | ---------------------------------------- | ----------------------------------------- | -------------------------------------------------------- |
 | 1    | Product2(부품·모델)                  | ErpPartCode__c                           | Data Loader upsert (IF-01 대신 초기 이관) | Family = Compressor/General/EquipmentModel               |
