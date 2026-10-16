@@ -10,6 +10,7 @@
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 5번)
  * 1.1    2026-10-13    Edwin     삭제 시 재고 되돌림·복원 거부 테스트 (decision-log 11 A안)
  * 1.2    2026-10-13    Edwin     ERP 이상 응답(읽을 수 없음·결과 누락·400)·15자리 Id·단위 표시·기사 삭제 테스트 (D7 ERP 연동 8번)
+ * 1.3    2026-10-16    Edwin     삭제 재고 되돌림은 표준 동작으로 검증(Apex 되돌림 제거 후에도 한 번만 되돌아감, R6)
  * ----------------------------------------------------------------------------
  * @see ErpInventoryService
  */
@@ -430,7 +431,7 @@ private class ErpInventoryServiceTest {
     );
   }
 
-  // 정상: 실패 상태·영구적 실패로 확인 필요인 사용 부품은 삭제 가능, 삭제한 수량만큼 재고가 돌아옴 (현재 + 삭제 수량)
+  // 정상: 실패 상태·영구적 실패로 확인 필요인 사용 부품은 삭제 가능. 재고 되돌림은 Salesforce 표준(커밋된 건만)이라 Apex는 손대지 않음 (R6)
   @isTest
   static void normalDeleteAllowedWhenNotReflected() {
     ProductConsumed failed = TestDataFactory.buildPart(
@@ -471,9 +472,9 @@ private class ErpInventoryServiceTest {
       '둘 다 삭제됨'
     );
     Assert.areEqual(
-      VAN_QUANTITY,
+      VAN_QUANTITY - 3,
       getItem('General').QuantityOnHand,
-      '삭제한 2 + 1만큼 되돌림'
+      'Apex 되돌림 없음(R6). 테스트는 한 트랜잭션이라 표준 되돌림도 없음 — 커밋된 건은 표준이 한 번 되돌림(decision-log 19 진단 ②)'
     );
   }
 
@@ -545,15 +546,15 @@ private class ErpInventoryServiceTest {
       '복원되지 않음'
     );
     Assert.areEqual(
-      VAN_QUANTITY,
+      VAN_QUANTITY - 1,
       getItem('General').QuantityOnHand,
-      '삭제 때 되돌린 재고 그대로'
+      '복원 거부 — 재고도 그대로(같은 트랜잭션이라 표준 되돌림 없음)'
     );
   }
 
-  // 벌크: 200건 한 번에 삭제(실패 100 + 완료 100, 부분 성공) → 실패 100건만 삭제·재고 되돌림, 완료 100건은 거부
+  // 벌크: 200건 한 번에 삭제(실패 100 + 완료 100, 부분 성공) → 실패 100건만 삭제, 완료 100건은 거부(재고 되돌림은 표준 — 테스트 트랜잭션에선 없음)
   @isTest
-  static void bulkDelete200RestoresOnlyAllowed() {
+  static void bulkDelete200OnlyAllowed() {
     Id workOrderId = getWorkOrder().Id;
     Id itemId = getItem('General').Id;
     List<ProductConsumed> parts = new List<ProductConsumed>();
@@ -577,9 +578,9 @@ private class ErpInventoryServiceTest {
     }
     Assert.areEqual(100, deleted, '실패 100건만 삭제');
     Assert.areEqual(
-      VAN_QUANTITY - 100,
+      VAN_QUANTITY - 200,
       getItem('General').QuantityOnHand,
-      '300 - 200 + 100 (삭제된 100건만 되돌림)'
+      '300 - 200, Apex 되돌림 없음(R6)'
     );
     Assert.isTrue(queries <= 5, '200건이어도 조회 몇 번: ' + queries);
   }
@@ -658,9 +659,9 @@ private class ErpInventoryServiceTest {
     );
   }
 
-  // 정상: 협력 기사가 자기 차량 재고로 입력한 실패 건을 직접 삭제 → 재고 되돌림 (기사 권한으로 삭제 + 시스템 보정)
+  // 정상: 협력 기사가 자기 차량 재고로 입력한 실패 건을 직접 삭제(기사 권한). 재고 되돌림은 표준 몫 — Apex 보정 없음(R6)
   @isTest
-  static void normalTechnicianDeleteRestoresStock() {
+  static void normalTechnicianDeletesFailedPart() {
     User technician = getTechnician();
     Map<String, SObject> stock = createTechnicianStock(technician);
     Id techItemId = stock.get('item').Id;
@@ -680,10 +681,10 @@ private class ErpInventoryServiceTest {
     Test.stopTest();
 
     Assert.areEqual(
-      10,
+      7,
       [SELECT QuantityOnHand FROM ProductItem WHERE Id = :techItemId]
       .QuantityOnHand,
-      '10 - 3 + 3'
+      '10 - 3, Apex 되돌림 없음(같은 트랜잭션이라 표준 되돌림도 없음)'
     );
   }
 }

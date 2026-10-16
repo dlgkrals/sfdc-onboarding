@@ -6,7 +6,7 @@
  *              - 업무 거부(재고 부족·없는 코드 등) → 확인 필요(NeedsReview) — 재시도해도 같은 결과
  *              - 일시적 실패(5xx·401·시간 초과·연결 실패) → 실패(Failed) — 매시 재전송, 상한 초과 시 확인 필요 [RETRY_EXHAUSTED]
  *              메시지 형식: "[코드] 내용" (삭제 규칙이 코드로 판단)
- *              삭제: 허용된 건(ERP 미반영 확실)만 그 수량만큼 Salesforce 재고를 되돌림 (현재 + 삭제 수량, 잠금 후 갱신)
+ *              삭제: 재고 되돌림은 Salesforce 표준 동작(사용 부품 삭제 시 보유량 복원)에 맡김 — 1.3에서 Apex 되돌림 제거(R6 이중 증가)
  *              두 오브젝트의 ERP 필드 API 이름이 같아서(ErpSyncStatus__c 등) 전송·결과·재시도 처리는 SObject로 공통 사용
  * @layer       Service
  * @author      Edwin
@@ -17,6 +17,7 @@
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 5번: 사용 부품 → ERP)
  * 1.1    2026-10-13    Edwin     restoreStockForDeleted 추가 (삭제 시 재고 되돌림, decision-log 11 A안)
  * 1.2    2026-10-13    Edwin     재고 이동 → ERP(IF-06) 추가, getMaxRetry 공개(재전송 Batch), 전송·결과·재시도 공통화, 콜아웃과 저장 분리(build*·save)
+ * 1.3    2026-10-16    Edwin     restoreStockForDeleted 제거 (표준도 재고를 되돌려 이중 증가, R6 · decision-log 19)
  * ----------------------------------------------------------------------------
  * @see ErpSyncQueueable, ProductConsumedTriggerHandler, ProductTransferTriggerHandler, erp-mock/src/index.js, docs/interface_definition.md IF-03·IF-06
  */
@@ -347,47 +348,6 @@ public with sharing class ErpInventoryService {
         !pc.ErpSyncMessage__c.startsWith('[' + CODE_RETRY_EXHAUSTED + ']');
     }
     return false;
-  }
-
-  /**
-   * @description 삭제된 사용 부품 수량만큼 Salesforce 재고(ProductItem)를 되돌림 (decision-log 11, A안)
-   *              표준은 삭제해도 보유량을 되돌리지 않으므로 Apex가 보정. 삭제 규칙(canDelete)을 통과한 건 = ERP 미반영이 확실한 건만 들어옴
-   *              덮어쓰기가 아니라 "현재 수량 + 삭제한 수량". 동시에 다른 사용·이동이 있어도 값이 꼬이지 않게 FOR UPDATE로 잠금
-   * @param deleted 삭제된 사용 부품 (Trigger.old)
-   * @return 수량을 고친 재고
-   */
-  public static List<ProductItem> restoreStockForDeleted(
-    List<ProductConsumed> deleted
-  ) {
-    // DESC: 같은 재고에서 여러 건을 지우면 합쳐서 한 번에 되돌림
-    Map<Id, Decimal> restoreQtyByItem = new Map<Id, Decimal>();
-    for (ProductConsumed pc : deleted) {
-      if (pc.ProductItemId == null || pc.QuantityConsumed == null) {
-        continue;
-      }
-      Decimal current = restoreQtyByItem.containsKey(pc.ProductItemId)
-        ? restoreQtyByItem.get(pc.ProductItemId)
-        : 0;
-      restoreQtyByItem.put(pc.ProductItemId, current + pc.QuantityConsumed);
-    }
-    if (restoreQtyByItem.isEmpty()) {
-      return new List<ProductItem>();
-    }
-    // WARN: 기사는 차량 재고 소유자지만, 시스템이 계산하는 보정이므로 SYSTEM_MODE로 명시 (API 67 기본 user mode)
-    List<ProductItem> items = [
-      SELECT Id, QuantityOnHand
-      FROM ProductItem
-      WHERE Id IN :restoreQtyByItem.keySet()
-      WITH SYSTEM_MODE
-      FOR UPDATE
-    ];
-    for (ProductItem item : items) {
-      item.QuantityOnHand =
-        (item.QuantityOnHand == null ? 0 : item.QuantityOnHand) +
-        restoreQtyByItem.get(item.Id);
-    }
-    Database.update(items, true, AccessLevel.SYSTEM_MODE);
-    return items;
   }
 
   // DESC: 200건씩 나눠 POST (200건 = 콜아웃 1번). 묶음이 실패하면 그 묶음 전체에 상태·메시지를 넣은 결과를 만듦

@@ -4,7 +4,7 @@
  *              최종 판정(ChargeType__c)은 비어 있을 때만 채움 (WarrantyService)
  *              after insert  : ERP 재고 차감 전송 예약 (IF-03, Queueable 비동기 — 트리거에서는 콜아웃 불가)
  *              before delete : ERP에 반영됐거나 반영 여부를 모르는 사용 기록은 삭제 거부 (ERP 되돌림 API 없음)
- *              after delete  : 삭제가 허용된 건(ERP 미반영 확실)만 그 수량만큼 Salesforce 재고 되돌림
+ *              (삭제된 건의 재고 되돌림은 Salesforce 표준 동작 — 1.5에서 Apex 되돌림 제거, R6)
  *              after undelete: 휴지통 복원 거부 (잘못 지웠으면 새로 입력)
  * @layer       TriggerHandler
  * @author      Edwin
@@ -17,6 +17,7 @@
  * 1.2    2026-10-13    Edwin     after insert ERP 전송 예약, before delete 삭제 규칙 (D7 ERP 연동)
  * 1.3    2026-10-13    Edwin     after delete 재고 되돌림, after undelete 복원 거부 (decision-log 11 A안)
  * 1.4    2026-10-14    Edwin     before insert 차량 재고 초과 거부 (D8 보안 점검 R1: 표준 새로 만들기 등 화면 밖 경로도 차단)
+ * 1.5    2026-10-16    Edwin     after delete 재고 되돌림 제거 (표준이 이미 되돌려 이중 증가, R6 · decision-log 19)
  * ----------------------------------------------------------------------------
  * @see ProductConsumedTrigger, VanStockService, WarrantyService, ErpInventoryService, TriggerHandler
  */
@@ -39,13 +40,6 @@ public with sharing class ProductConsumedTriggerHandler extends TriggerHandler {
         pc.addError(System.Label.MSG_ERP_DELETE_BLOCKED);
       }
     }
-  }
-
-  // DESC: before delete에서 거부된 건은 여기 오지 않음 → 삭제가 확정된 건만 재고 되돌림
-  protected override void afterDelete() {
-    ErpInventoryService.restoreStockForDeleted(
-      (List<ProductConsumed>) Trigger.old
-    );
   }
 
   // WARN: 복원하면 재고·ERP 상태가 삭제 전 기준과 어긋나므로 막음. 잘못 지웠으면 새로 입력 (새 insert에서 판정·ERP 전송)

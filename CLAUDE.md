@@ -50,7 +50,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 
 - 트리거(회사 프레임워크, 오브젝트당 1개, 부모 TriggerHandler, 스위치 TriggerSetting__mdt, 우회 TriggerHandler.bypassedHandlers):
   - CaseTrigger → CaseTriggerHandler(before insert 반복 고장 판정, after insert/update/delete/undelete 장비 집계 CaseStatsService)
-  - ProductConsumedTrigger → ProductConsumedTriggerHandler 1.4(before insert 재고 초과 거부 VanStockService + 유·무상 판정 WarrantyService, after insert ERP 전송 예약, before delete 삭제 규칙, after delete 재고 되돌림(R6로 제거 예정), after undelete 복원 거부)
+  - ProductConsumedTrigger → ProductConsumedTriggerHandler 1.5(before insert 재고 초과 거부 VanStockService + 유·무상 판정 WarrantyService, after insert ERP 전송 예약, before delete 삭제 규칙, after undelete 복원 거부. 삭제 시 재고 되돌림은 표준 — R6로 Apex 되돌림 제거 2026-10-16)
   - ProductTransferTrigger → ProductTransferTriggerHandler(수령 시 ERP 전송 예약)
   - CustomerSiteTrigger → CustomerSiteTriggerHandler(before insert/update 서비스센터 자동 지정)
   - WorkOrderTrigger → WorkOrderTriggerHandler(after insert/update/delete/undelete 장비·고객사·사업장 누적 청구액 WorkOrderChargeService.recalculateParentTotals, 2026-10-16). 저장 전 Flow WorkOrder_BeforeSave_FillAsset = 안전망(접수가 있으면 비어 있는 장비·고객사·사업장·서비스센터를 접수에서 채움). 일괄 계산 scripts/apex/d9_asset_charge_backfill·d9_parent_charge_backfill·d9_workorder_fill_from_case.apex
@@ -77,7 +77,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - 인증: Named Credential HG_ErpMock, 키는 External Credential HG_ErpMock 보안 주체 HG_ErpPrincipal의 ApiKey(설정 화면에서 입력, 메타데이터·Git에 없음). **실행 사용자에게 보안 주체 접근 + UserExternalCredential 읽기 둘 다 필요**(HttpCalloutMock 테스트로는 안 잡힘 → 실제 사용자로 확인)
 - 재고 원칙: Salesforce 재고를 ERP 값으로 덮어쓰지 않음. ERP 응답 남은 수량은 기록만(불일치 표시). ERP에서만 생긴 변동은 변동량만큼 조정
 - IF-03 사용 부품 → ERP 차감 / IF-06 재고 이동(수령) → ERP: 트리거 after insert/update → ErpSyncQueueable → ErpInventoryService(200건 = 콜아웃 1번, 결과 SYSTEM_MODE 저장, 메시지 "[코드] 내용"). 일시적 실패(5xx·시간 초과·연결·401) = Failed → 재전송, 영구적(재고 부족·없는 코드)·상한 초과 = NeedsReview. 재전송 ErpRetryBatch ← ErpRetrySchedulable(매시 정각, 예약 "HG ERP 재전송", 상한 ErpMaxRetry 3, 10분 넘은 Pending도 대상, Batch를 Type.forName으로 생성해 배포 막힘 회피)
-- 사용 부품 삭제: 실패·ERP 거부(NeedsReview)만 허용, 대기·완료는 before delete 거부, 휴지통 복원 거부. **삭제 시 Salesforce 표준도 재고를 되돌리는데 Apex(restoreStockForDeleted)도 되돌려 이중 증가(R6)** → 표준에 맡기기로 결정, 코드 수정 대기
+- 사용 부품 삭제: 실패·ERP 거부(NeedsReview)만 허용, 대기·완료는 before delete 거부, 휴지통 복원 거부. **삭제 시 재고 되돌림은 Salesforce 표준**(커밋된 건만, 같은 트랜잭션·Apex 테스트에선 안 일어남). R6 이중 증가 → Apex 되돌림 제거 완료(2026-10-16)
 - IF-02 ERP → Salesforce 역방향 = **Push + Pull**(2026-10-15). Push(주 경로): ERP Mock이 입고·조정 직후 `POST /services/apexrest/hg/erp/movements`(ErpMovementResource, without sharing — 입력 검증이 관문) → ErpStockSyncService.applyPushed. 인증 OAuth Client Credentials(외부 클라이언트 앱 "HG ERP Mock", Run As = 연동 사용자 "ERP 연동": 사용자 라이선스 Salesforce Integration + 권한 집합 라이선스 Salesforce API Integration, 권한 집합 HG_ErpIntegration(클래스 실행만)·HG_ErpIntegrationData(재고·위치·제품 읽기만 — Field Service 플랫폼 검사가 요구)). ERP 쪽 재시도 없음. Pull(안전망): ErpStockSyncSchedulable(예약 1개 "HG ERP 재고 동기화 :30 (매시, 푸시 안전망)") → ErpStockSyncBatch → syncNextPage, `GET /api/movements?after={LastMovementId}`. 공통 규칙: ERP 출처 RECEIPT·ADJUST만 변동량만큼, 없는 재고는 생성, **이미 기록된 이력 번호는 중복으로 건너뜀**(Push·Pull이 같은 변동을 받아도 한 번), 데이터 문제는 ErpInboundLog__c 오류 기록, 통신·저장 실패는 Savepoint로 되돌림. 기록 메시지 끝에 "· 푸시"/"· 가져오기". 기준 번호는 Pull만 올림. 스크립트 d7_erp_inbound_preview·baseline·run·schedule(APPLY 미리 보기)
 - 초기 적재·시연 초기화 scripts/apex/d7_erp_seed.apex(대기·실패 건이 있으면 중단). 재전송 수동 d7_erp_retry_run.apex. 창고 WH-GS-001(경기남부, 기사 읽기 공유)
 
@@ -95,12 +95,12 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - D4~D8 완료(브랜치 feature/onboarding-d4 a15d9a5, d5 9070a35, d6 a24d1a2, d7 63abe71, d8 진행 중 최신 375728a). D11(10/19) 발표 완료
 - 테스트 238개 통과, org 커버리지 96%(2026-10-16 RunLocalTests, [기사 배정]·누적 청구액 후)
 - 삭제됨: CaseRejectPracticeTest(저장소·org), AccountController(저장소·org), 루트 schema.sql
-- 문서: docs/decision-log.md, docs/interface_definition.md(IF-01~07: 구현 02·03·06·07, 범위 밖 01·04·05), docs/d8_security_review.md(보안 결과표, 남은 위험 R2·R4·R6), docs/d8_lwc_memo.md, docs/d7_lwc_memo.md, docs/d6_screen_design.md(SC-01~10), docs/d6_test_report.md, docs/d6_config_externalization.md, docs/d5_*.md, docs/org_inventory.md(10/6 점검)
+- 문서: docs/decision-log.md, docs/interface_definition.md(IF-01~07: 구현 02·03·06·07, 범위 밖 01·04·05), docs/d8_security_review.md(보안 결과표, 남은 위험 R2·R4, R6 반영 완료), docs/d8_lwc_memo.md, docs/d7_lwc_memo.md, docs/d6_screen_design.md(SC-01~10), docs/d6_test_report.md, docs/d6_config_externalization.md, docs/d5_*.md, docs/org_inventory.md(10/6 점검)
 - 산출물(회사 양식): docs/산출물/ — 03 기능 및 화면 설계서(pptx), 06 인터페이스 정의서, 07 단위 테스트 시나리오, 09 통합 테스트 결과서, 11 Cut Over 사전 점검, 19 소스 이관 목록(2026-10-16). 배포 절차 docs/deploy_procedure.md(샌드박스 → 운영 가정, 저장소에 없는 메타데이터 목록 1-1). V2.0 요건서·권한 매트릭스용 사실 정리 docs/handoff/v2_facts.md. 요건서·권한 매트릭스 V1.1 원본·ERD는 저장소 밖(다운로드 d8_실습/참고_현재본)
 
 ### 대기 중인 일
 
-- R6: ProductConsumedTriggerHandler after delete의 restoreStockForDeleted 제거(삭제 허용·복원 거부 규칙은 유지)
+- R6 org 확인(코드 반영 완료 2026-10-16): 실패 상태 사용 부품 1건을 다른 실행에서 삭제해 재고가 수량만큼 한 번만 늘어나는지(데이터 변경이라 Edwin 확인 후)
 - CTI 가상 착신: 완료(2026-10-15 합침, 같은 날 개선 5가지). 다음 단계 후보 장비 QR, 통화 활동(Task) 기록
 - 장비 모델 필수 검증 규칙: 후보(대리점 장비 등 모델을 나중에 아는 경우 업무 확인 필요)
 - BR-18 상태 순서 강제(다음 단계 후보): 접수 경로 [상태 완료로 표시]·편집으로 배정 없이 처리 중이 되는 한계 포함(decision-log 10-16 7번)
