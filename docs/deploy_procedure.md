@@ -41,13 +41,14 @@ sf project retrieve start -o devorg -m GlobalValueSet:ServiceCenter -m CustomObj
 
 ### 1-1-1. 저장소만으로 check-only 배포 (2026-10-16, 대상 dev org)
 
-| 범위                     | 명령                                                                                          | 결과                                                                                                                                                          |
-| ------------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 저장소 전체(`force-app`) | `sf project deploy validate --source-dir force-app --test-level RunLocalTests`                | **실패**: Apex 클래스 54개 모두 "보류 중이거나 진행 중인 작업이 있습니다"(dev org의 예약 작업 3개가 참조하는 클래스와 그 의존 클래스). 메타데이터 오류는 아님 |
-| Apex·트리거 제외 전체    | `sf project deploy start --dry-run -d <classes·triggers 외 폴더 전부> --test-level NoTestRun` | **성공: 843 / 843**, 오류 0                                                                                                                                   |
-| Apex 54 · 트리거 4       | (같은 org에서 예약 해제 후 검증 필요)                                                         | 미검증. 코드는 org와 같고 2026-10-15 RunLocalTests 214건 Pass                                                                                                 |
+| 범위                                   | 명령                                                                                          | 결과                                                                                                                                                          |
+| -------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 저장소 전체(`force-app`)               | `sf project deploy validate --source-dir force-app --test-level RunLocalTests`                | **실패**: Apex 클래스 54개 모두 "보류 중이거나 진행 중인 작업이 있습니다"(dev org의 예약 작업 3개가 참조하는 클래스와 그 의존 클래스). 메타데이터 오류는 아님 |
+| Apex·트리거 제외 전체                  | `sf project deploy start --dry-run -d <classes·triggers 외 폴더 전부> --test-level NoTestRun` | **성공: 843 / 843**, 오류 0                                                                                                                                   |
+| 저장소 전체(`force-app`), 예약 해제 후 | 예약 3개 `System.abortJob` → 같은 validate → 스크립트로 재예약                                | **성공: 구성 요소 901 / 901, 테스트 193 / 193 통과**, 커버리지 경고 없음(Job 0Afaj00000nv6Z8CAI). 재예약 후 예약 3개 WAITING 확인                             |
 
-- 결론: 메타데이터는 저장소만으로 배포 가능. Apex는 **예약 작업이 없는 org(새 샌드박스·운영 첫 배포)에서는 막히지 않고**, 예약이 있는 org에서는 check-only(validate)도 막힌다 → 1-3의 예약 해제를 validate 전에 한다
+- 결론(2026-10-16): **저장소만으로 dev org에 check-only 배포 성공**(901 구성 요소, Apex 포함). 예약 작업이 있는 org에서는 validate도 막히므로 1-3의 예약 해제를 validate 전에 하고, 끝나면 바로 재예약한다
+- 재예약 주의: `d7_erp_inbound_schedule.apex`의 APPLY를 바꾼 사본을 PowerShell `Set-Content -Encoding UTF8`로 만들면 BOM이 붙어 익명 Apex가 실행되지 않고 조용히 넘어감 → 사본은 BOM 없는 UTF-8로 저장하거나 원본 APPLY 값을 바꿔 실행하고, 재예약 후 `CronTrigger` 3건을 반드시 조회
 - `deploy validate`는 `NoTestRun`을 받지 않음(RunLocalTests 등 필수). 테스트 없이 확인할 때는 `deploy start --dry-run --test-level NoTestRun`(운영에서는 불가)
 
 ### 1-2. 품질 기준 확인
