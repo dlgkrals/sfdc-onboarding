@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>VisitedWorkOrderCount__c</fullName>
+    <description
+  >26-10-16 이 사업장의 방문한 출동(도착·승인 대기·완료) 수 = 누적 청구액에 합산된 출동 수. 출동 트리거(WorkOrderChargeService)가 계산, 읽기 전용 by Edwin</description>
+    <externalId>false</externalId>
+    <inlineHelpText
+  >누적 청구액에 합산된 출동(도착·승인 대기·완료) 수입니다. 전체 출동 기준입니다.</inlineHelpText>
+    <label>방문 출동 수</label>
+    <precision>9</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

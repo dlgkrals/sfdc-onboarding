@@ -21,6 +21,12 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
+                <componentName>workOrderChargeSummary</componentName>
+                <identifier>c_workOrderChargeSummary</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>adminFilters</name>
                 </componentInstanceProperties>

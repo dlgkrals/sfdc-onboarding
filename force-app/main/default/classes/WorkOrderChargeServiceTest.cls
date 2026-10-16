@@ -9,6 +9,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-16    Edwin     최초 작성 (장비 화면 누적 청구액)
  * 1.1    2026-10-16    Edwin     고객사·사업장 누적 청구액(합계·사업장 변경·벌크·상담원 읽기)
+ * 1.2    2026-10-16    Edwin     방문 출동 수(VisitedWorkOrderCount__c) 검증
  * ----------------------------------------------------------------------------
  * @see WorkOrderChargeService, WorkOrderTriggerHandler
  */
@@ -65,6 +66,16 @@ private class WorkOrderChargeServiceTest {
     return total == null ? 0 : total;
   }
 
+  private static Decimal countOf(String serial) {
+    Decimal n = [
+      SELECT VisitedWorkOrderCount__c
+      FROM Asset
+      WHERE SerialKey__c = :serial
+    ]
+    .VisitedWorkOrderCount__c;
+    return n == null ? 0 : n;
+  }
+
   private static User getUser(String permissionSetName) {
     return [
       SELECT Id
@@ -101,6 +112,7 @@ private class WorkOrderChargeServiceTest {
 
     Assert.areEqual(0, whileAssigned, '배정은 방문 전이라 제외');
     Assert.areEqual(FEE, totalOf(SERIAL_OTHER), '도착 = 방문비 합계');
+    Assert.areEqual(1, countOf(SERIAL_OTHER), '합산된 출동 1건');
   }
 
   // 정상: 승인 대기·완료는 포함, 수락·거절은 제외
@@ -277,6 +289,17 @@ private class WorkOrderChargeServiceTest {
     Test.stopTest();
 
     Assert.areEqual(FEE * 2, accountAfterArrive, '고객사 = 출동 2건 합계');
+    Assert.areEqual(
+      1,
+      [
+        SELECT VisitedWorkOrderCount__c
+        FROM Account
+        WHERE Name = '테스트 고객사'
+        LIMIT 1
+      ]
+      .VisitedWorkOrderCount__c,
+      '거절 후 고객사 방문 출동 1건'
+    );
     Assert.areEqual(FEE, accountTotal(), '거절된 출동은 고객사 합계에서 빠짐');
     Assert.areEqual(FEE, siteTotal(siteId), '사업장도 같은 기준');
   }
@@ -409,6 +432,7 @@ private class WorkOrderChargeServiceTest {
     Test.stopTest();
 
     Assert.areEqual(200 * 1000, totalOf(SERIAL_OTHER));
+    Assert.areEqual(200, countOf(SERIAL_OTHER), '방문 출동 200건');
     Assert.areEqual(200 * 1000, accountTotal(), '고객사 합계도 같은 묶음에서');
     Assert.isTrue(queries < 20, '200건이어도 조회 몇 번: ' + queries);
   }

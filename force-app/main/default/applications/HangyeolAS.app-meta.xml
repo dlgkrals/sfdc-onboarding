@@ -12,6 +12,16 @@
     </actionOverrides>
     <actionOverrides>
         <actionName>View</actionName>
+        <comment
+    >26-10-16 고객사 레코드 페이지(출동 누적 청구액 요약) by Edwin</comment>
+        <content>HG_AccountRecordPage</content>
+        <formFactor>Large</formFactor>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
+        <pageOrSobjectType>Account</pageOrSobjectType>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
         <comment>26-10-13 SC-04 장비 상세 레코드 페이지 by Edwin</comment>
         <content>HG_AssetRecordPage</content>
         <formFactor>Large</formFactor>
@@ -37,6 +47,16 @@
         <skipRecordTypeSelect>false</skipRecordTypeSelect>
         <type>Flexipage</type>
         <pageOrSobjectType>WorkOrder</pageOrSobjectType>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <comment
+    >26-10-16 사업장 레코드 페이지(출동 누적 청구액 요약) by Edwin</comment>
+        <content>HG_CustomerSiteRecordPage</content>
+        <formFactor>Large</formFactor>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
+        <pageOrSobjectType>CustomerSite__c</pageOrSobjectType>
     </actionOverrides>
     <formFactors>Small</formFactors>
     <formFactors>Large</formFactors>

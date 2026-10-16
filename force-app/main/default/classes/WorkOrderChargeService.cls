@@ -11,6 +11,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-16    Edwin     최초 작성 (장비 화면 누적 청구액)
  * 1.1    2026-10-16    Edwin     고객사·사업장 누적 청구액 recalculateParentTotals 추가
+ * 1.2    2026-10-16    Edwin     합산된 출동 수(VisitedWorkOrderCount__c)도 같은 집계로 저장 (화면 "누적 청구액 · 방문 출동 N건")
  * ----------------------------------------------------------------------------
  * @see WorkOrderTriggerHandler, CaseStatsService(같은 집계 패턴), scripts/apex/d9_asset_charge_backfill.apex
  */
@@ -23,6 +24,8 @@ public without sharing class WorkOrderChargeService {
     'PendingApproval',
     'Completed'
   };
+  // DESC: 상위 오브젝트에 이 필드가 있으면 합산된 출동 수도 저장 (1.2)
+  private static final String COUNT_FIELD = 'visitedworkordercount__c';
 
   /**
    * @description 장비 누적 청구액 다시 계산 (출동이 없거나 방문한 출동이 없으면 0)
@@ -96,11 +99,12 @@ public without sharing class WorkOrderChargeService {
     // PERF: 집계 쿼리 1회 (상위 레코드 수와 상관없이). 수식 필드 fmTotalCharge__c도 SUM 가능(2026-10-16 확인)
     // DESC: 필드 이름은 describe 결과만 쓰고 값은 바인드 → 인젝션 없음
     Map<Id, Decimal> totalsByParent = new Map<Id, Decimal>();
+    Map<Id, Integer> countsByParent = new Map<Id, Integer>();
     for (
       SObject row : Database.queryWithBinds(
         'SELECT ' +
           groupName +
-          ' parentId, SUM(fmTotalCharge__c) total FROM WorkOrder WHERE ' +
+          ' parentId, SUM(fmTotalCharge__c) total, COUNT(Id) cnt FROM WorkOrder WHERE ' +
           groupName +
           ' IN :targetIds AND Status IN :statuses GROUP BY ' +
           groupName,
@@ -114,15 +118,23 @@ public without sharing class WorkOrderChargeService {
       AggregateResult ar = (AggregateResult) row;
       Decimal total = (Decimal) ar.get('total');
       totalsByParent.put((Id) ar.get('parentId'), total == null ? 0 : total);
+      countsByParent.put((Id) ar.get('parentId'), (Integer) ar.get('cnt'));
     }
 
     // DESC: 값이 바뀐 레코드만 저장 (불필요한 저장으로 장비 Flow·검증 규칙이 도는 것을 줄임)
     String targetName = targetDescribe.getName();
+    // DESC: 합산된 출동 수(VisitedWorkOrderCount__c)가 있는 오브젝트면 같이 저장 (장비·고객사·사업장, 1.2)
+    String countName = targetType.getDescribe()
+        .fields.getMap()
+        .containsKey(COUNT_FIELD)
+      ? COUNT_FIELD
+      : null;
     List<SObject> toUpdate = new List<SObject>();
     for (
       SObject current : Database.queryWithBinds(
         'SELECT Id, ' +
           targetName +
+          (countName == null ? '' : ', ' + countName) +
           ' FROM ' +
           targetType.getDescribe().getName() +
           ' WHERE Id IN :targetIds',
@@ -133,11 +145,20 @@ public without sharing class WorkOrderChargeService {
       Decimal newTotal = totalsByParent.containsKey(current.Id)
         ? totalsByParent.get(current.Id)
         : 0;
-      if ((Decimal) current.get(targetName) == newTotal) {
+      Integer newCount = countsByParent.containsKey(current.Id)
+        ? countsByParent.get(current.Id)
+        : 0;
+      Boolean countSame =
+        countName == null ||
+        (Decimal) current.get(countName) == newCount;
+      if ((Decimal) current.get(targetName) == newTotal && countSame) {
         continue;
       }
       SObject updated = targetType.newSObject(current.Id);
       updated.put(targetName, newTotal);
+      if (countName != null) {
+        updated.put(countName, newCount);
+      }
       toUpdate.add(updated);
     }
     if (toUpdate.isEmpty()) {

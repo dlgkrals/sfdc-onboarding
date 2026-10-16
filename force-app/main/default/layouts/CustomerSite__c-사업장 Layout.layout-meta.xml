@@ -142,15 +142,6 @@
         </platformActionListItems>
     </platformActionList>
     <relatedLists>
-        <fields>ASSET.SERIAL_NUMBER</fields>
-        <fields>PRODUCT2.NAME</fields>
-        <fields>ASSET.STATUS</fields>
-        <fields>ASSET.INSTALL_DATE</fields>
-        <fields>fmWarrantyStatus__c</fields>
-        <fields>HasExtendedWarranty__c</fields>
-        <relatedList>Asset.CustomerSite__c</relatedList>
-    </relatedLists>
-    <relatedLists>
         <excludeButtons>New</excludeButtons>
         <fields>Name</fields>
         <fields>Asset</fields>
@@ -161,6 +152,15 @@
         <relatedList>WorkOrder.CustomerSite__c</relatedList>
         <sortField>Name</sortField>
         <sortOrder>Desc</sortOrder>
+    </relatedLists>
+    <relatedLists>
+        <fields>ASSET.SERIAL_NUMBER</fields>
+        <fields>PRODUCT2.NAME</fields>
+        <fields>ASSET.STATUS</fields>
+        <fields>ASSET.INSTALL_DATE</fields>
+        <fields>fmWarrantyStatus__c</fields>
+        <fields>HasExtendedWarranty__c</fields>
+        <relatedList>Asset.CustomerSite__c</relatedList>
     </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>false</showHighlightsPanel>

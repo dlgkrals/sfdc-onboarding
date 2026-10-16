@@ -1519,4 +1519,22 @@
     >출동 {0}을(를) {1} 기사에게 배정했습니다.</shortDescription>
         <value>출동 {0}을(를) {1} 기사에게 배정했습니다.</value>
     </labels>
+    <labels>
+        <fullName>LABEL_CHARGE_SUMMARY</fullName>
+        <categories>HG_WorkOrderCharge</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>누적 청구액 {0} · 방문 출동 {1}건</shortDescription>
+        <value>누적 청구액 {0} · 방문 출동 {1}건</value>
+    </labels>
+    <labels>
+        <fullName>LABEL_CHARGE_SUMMARY_NOTE</fullName>
+        <categories>HG_WorkOrderCharge</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >도착·승인 대기·완료 출동 전체 기준입니다. 아래 목록은 최근 출동만 보여 줍니다.</shortDescription>
+        <value
+    >도착·승인 대기·완료 출동 전체 기준입니다. 아래 목록은 최근 출동만 보여 줍니다.</value>
+    </labels>
 </CustomLabels>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>출동 누적 청구액 요약</masterLabel>
+    <description
+  >26-10-16 장비·고객사·사업장 "최근 출동" 위 요약: 누적 청구액 · 방문 출동 N건(전체 출동 기준) by Edwin</description>
+    <targets>
+        <target>lightning__RecordPage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage">
+            <objects>
+                <object>Asset</object>
+                <object>Account</object>
+                <object>CustomerSite__c</object>
+            </objects>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>
