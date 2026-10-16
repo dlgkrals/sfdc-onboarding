@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All_WorkOrders</fullName>
+    <columns>Name</columns>
+    <columns>Subject</columns>
+    <columns>Status</columns>
+    <columns>Priority</columns>
+    <columns>Owner</columns>
+    <columns>Account</columns>
+    <columns>Case</columns>
+    <columns>Asset</columns>
+    <columns>CreatedDate</columns>
+    <filterScope>Everything</filterScope>
+    <label>모든 작업 주문</label>
+</ListView>

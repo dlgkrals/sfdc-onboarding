@@ -3,11 +3,12 @@
     <fullName>QuantityChange__c</fullName>
     <description
   >26-10-13 ERP 변동량 (+입고·조정 증가, -조정 감소) by Edwin</description>
-    <label>변동량</label>
-    <required>false</required>
-    <precision>16</precision>
-    <scale>2</scale>
     <externalId>false</externalId>
-    <unique>false</unique>
+    <label>변동량</label>
+    <precision>16</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackTrending>false</trackTrending>
     <type>Number</type>
+    <unique>false</unique>
 </CustomField>

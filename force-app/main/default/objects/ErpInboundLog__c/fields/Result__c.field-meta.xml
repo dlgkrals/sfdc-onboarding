@@ -5,6 +5,7 @@
   >26-10-13 반영(Applied) / 오류(Error: 없는 코드·음수 재고 등 다시 해도 같은 결과, 건너뜀) by Edwin</description>
     <label>결과</label>
     <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
         <restricted>true</restricted>

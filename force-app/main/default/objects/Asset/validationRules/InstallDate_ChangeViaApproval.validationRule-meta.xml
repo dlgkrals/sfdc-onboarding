@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>InstallDate_ChangeViaApproval</fullName>
+    <active>true</active>
+    <description
+  >26-10-07 확정된 설치일·근거를 승인 없이 수정 by Edwin</description>
+    <errorConditionFormula>AND(
+  OR(
+    AND(ISCHANGED(InstallDate), NOT(ISBLANK(PRIORVALUE(InstallDate)))),
+    AND(ISCHANGED(InstallationDateSource__c),
+        NOT(ISPICKVAL(PRIORVALUE(InstallationDateSource__c), &apos;Unverified&apos;)))
+  ),
+  NOT(ISPICKVAL(CorrectionStatus__c, &apos;Approved&apos;)),
+  NOT($Permission.HG_BypassValidation)
+)</errorConditionFormula>
+    <errorDisplayField>InstallDate</errorDisplayField>
+    <errorMessage
+  >확정된 설치일·근거의 정정은 승인을 거쳐야 합니다. 정정 요청 값을 입력하고 승인 제출하세요.</errorMessage>
+</ValidationRule>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PreWorkBriefPromptTemplate</fullName>
+    <inlineHelpText
+  >활성화된 사전 작업 브리프 프롬프트 템플릿의 ID를 입력합니다. ID를 확인하려면 프롬프트 빌더에서 템플릿을 열고 URL에서 &quot;EinsteinPromptStudio/&quot; 이후의 문자를 복사합니다. 예를 들어 URL이 https://testcom98.test1.my.pc-rnd.salesforce-setup.com/lightning/setup/EinsteinPromptStudio/0hfSG000001SUFVYA4/edit?c__versionId=3vNSG0000000g8v2AA인 경우 ID는 0hfSG000001SUFVYA4입니다.</inlineHelpText>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+</CustomField>

@@ -4,6 +4,6 @@
     <description>26-10-13 ERP에서 변동이 생긴 일시 by Edwin</description>
     <label>ERP 변동 일시</label>
     <required>false</required>
-    <externalId>false</externalId>
+    <trackTrending>false</trackTrending>
     <type>DateTime</type>
 </CustomField>

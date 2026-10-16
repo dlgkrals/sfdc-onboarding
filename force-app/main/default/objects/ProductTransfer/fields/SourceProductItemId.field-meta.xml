@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SourceProductItemId</fullName>
+    <inlineHelpText
+  >검색 결과를 향상하기 위해 세부 사항을 가능한 한 자세히 입력하십시오. 예를 들어 &quot;케이블&quot;을 검색하는 대신 &quot;동축 케이블&quot;을 검색하거나 제품 코드의 일부를 입력합니다.</inlineHelpText>
+    <trackHistory>false</trackHistory>
+    <type>Lookup</type>
+</CustomField>

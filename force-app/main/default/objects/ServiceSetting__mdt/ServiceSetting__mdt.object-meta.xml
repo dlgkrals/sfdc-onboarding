@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>출장비·SLA·승인 금액 등 운영 기준값 (BR-17)</description>
+    <label>서비스 기준값</label>
+    <pluralLabel>서비스 기준값</pluralLabel>
+    <visibility>Public</visibility>
+</CustomObject>

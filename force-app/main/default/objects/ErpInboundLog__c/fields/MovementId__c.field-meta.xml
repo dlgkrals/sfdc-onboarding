@@ -3,11 +3,12 @@
     <fullName>MovementId__c</fullName>
     <description
   >26-10-13 ERP movements.id. 고유 → 같은 변동은 한 번만 기록·반영 by Edwin</description>
-    <label>ERP 이력 번호</label>
-    <required>false</required>
     <externalId>true</externalId>
+    <label>ERP 이력 번호</label>
     <precision>18</precision>
+    <required>false</required>
     <scale>0</scale>
-    <unique>true</unique>
+    <trackTrending>false</trackTrending>
     <type>Number</type>
+    <unique>true</unique>
 </CustomField>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>InstallationDateSource__c</fullName>
+    <label>설치일 근거</label>
+    <required>true</required>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <controllingField>SalesChannel__c</controllingField>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>CommissioningReport</fullName>
+                <default>false</default>
+                <label>시운전 확인서</label>
+            </value>
+            <value>
+                <fullName>InstallationCertificate</fullName>
+                <default>false</default>
+                <label>설치확인서</label>
+            </value>
+            <value>
+                <fullName>CustomerEvidence</fullName>
+                <default>false</default>
+                <label>고객 증빙</label>
+            </value>
+            <value>
+                <fullName>Unverified</fullName>
+                <default>true</default>
+                <label>미확인</label>
+            </value>
+        </valueSetDefinition>
+        <valueSettings>
+            <controllingFieldValue>Direct</controllingFieldValue>
+            <valueName>CommissioningReport</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Direct</controllingFieldValue>
+            <controllingFieldValue>Dealer</controllingFieldValue>
+            <valueName>Unverified</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Dealer</controllingFieldValue>
+            <valueName>InstallationCertificate</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Dealer</controllingFieldValue>
+            <valueName>CustomerEvidence</valueName>
+        </valueSettings>
+    </valueSet>
+</CustomField>

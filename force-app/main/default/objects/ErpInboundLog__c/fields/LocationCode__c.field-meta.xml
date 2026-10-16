@@ -3,10 +3,11 @@
     <fullName>LocationCode__c</fullName>
     <description
   >26-10-13 ERP 위치 코드 (Location.ErpLocationCode__c) by Edwin</description>
-    <label>ERP 위치 코드</label>
-    <required>false</required>
-    <length>40</length>
     <externalId>false</externalId>
-    <unique>false</unique>
+    <label>ERP 위치 코드</label>
+    <length>40</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>Text</type>
+    <unique>false</unique>
 </CustomField>

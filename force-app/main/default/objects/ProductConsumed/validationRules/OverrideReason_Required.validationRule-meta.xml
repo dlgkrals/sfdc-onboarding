@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>OverrideReason_Required</fullName>
+    <active>true</active>
+    <description>26-10-07 판정 변경 사유 필수 by Edwin</description>
+    <errorConditionFormula>AND(
+  NOT(ISBLANK(TEXT(AutoChargeType__c))),
+  TEXT(ChargeType__c) &lt;&gt; TEXT(AutoChargeType__c),
+  ISBLANK(OverrideReason__c)
+)</errorConditionFormula>
+    <errorDisplayField>OverrideReason__c</errorDisplayField>
+    <errorMessage
+  >자동 판정과 다르게 확정하려면 판정 변경 사유를 입력하세요.</errorMessage>
+</ValidationRule>

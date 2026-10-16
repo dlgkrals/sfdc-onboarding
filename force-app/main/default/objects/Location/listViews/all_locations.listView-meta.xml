@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>all_locations</fullName>
+    <columns>Name</columns>
+    <columns>LocationType</columns>
+    <columns>Owner</columns>
+    <columns>ParentLocation</columns>
+    <filterScope>Everything</filterScope>
+    <label>모든 위치</label>
+</ListView>

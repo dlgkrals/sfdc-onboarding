@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DeclineReason_Required</fullName>
+    <active>true</active>
+    <description>26-10-07 거절 사유 필수 by Edwin</description>
+    <errorConditionFormula>AND(
+  ISPICKVAL(Status, &apos;Declined&apos;),
+  ISBLANK(DeclineReason__c)
+)</errorConditionFormula>
+    <errorDisplayField>DeclineReason__c</errorDisplayField>
+    <errorMessage>배정을 거절하려면 거절 사유를 입력하세요.</errorMessage>
+</ValidationRule>

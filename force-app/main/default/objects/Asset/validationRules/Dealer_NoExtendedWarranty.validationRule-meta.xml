@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Dealer_NoExtendedWarranty</fullName>
+    <active>true</active>
+    <description>26-10-07 대리점 장비 연장보증 불가 by Edwin</description>
+    <errorConditionFormula>AND(
+  ISPICKVAL(SalesChannel__c, &apos;Dealer&apos;),
+  HasExtendedWarranty__c
+)</errorConditionFormula>
+    <errorDisplayField>HasExtendedWarranty__c</errorDisplayField>
+    <errorMessage>대리점 장비에는 연장보증을 설정할 수 없습니다.</errorMessage>
+</ValidationRule>

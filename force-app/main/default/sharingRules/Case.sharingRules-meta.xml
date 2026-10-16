@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<SharingRules xmlns="http://soap.sforce.com/2006/04/metadata">
+    <sharingCriteriaRules>
+        <fullName>HG_CenterCases_CallCenter</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>센터 지정된 접수(Queue 소유 포함) → 콜센터 읽기/쓰기</label>
+        <sharedTo>
+            <group>HG_CallCenter</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>ServiceCenter__c</field>
+            <operation>equals</operation>
+            <value
+      >서울센터,경기북부센터,경기남부·인천센터,충청센터,영남센터,호남센터,강원센터,제주센터</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingOwnerRules>
+        <fullName>HG_AllCases_CallCenter</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>모든 접수 → 콜센터 읽기/쓰기</label>
+        <sharedTo>
+            <group>HG_CallCenter</group>
+        </sharedTo>
+        <sharedFrom>
+            <allInternalUsers />
+        </sharedFrom>
+    </sharingOwnerRules>
+</SharingRules>

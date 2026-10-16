@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<SharingRules xmlns="http://soap.sforce.com/2006/04/metadata">
+    <sharingCriteriaRules>
+        <fullName>HG_Chungcheong_WorkOrders_CM</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>충청 출동 → 충청센터장 읽기/쓰기</label>
+        <sharedTo>
+            <role>HG_ChungcheongCenterManager</role>
+        </sharedTo>
+        <criteriaItems>
+            <field>ServiceCenter__c</field>
+            <operation>equals</operation>
+            <value>충청센터</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>HG_GyeonggiSouth_WorkOrders_CM</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>경기남부 출동 → 경기남부센터장 읽기/쓰기</label>
+        <sharedTo>
+            <role>HG_GyeonggiSouthCenterManager</role>
+        </sharedTo>
+        <criteriaItems>
+            <field>ServiceCenter__c</field>
+            <operation>equals</operation>
+            <value>경기남부·인천센터</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>HG_Seoul_WorkOrders_CM</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>서울 출동 → 서울센터장 읽기/쓰기</label>
+        <sharedTo>
+            <role>HG_SeoulCenterManager</role>
+        </sharedTo>
+        <criteriaItems>
+            <field>ServiceCenter__c</field>
+            <operation>equals</operation>
+            <value>서울센터</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingOwnerRules>
+        <fullName>HG_AllWorkOrders_CallCenter</fullName>
+        <accessLevel>Read</accessLevel>
+        <label>모든 출동 → 콜센터 읽기</label>
+        <sharedTo>
+            <group>HG_CallCenter</group>
+        </sharedTo>
+        <sharedFrom>
+            <allInternalUsers />
+        </sharedFrom>
+    </sharingOwnerRules>
+</SharingRules>

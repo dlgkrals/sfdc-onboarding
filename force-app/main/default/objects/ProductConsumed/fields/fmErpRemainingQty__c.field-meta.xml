@@ -6,7 +6,6 @@
     <externalId>false</externalId>
     <formula
   >IF(ISBLANK(ErpRemainingQty__c), NULL, TEXT(ErpRemainingQty__c) &amp; &apos; &apos; &amp; CASE(TEXT(ProductItem.QuantityUnitOfMeasure), &apos;Each&apos;, $Label.MISC_UNIT_EACH, &apos;kg&apos;, $Label.MISC_UNIT_KG, TEXT(ProductItem.QuantityUnitOfMeasure)))</formula>
-    <formulaTreatBlanksAs>BlankAsBlank</formulaTreatBlanksAs>
     <label>ERP 남은 수량(단위)</label>
     <required>false</required>
     <trackHistory>false</trackHistory>

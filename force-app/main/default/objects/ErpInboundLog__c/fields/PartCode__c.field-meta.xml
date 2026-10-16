@@ -3,10 +3,11 @@
     <fullName>PartCode__c</fullName>
     <description
   >26-10-13 ERP 부품 코드 (Product2.ErpPartCode__c) by Edwin</description>
-    <label>ERP 부품 코드</label>
-    <required>false</required>
-    <length>40</length>
     <externalId>false</externalId>
-    <unique>false</unique>
+    <label>ERP 부품 코드</label>
+    <length>40</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>Text</type>
+    <unique>false</unique>
 </CustomField>

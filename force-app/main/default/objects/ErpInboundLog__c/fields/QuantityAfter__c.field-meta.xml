@@ -3,11 +3,12 @@
     <fullName>QuantityAfter__c</fullName>
     <description
   >26-10-13 반영 후 Salesforce 재고 수량 (오류면 비움) by Edwin</description>
-    <label>반영 후 Salesforce 수량</label>
-    <required>false</required>
-    <precision>16</precision>
-    <scale>2</scale>
     <externalId>false</externalId>
-    <unique>false</unique>
+    <label>반영 후 Salesforce 수량</label>
+    <precision>16</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackTrending>false</trackTrending>
     <type>Number</type>
+    <unique>false</unique>
 </CustomField>

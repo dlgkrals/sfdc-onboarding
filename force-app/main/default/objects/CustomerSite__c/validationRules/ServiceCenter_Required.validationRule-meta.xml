@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ServiceCenter_Required</fullName>
+    <active>true</active>
+    <description>26-10-07 서비스센터 필수 by Edwin</description>
+    <errorConditionFormula
+  >ISBLANK(TEXT(ServiceCenter__c))</errorConditionFormula>
+    <errorDisplayField>ServiceCenter__c</errorDisplayField>
+    <errorMessage
+  >담당 서비스센터를 선택하세요. 주소로 자동 지정되지 않은 사업장입니다.</errorMessage>
+</ValidationRule>

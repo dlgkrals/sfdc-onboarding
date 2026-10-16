@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BusinessRegistrationNumber_Format</fullName>
+    <active>true</active>
+    <description
+  >26-10-07 개인 외 고객은 사업자번호 숫자 10자리 필수 by Edwin</description>
+    <errorConditionFormula>AND(
+       RecordType.DeveloperName &lt;&gt; &apos;Individual&apos;,
+       NOT(REGEX(BusinessRegistrationNumber__c, &quot;[0-9]{10}&quot;))
+     )</errorConditionFormula>
+    <errorDisplayField>BusinessRegistrationNumber__c</errorDisplayField>
+    <errorMessage>사업자등록번호는 숫자 10자리로 입력하세요.</errorMessage>
+</ValidationRule>

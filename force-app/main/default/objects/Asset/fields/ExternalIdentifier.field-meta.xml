@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ExternalIdentifier</fullName>
+    <inlineHelpText>외부 시스템에서 일치하는 레코드의 ID.</inlineHelpText>
+    <trackHistory>false</trackHistory>
+</CustomField>
