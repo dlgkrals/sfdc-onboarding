@@ -93,7 +93,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 ## 일정 · 현황
 
 - D4~D8 완료(브랜치 feature/onboarding-d4 a15d9a5, d5 9070a35, d6 a24d1a2, d7 63abe71, d8 진행 중 최신 375728a). D11(10/19) 발표 완료
-- 테스트 214개 통과, org 커버리지 96%(2026-10-15, 피드백 개선 5가지 후)
+- 테스트 238개 통과, org 커버리지 96%(2026-10-16 RunLocalTests, [기사 배정]·누적 청구액 후)
 - 삭제됨: CaseRejectPracticeTest(저장소·org), AccountController(저장소·org), 루트 schema.sql
 - 문서: docs/decision-log.md, docs/interface_definition.md(IF-01~07: 구현 02·03·06·07, 범위 밖 01·04·05), docs/d8_security_review.md(보안 결과표, 남은 위험 R2·R4·R6), docs/d8_lwc_memo.md, docs/d7_lwc_memo.md, docs/d6_screen_design.md(SC-01~10), docs/d6_test_report.md, docs/d6_config_externalization.md, docs/d5_*.md, docs/org_inventory.md(10/6 점검)
 - 산출물(회사 양식): docs/산출물/ — 03 기능 및 화면 설계서(pptx), 06 인터페이스 정의서, 07 단위 테스트 시나리오, 09 통합 테스트 결과서, 11 Cut Over 사전 점검, 19 소스 이관 목록(2026-10-16). 배포 절차 docs/deploy_procedure.md(샌드박스 → 운영 가정, 저장소에 없는 메타데이터 목록 1-1). V2.0 요건서·권한 매트릭스용 사실 정리 docs/handoff/v2_facts.md. 요건서·권한 매트릭스 V1.1 원본·ERD는 저장소 밖(다운로드 d8_실습/참고_현재본)
@@ -103,7 +103,8 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - R6: ProductConsumedTriggerHandler after delete의 restoreStockForDeleted 제거(삭제 허용·복원 거부 규칙은 유지)
 - CTI 가상 착신: 완료(2026-10-15 합침, 같은 날 개선 5가지). 다음 단계 후보 장비 QR, 통화 활동(Task) 기록
 - 장비 모델 필수 검증 규칙: 후보(대리점 장비 등 모델을 나중에 아는 경우 업무 확인 필요)
-- [기사 배정] 확인 필요: 완료 접수에 재배정하면 처리 중으로 되돌리는 것, 접수 경로의 [상태 완료로 표시]를 막을지, 출동 탭 Prompt가 실제 사용자 화면에 뜨는지(관리자 헤드리스 캡처에서는 안 보임)
+- BR-18 상태 순서 강제(다음 단계 후보): 접수 경로 [상태 완료로 표시]·편집으로 배정 없이 처리 중이 되는 한계 포함(decision-log 10-16 7번)
+- [기사 배정] 화면 확인 대기(Edwin이 실제 사용자로 몰아서): 김병철 배정 흐름·출동 탭 Prompt가 실제 사용자 화면에 뜨는지(관리자 헤드리스 캡처에서는 안 보임)
 
 ## 권한 (V1.1 매트릭스 + D8)
 
