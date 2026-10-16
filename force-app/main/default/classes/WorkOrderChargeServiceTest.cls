@@ -218,11 +218,25 @@ private class WorkOrderChargeServiceTest {
     insert created;
     Test.stopTest();
 
+    WorkOrder saved = [
+      SELECT AssetId, AccountId, CustomerSite__c, ServiceCenter__c
+      FROM WorkOrder
+      WHERE Id = :created.Id
+    ];
+    Case source = [
+      SELECT AccountId, CustomerSite__c, ServiceCenter__c
+      FROM Case
+      WHERE Id = :caseId
+    ];
+    Assert.areEqual(assetId(SERIAL_OTHER), saved.AssetId, '접수의 장비 복사');
+    Assert.areEqual(source.AccountId, saved.AccountId, '고객사 복사');
     Assert.areEqual(
-      assetId(SERIAL_OTHER),
-      [SELECT AssetId FROM WorkOrder WHERE Id = :created.Id].AssetId,
-      '접수의 장비 복사'
+      source.CustomerSite__c,
+      saved.CustomerSite__c,
+      '사업장 복사'
     );
+    Assert.isNotNull(saved.ServiceCenter__c, '서비스센터 복사(공유 규칙 기준)');
+    Assert.areEqual(source.ServiceCenter__c, saved.ServiceCenter__c);
   }
 
   // 불허: 트리거 스위치를 끄면 다시 계산하지 않음 (데이터 이관 때)
