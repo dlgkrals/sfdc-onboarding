@@ -201,7 +201,17 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>Account.TotalWorkOrderCharge__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>Asset.TotalWorkOrderCharge__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>CustomerSite__c.TotalWorkOrderCharge__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

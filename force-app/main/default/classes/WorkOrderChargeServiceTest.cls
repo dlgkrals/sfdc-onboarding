@@ -1,6 +1,6 @@
 /**
  * @description WorkOrderChargeService · WorkOrderTriggerHandler · Flow WorkOrder_BeforeSave_FillAsset 테스트
- *              장비 누적 청구액 = 방문한 출동(도착·승인 대기·완료)의 총 청구액 합계
+ *              장비·고객사·사업장 누적 청구액 = 방문한 출동(도착·승인 대기·완료)의 총 청구액 합계
  * @layer       Test
  * @author      Edwin
  * @date        2026-10-16
@@ -8,6 +8,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-16    Edwin     최초 작성 (장비 화면 누적 청구액)
+ * 1.1    2026-10-16    Edwin     고객사·사업장 누적 청구액(합계·사업장 변경·벌크·상담원 읽기)
  * ----------------------------------------------------------------------------
  * @see WorkOrderChargeService, WorkOrderTriggerHandler
  */
@@ -239,6 +240,68 @@ private class WorkOrderChargeServiceTest {
     Assert.areEqual(source.ServiceCenter__c, saved.ServiceCenter__c);
   }
 
+  private static Decimal accountTotal() {
+    Decimal total = [
+      SELECT TotalWorkOrderCharge__c
+      FROM Account
+      WHERE Name = '테스트 고객사'
+      LIMIT 1
+    ]
+    .TotalWorkOrderCharge__c;
+    return total == null ? 0 : total;
+  }
+
+  private static Decimal siteTotal(Id siteId) {
+    Decimal total = [
+      SELECT TotalWorkOrderCharge__c
+      FROM CustomerSite__c
+      WHERE Id = :siteId
+    ]
+    .TotalWorkOrderCharge__c;
+    return total == null ? 0 : total;
+  }
+
+  // 정상: 고객사·사업장 누적 청구액 = 그 아래 장비들의 방문 출동 합계 (장비 2대 · 출동 2건)
+  @isTest
+  static void normalAccountAndSiteTotalsFollow() {
+    WorkOrder paidWo = workOrderOf(SERIAL_PAID);
+    WorkOrder otherWo = workOrderOf(SERIAL_OTHER);
+    Id siteId = [SELECT CustomerSite__c FROM WorkOrder WHERE Id = :otherWo.Id]
+    .CustomerSite__c;
+
+    Test.startTest();
+    moveTo(paidWo, 'Arrived');
+    moveTo(otherWo, 'Arrived');
+    Decimal accountAfterArrive = accountTotal();
+    moveTo(otherWo, 'Declined');
+    Test.stopTest();
+
+    Assert.areEqual(FEE * 2, accountAfterArrive, '고객사 = 출동 2건 합계');
+    Assert.areEqual(FEE, accountTotal(), '거절된 출동은 고객사 합계에서 빠짐');
+    Assert.areEqual(FEE, siteTotal(siteId), '사업장도 같은 기준');
+  }
+
+  // 정상: 출동의 사업장을 바꾸면 이전 사업장과 새 사업장 둘 다 다시 계산
+  @isTest
+  static void normalSiteChangeRecalculatesBoth() {
+    WorkOrder wo = workOrderOf(SERIAL_OTHER);
+    moveTo(wo, 'Arrived');
+    WorkOrder saved = [
+      SELECT AccountId, CustomerSite__c
+      FROM WorkOrder
+      WHERE Id = :wo.Id
+    ];
+    CustomerSite__c otherSite = TestDataFactory.createSite(saved.AccountId);
+
+    Test.startTest();
+    update new WorkOrder(Id = wo.Id, CustomerSite__c = otherSite.Id);
+    Test.stopTest();
+
+    Assert.areEqual(0, siteTotal(saved.CustomerSite__c), '이전 사업장 0');
+    Assert.areEqual(FEE, siteTotal(otherSite.Id), '새 사업장에 합계');
+    Assert.areEqual(FEE, accountTotal(), '고객사는 그대로');
+  }
+
   // 불허: 트리거 스위치를 끄면 다시 계산하지 않음 (데이터 이관 때)
   @isTest
   static void rejectSwitchOffSkipsRecalculation() {
@@ -278,6 +341,7 @@ private class WorkOrderChargeServiceTest {
     moveTo(wo, 'Arrived');
     Id targetId = assetId(SERIAL_OTHER);
     Decimal seenByCallCenter;
+    Decimal accountSeenByCallCenter;
     Boolean technicianBlocked = false;
 
     Test.startTest();
@@ -287,6 +351,14 @@ private class WorkOrderChargeServiceTest {
         FROM Asset
         WHERE Id = :targetId
         WITH USER_MODE
+      ]
+      .TotalWorkOrderCharge__c;
+      accountSeenByCallCenter = [
+        SELECT TotalWorkOrderCharge__c
+        FROM Account
+        WHERE Name = '테스트 고객사'
+        WITH USER_MODE
+        LIMIT 1
       ]
       .TotalWorkOrderCharge__c;
     }
@@ -305,6 +377,11 @@ private class WorkOrderChargeServiceTest {
     Test.stopTest();
 
     Assert.areEqual(FEE, seenByCallCenter, '상담원 읽기');
+    Assert.areEqual(
+      FEE,
+      accountSeenByCallCenter,
+      '상담원 고객사 누적 청구액 읽기'
+    );
     Assert.isTrue(technicianBlocked, '기사는 장비 권한 없음');
   }
 
@@ -332,6 +409,7 @@ private class WorkOrderChargeServiceTest {
     Test.stopTest();
 
     Assert.areEqual(200 * 1000, totalOf(SERIAL_OTHER));
+    Assert.areEqual(200 * 1000, accountTotal(), '고객사 합계도 같은 묶음에서');
     Assert.isTrue(queries < 20, '200건이어도 조회 몇 번: ' + queries);
   }
 }

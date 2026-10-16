@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TotalWorkOrderCharge__c</fullName>
+    <description
+  >26-10-16 이 사업장의 출동 중 실제로 방문한 출동(도착·승인 대기·완료)의 총 청구액 합계. 출동 트리거(WorkOrderChargeService)가 계산, 읽기 전용 by Edwin</description>
+    <externalId>false</externalId>
+    <inlineHelpText
+  >이 사업장에 실제로 방문한 출동(도착·승인 대기·완료)의 총 청구액 합계입니다. 배정·수락·거절 출동은 빠집니다.</inlineHelpText>
+    <label>누적 청구액</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Currency</type>
+</CustomField>

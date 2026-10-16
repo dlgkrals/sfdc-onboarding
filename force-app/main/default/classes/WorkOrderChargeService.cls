@@ -1,8 +1,8 @@
 /**
- * @description 출동 총 청구액(fmTotalCharge__c) 합계를 상위 레코드에 저장 — 지금은 장비 누적 청구액(Asset.TotalWorkOrderCharge__c)
+ * @description 출동 총 청구액(fmTotalCharge__c) 합계를 상위 레코드에 저장 — 장비·고객사·사업장 누적 청구액(TotalWorkOrderCharge__c)
  *              합계 대상 = 실제로 방문한 출동(도착·승인 대기·완료). 배정·수락·거절은 방문비가 생기지 않아 제외
  *              장비 → 출동은 Lookup이라 Roll-Up Summary 불가 → 출동 트리거가 이 서비스를 부름
- *              묶는 필드(출동의 조회 필드)와 대상 필드를 인자로 받아 고객사(AccountId)·사업장(CustomerSite__c)도 같은 메서드로 늘릴 수 있음
+ *              묶는 필드(출동의 조회 필드: AssetId·AccountId·CustomerSite__c)와 대상 필드를 인자로 받는 recalculateTotals 하나로 처리
  * @layer       Service
  * @author      Edwin
  * @date        2026-10-16
@@ -10,6 +10,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-16    Edwin     최초 작성 (장비 화면 누적 청구액)
+ * 1.1    2026-10-16    Edwin     고객사·사업장 누적 청구액 recalculateParentTotals 추가
  * ----------------------------------------------------------------------------
  * @see WorkOrderTriggerHandler, CaseStatsService(같은 집계 패턴), scripts/apex/d9_asset_charge_backfill.apex
  */
@@ -34,6 +35,31 @@ public without sharing class WorkOrderChargeService {
       WorkOrder.AssetId,
       Asset.TotalWorkOrderCharge__c
     );
+  }
+
+  /**
+   * @description 장비·고객사·사업장 누적 청구액을 한 번에 다시 계산 (빈 집합은 건너뜀, 오브젝트당 집계 1회·저장 1회)
+   * @param assetIds   다시 계산할 장비 Id
+   * @param accountIds 다시 계산할 고객사 Id
+   * @param siteIds    다시 계산할 사업장 Id
+   * @return 값이 바뀌어 저장한 레코드 수(세 오브젝트 합)
+   */
+  public static Integer recalculateParentTotals(
+    Set<Id> assetIds,
+    Set<Id> accountIds,
+    Set<Id> siteIds
+  ) {
+    return recalculateAssetTotals(assetIds) +
+      recalculateTotals(
+        accountIds,
+        WorkOrder.AccountId,
+        Account.TotalWorkOrderCharge__c
+      ) +
+      recalculateTotals(
+        siteIds,
+        WorkOrder.CustomerSite__c,
+        CustomerSite__c.TotalWorkOrderCharge__c
+      );
   }
 
   /**

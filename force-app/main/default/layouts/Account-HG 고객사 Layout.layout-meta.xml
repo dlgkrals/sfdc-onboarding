@@ -48,6 +48,10 @@
                 <behavior>Edit</behavior>
                 <field>PaymentMethod__c</field>
             </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>TotalWorkOrderCharge__c</field>
+            </layoutItems>
         </layoutColumns>
         <style>TwoColumnsLeftToRight</style>
     </layoutSections>
@@ -127,6 +131,18 @@
         <fields>CASES.SUBJECT</fields>
         <fields>CASES.STATUS</fields>
         <relatedList>RelatedCaseList</relatedList>
+    </relatedLists>
+    <relatedLists>
+        <excludeButtons>New</excludeButtons>
+        <fields>Name</fields>
+        <fields>Asset</fields>
+        <fields>Owner</fields>
+        <fields>Status</fields>
+        <fields>ArrivalDateTime__c</fields>
+        <fields>fmTotalCharge__c</fields>
+        <relatedList>WorkOrders</relatedList>
+        <sortField>Name</sortField>
+        <sortOrder>Desc</sortOrder>
     </relatedLists>
     <relatedObjects>ParentId</relatedObjects>
     <showEmailCheckbox>false</showEmailCheckbox>
