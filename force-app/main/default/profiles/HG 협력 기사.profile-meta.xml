@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Profile xmlns="http://soap.sforce.com/2006/04/metadata">
+    <custom>true</custom>
+    <description
+  >26-10-16 역할별 홈 페이지 지정용(권한은 권한 집합) by Edwin</description>
+    <layoutAssignments>
+        <layout>Account-HG 고객사 Layout</layout>
+        <recordType>Account.Corporation</recordType>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>Account-HG 고객사 Layout</layout>
+        <recordType>Account.Dealer</recordType>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>Account-HG 고객사 Layout</layout>
+        <recordType>Account.Individual</recordType>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>Account-HG 고객사 Layout</layout>
+        <recordType>Account.SoleProprietor</recordType>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>Product2-Product Layout</layout>
+    </layoutAssignments>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>false</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Entitlement</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>false</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>EntitlementContact</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <userLicense>Salesforce</userLicense>
+</Profile>

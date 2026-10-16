@@ -34,7 +34,8 @@ sf project retrieve start -o devorg -m GlobalValueSet:ServiceCenter -m CustomObj
 # 검증 규칙은 오브젝트별로 (예: -m "ValidationRule:Case.Closed_Lock")
 ```
 
-- 프로필은 전체 retrieve로 덮어쓰지 않는다(저장소에는 대리점 레이아웃 지정만 있는 최소 파일)
+- 프로필은 전체 retrieve로 덮어쓰지 않는다(저장소에는 필요한 부분만 있는 최소 파일: 고객사 레코드 유형 4개·제품 레이아웃 할당, 새 프로필은 권리 읽기 해제·설명). 프로필 6개 = Admin · Minimum Access - Salesforce · Minimum Access - API Only Integrations · HG 콜센터 상담원 · HG 센터장 · HG 협력 기사(2026-10-16)
+- **프로필별 제품(Product2) 페이지 레이아웃 할당 필요**: 할당이 없으면 제품 화면이 오류. 최소 파일에 `Product2-Product Layout`이 들어 있으므로 프로필을 배포하면 함께 맞춰짐(새 프로필을 화면에서 만들면 직접 확인)
 - retrieve 후 `npx prettier --write "force-app/**/*.{cls,trigger}"`(줄바꿈 정리), 저장소 = org 비교(내용 비교 스크립트, decision-log CTI 합치기 참고)
 
 **2026-10-16 실행 결과 (커밋 d2206cc)**: 위 표 전부 받음. 오브젝트는 정의 단위로 16개(Account·Asset·Case·WorkOrder·Location·Product2·ProductItem·ProductConsumed·ProductTransfer·CustomerSite__c·ErpInboundLog__c·ErpSyncState__c·ServiceSetting__mdt·WarrantyPolicy__mdt·ServiceCenterMapping__mdt·TriggerSetting__mdt)를 받아 OWD·레코드 유형·검증 규칙 17·목록 보기가 함께 들어옴. 역할은 HG\_ 8개만, 외부 클라이언트 앱은 정의(`HG_ERP_Mock.eca-meta.xml`)만이고 OAuth 설정·키는 받지 않음(키 없음 확인). 기존 파일 186개는 retrieve가 요소 순서·줄 포맷을 바꾼 것(내용 변화 없음)
