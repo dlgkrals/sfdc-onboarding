@@ -10,6 +10,13 @@
     </targets>
     <targetConfigs>
         <targetConfig targets="lightning__RecordPage">
+            <property
+        name="recentCount"
+        type="Integer"
+        default="5"
+        label="아래 출동 목록 건수"
+        description="요약 아래 출동 목록이 보여 주는 건수(문구 &quot;아래는 최근 N건&quot;)"
+      />
             <objects>
                 <object>Asset</object>
                 <object>Account</object>

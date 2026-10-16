@@ -24,8 +24,8 @@ const CURRENCY = new Intl.NumberFormat("ko-KR", {
 export default class WorkOrderChargeSummary extends LightningElement {
   @api recordId;
   @api objectApiName;
-
-  note = LABEL_CHARGE_SUMMARY_NOTE;
+  // DESC: 아래 출동 목록이 보여 주는 건수(장비 페이지 동적 목록 5, 고객사·사업장 표준 관련 목록 6) — 페이지에서 지정
+  @api recentCount = 5;
   record;
 
   get fields() {
@@ -40,6 +40,10 @@ export default class WorkOrderChargeSummary extends LightningElement {
   @wire(getRecord, { recordId: "$recordId", optionalFields: "$fields" })
   wiredRecord({ data }) {
     this.record = data;
+  }
+
+  get note() {
+    return LABEL_CHARGE_SUMMARY_NOTE.replace("{0}", this.recentCount);
   }
 
   get summary() {

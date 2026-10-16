@@ -6,6 +6,10 @@
         <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>
+                    <name>decorate</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
                     <name>richTextValue</name>
                     <value
           >&lt;p&gt;&lt;b&gt;배정 대기 접수부터 확인하세요.&lt;/b&gt; 접수를 열고 [기사 배정]을 누르면 출동이 만들어집니다. 거절된 출동은 재배정 필요 목록에 모입니다.&lt;/p&gt;</value>
@@ -21,12 +25,24 @@
         <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>
+                    <name>enableInlineEdit</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
                     <name>entityName</name>
                     <value>Case</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>filterName</name>
                     <value>HG_AwaitingDispatch</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>hideActionBar</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>hideSearchBar</name>
+                    <value>false</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:filterListCard</componentName>
                 <identifier>flexipage_filterListCard_2</identifier>
@@ -39,12 +55,24 @@
         <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>
+                    <name>enableInlineEdit</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
                     <name>entityName</name>
                     <value>WorkOrder</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>filterName</name>
                     <value>HG_NeedsReassignment</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>hideActionBar</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>hideSearchBar</name>
+                    <value>false</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:filterListCard</componentName>
                 <identifier>flexipage_filterListCard_3</identifier>
@@ -56,6 +84,18 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName
+        >runtime_approval_process:pendingApprovalCard</componentName>
+                <identifier
+        >runtime_approval_process_pendingApprovalCard</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>enableInlineEdit</name>
+                    <value>true</value>
+                </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>entityName</name>
                     <value>WorkOrder</value>
@@ -63,6 +103,14 @@
                 <componentInstanceProperties>
                     <name>filterName</name>
                     <value>HG_PendingApproval</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>hideActionBar</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>hideSearchBar</name>
+                    <value>false</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:filterListCard</componentName>
                 <identifier>flexipage_filterListCard_4</identifier>
@@ -73,6 +121,10 @@
                 <componentInstanceProperties>
                     <name>reportName</name>
                     <value>HG_CenterCasesByPriority</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>showRefreshButton</name>
+                    <value>true</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:reportChart</componentName>
                 <identifier>flexipage_reportChart_5</identifier>

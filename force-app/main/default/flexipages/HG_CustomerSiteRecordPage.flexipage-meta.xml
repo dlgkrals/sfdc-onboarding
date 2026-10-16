@@ -35,6 +35,10 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentInstanceProperties>
+                    <name>recentCount</name>
+                    <value>6</value>
+                </componentInstanceProperties>
                 <componentName>workOrderChargeSummary</componentName>
                 <identifier>c_workOrderChargeSummary</identifier>
             </componentInstance>

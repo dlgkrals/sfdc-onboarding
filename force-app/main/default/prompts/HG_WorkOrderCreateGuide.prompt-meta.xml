@@ -11,7 +11,7 @@
         <dismissButtonLabel>확인</dismissButtonLabel>
         <displayPosition>TopRight</displayPosition>
         <displayType>FloatingPanel</displayType>
-        <isPublished>true</isPublished>
+        <isPublished>false</isPublished>
         <masterLabel>출동 생성 안내</masterLabel>
         <publishedDate>2026-10-16</publishedDate>
         <shouldDisplayActionButton>false</shouldDisplayActionButton>
