@@ -9,5 +9,10 @@
     >&lt;p&gt;&lt;b&gt;[기사 배정]으로 출동을 만드세요.&lt;/b&gt;&lt;/p&gt;&lt;p&gt;오른쪽 위 [기사 배정] 버튼에서 우리 센터 기사·출동 목적·방문 예정 일시를 고르면 출동이 만들어지고 접수는 처리 중으로 바뀝니다.&lt;/p&gt;</info>
         <picklistValueName>New</picklistValueName>
     </pathAssistantSteps>
+    <pathAssistantSteps>
+        <info
+    >&lt;p&gt;&lt;b&gt;판정·승인·청구를 확인하고 종결하세요.&lt;/b&gt;&lt;/p&gt;&lt;p&gt;마지막 출동이 완료되면 접수가 자동으로 완료됩니다. 유·무상 판정, 승인 결과, 청구 금액을 확인한 뒤 종결하세요. 종결하면 수정할 수 없습니다.&lt;/p&gt;</info>
+        <picklistValueName>Completed</picklistValueName>
+    </pathAssistantSteps>
     <recordTypeName>__MASTER__</recordTypeName>
 </PathAssistant>

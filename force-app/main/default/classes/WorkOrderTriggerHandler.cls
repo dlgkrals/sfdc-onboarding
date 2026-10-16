@@ -12,6 +12,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-16    Edwin     최초 작성 (장비 화면 누적 청구액)
  * 1.1    2026-10-16    Edwin     고객사·사업장 누적 청구액도 계산(바뀌면 이전·새 상위 둘 다)
+ * 1.2    2026-10-16    Edwin     접수별 열린·완료 출동 수 + 접수 자동 완료·재오픈(CaseWorkOrderStatsService)
  * ----------------------------------------------------------------------------
  * @see WorkOrderTrigger, WorkOrderChargeService, TriggerHandler
  */
@@ -22,6 +23,7 @@ public with sharing class WorkOrderTriggerHandler extends TriggerHandler {
 
   protected override void afterInsert() {
     recalculateVisited((List<WorkOrder>) Trigger.new);
+    recalculateCases((List<WorkOrder>) Trigger.new, null);
   }
 
   protected override void afterUpdate() {
@@ -42,14 +44,41 @@ public with sharing class WorkOrderTriggerHandler extends TriggerHandler {
       parents.add(newWo);
     }
     parents.recalculate();
+    recalculateCases(
+      (List<WorkOrder>) Trigger.new,
+      (Map<Id, WorkOrder>) Trigger.oldMap
+    );
   }
 
   protected override void afterDelete() {
     recalculateVisited((List<WorkOrder>) Trigger.old);
+    recalculateCases((List<WorkOrder>) Trigger.old, null);
   }
 
   protected override void afterUndelete() {
     recalculateVisited((List<WorkOrder>) Trigger.new);
+    recalculateCases((List<WorkOrder>) Trigger.new, null);
+  }
+
+  // DESC: 접수별 열린·완료 출동 수와 접수 자동 상태(1.2). update는 상태·접수가 바뀐 출동만(이전·새 접수 둘 다)
+  private static void recalculateCases(
+    List<WorkOrder> workOrders,
+    Map<Id, WorkOrder> oldById
+  ) {
+    Set<Id> caseIds = new Set<Id>();
+    for (WorkOrder wo : workOrders) {
+      WorkOrder oldWo = oldById == null ? null : oldById.get(wo.Id);
+      if (oldWo == null) {
+        caseIds.add(wo.CaseId);
+      } else if (oldWo.Status != wo.Status || oldWo.CaseId != wo.CaseId) {
+        caseIds.add(wo.CaseId);
+        caseIds.add(oldWo.CaseId);
+      }
+    }
+    caseIds.remove(null);
+    if (!caseIds.isEmpty()) {
+      CaseWorkOrderStatsService.recalculate(caseIds);
+    }
   }
 
   // DESC: 합계에 영향을 주는 값만 묶은 상태 문자열
