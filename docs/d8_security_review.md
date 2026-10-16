@@ -48,15 +48,16 @@
 
 ## 4. 권한 집합 요약 (2026-10-14 저장소 기준)
 
-| 권한 집합        | Apex 클래스 접근                                                | 외부 자격 증명 보안 주체 | 주요 오브젝트(C/R/E/D)                                                     | 비고                               |
-| ---------------- | --------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------- | ---------------------------------- |
-| HG_CallCenter    | AccountNew·AddressSearch·AssetDetail·AssetSearch·WorkOrderParts | 주소(HG_JusoPrincipal)   | 고객사·장비·접수·사업장 CRE, 출동 R, 위치·재고·제품 R                      | 부품 추가는 출동 권한 R이라 거부됨 |
-| HG_CenterManager | 위와 같음                                                       | 주소                     | 고객사·장비·접수·사업장 RE, 출동 CRE, 재고 이동 R, ERP 수신 로그 R         | —                                  |
-| HG_Technician    | WorkOrderParts                                                  | ERP(HG_ErpPrincipal)     | 출동 RE, 재고 이동 CRE, 위치·재고·제품 R. 고객사·사업장·장비·접수 **없음** | 현장 정보는 출동의 수식 필드로     |
-| HG_Admin         | 위 5개                                                          | 주소·ERP                 | 주요 오브젝트 CRED + 모두 보기·모두 수정, ERP 수신 로그 R                  | `HG_BypassValidation`(검증 우회)   |
+| 권한 집합        | Apex 클래스 접근                                                | 외부 자격 증명 보안 주체 | 주요 오브젝트(C/R/E/D)                                                                 | 비고                                                     |
+| ---------------- | --------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| HG_CallCenter    | AccountNew·AddressSearch·AssetDetail·AssetSearch·WorkOrderParts | 주소(HG_JusoPrincipal)   | 고객사·장비·접수·사업장 CRE, 출동 R, 위치·재고·제품 R                                  | 부품 추가는 출동 권한 R이라 거부됨                       |
+| HG_CenterManager | 위와 같음 + Dispatch(10-16)                                     | 주소                     | 고객사·장비·접수·사업장 RE, 출동 **RE**(10-16 생성 제거), 재고 이동 R, ERP 수신 로그 R | `HG_DispatchWorkOrder`(기사 배정, 10-16)                 |
+| HG_Technician    | WorkOrderParts                                                  | ERP(HG_ErpPrincipal)     | 출동 RE, 재고 이동 CRE, 위치·재고·제품 R. 고객사·사업장·장비·접수 **없음**             | 현장 정보는 출동의 수식 필드로                           |
+| HG_Admin         | 위 5개 + Dispatch(10-16)                                        | 주소·ERP                 | 주요 오브젝트 CRED + 모두 보기·모두 수정, ERP 수신 로그 R                              | `HG_BypassValidation`(검증 우회), `HG_DispatchWorkOrder` |
 
 - 4개 모두 UserExternalCredential 읽기 포함(3장 #2)
 - 시스템 계산 필드(장비 집계·반복 고장, 사업장 센터)는 4개 모두 읽기 전용
+- (2026-10-16) 출동 생성은 [기사 배정] `DispatchService`(without sharing + SYSTEM_MODE)로만. 관문 3개를 Apex가 직접 확인: 사용자 지정 권한 `HG_DispatchWorkOrder` · 접수가 실행 사용자에게 보이는지(`WITH USER_MODE`) · 고른 기사가 실행 사용자 역할 아래인지. 기사·상담원 거부, 센터장의 직접 생성(USER_MODE insert) 거부는 `DispatchServiceTest`로 확인. 누적 청구액(장비·고객사·사업장)은 4개 모두 읽기 전용(기사는 오브젝트 권한 없음)
 
 ## 5. 남은 위험과 다음 조치 (결정 필요한 것은 표시)
 

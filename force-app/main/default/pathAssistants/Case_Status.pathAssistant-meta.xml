@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<PathAssistant xmlns="http://soap.sforce.com/2006/04/metadata">
+    <active>true</active>
+    <entityName>Case</entityName>
+    <fieldName>Status</fieldName>
+    <masterLabel>접수 경로</masterLabel>
+    <pathAssistantSteps>
+        <info
+    >&lt;p&gt;&lt;b&gt;[기사 배정]으로 출동을 만드세요.&lt;/b&gt;&lt;/p&gt;&lt;p&gt;오른쪽 위 [기사 배정] 버튼에서 우리 센터 기사·출동 목적·방문 예정 일시를 고르면 출동이 만들어지고 접수는 처리 중으로 바뀝니다.&lt;/p&gt;</info>
+        <picklistValueName>New</picklistValueName>
+    </pathAssistantSteps>
+    <recordTypeName>__MASTER__</recordTypeName>
+</PathAssistant>

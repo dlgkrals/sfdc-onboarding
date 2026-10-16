@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Prompt xmlns="http://soap.sforce.com/2006/04/metadata">
+    <masterLabel>출동 생성 안내</masterLabel>
+    <promptVersions>
+        <body
+    >출동은 접수 화면의 [기사 배정]에서 만듭니다. 배정 대기 접수 목록에서 접수를 열고 [기사 배정]을 누르세요.</body>
+        <customApplication>HangyeolAS</customApplication>
+        <delayDays>1</delayDays>
+        <description
+    >26-10-16 출동 탭에서 출동 생성 경로 안내 by Edwin</description>
+        <dismissButtonLabel>확인</dismissButtonLabel>
+        <displayPosition>TopRight</displayPosition>
+        <displayType>FloatingPanel</displayType>
+        <isPublished>true</isPublished>
+        <masterLabel>출동 생성 안내</masterLabel>
+        <publishedDate>2026-10-16</publishedDate>
+        <shouldDisplayActionButton>false</shouldDisplayActionButton>
+        <shouldIgnoreGlobalDelay>false</shouldIgnoreGlobalDelay>
+        <startDate>2026-10-16</startDate>
+        <targetPageKey1>WorkOrder</targetPageKey1>
+        <targetPageKey2>home</targetPageKey2>
+        <targetPageType>standard__objectPage</targetPageType>
+        <timesToDisplay>3</timesToDisplay>
+        <title>출동은 [기사 배정]으로 만듭니다</title>
+        <userAccess>Everyone</userAccess>
+        <userProfileAccess>Everyone</userProfileAccess>
+        <versionNumber>1</versionNumber>
+    </promptVersions>
+</Prompt>
