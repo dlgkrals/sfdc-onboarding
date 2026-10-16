@@ -1,5 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <SharingRules xmlns="http://soap.sforce.com/2006/04/metadata">
+    <sharingCriteriaRules>
+        <fullName>HG_GyeonggiSouth_Warehouse_Stock_Tech</fullName>
+        <accessLevel>Read</accessLevel>
+        <description
+    >26-10-16 경기남부 창고 재고(서비스센터 = 경기남부·인천 AND 창고 재고) → 경기남부 기사 읽기. 센터장은 역할 계층으로. 소유자 기준 HG_Warehouse_Stock_GS_Tech(모든 센터 창고 재고가 보이던 결함) 대체 by Edwin</description>
+        <label>경기남부 창고 재고 → 경기남부 기사 읽기</label>
+        <sharedTo>
+            <role>HG_GyeonggiSouthTechnician</role>
+        </sharedTo>
+        <criteriaItems>
+            <field>ServiceCenter__c</field>
+            <operation>equals</operation>
+            <value>경기남부·인천센터</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>WarehouseStock__c</field>
+            <operation>equals</operation>
+            <value>참</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
     <sharingOwnerRules>
         <fullName>HG_AllStock_CallCenter</fullName>
         <accessLevel>Read</accessLevel>
@@ -44,16 +65,4 @@
             <role>HG_SeoulTechnician</role>
         </sharedFrom>
     </sharingOwnerRules>
-    <sharingOwnerRules>
-        <fullName>HG_Warehouse_Stock_GS_Tech</fullName>
-        <accessLevel>Read</accessLevel>
-        <description
-    >26-10-13 관리자(서비스운영팀장) 소유 재고 = 창고 재고를 경기남부 기사에게 읽기 전용. 기사 차량 재고(기사 소유)는 대상 아님 by Edwin</description>
-        <label>창고 재고 → 경기남부 기사 읽기</label>
-        <sharedTo>
-            <role>HG_GyeonggiSouthTechnician</role>
-        </sharedTo>
-        <sharedFrom>
-            <role>HG_ServiceOpsManager</role>
-        </sharedFrom>
-    </sharingOwnerRules></SharingRules>
+</SharingRules>

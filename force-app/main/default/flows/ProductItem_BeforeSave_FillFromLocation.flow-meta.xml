@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>Copy_From_Location</name>
+        <label>위치의 센터·창고 여부 복사</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.ServiceCenter__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>fxCenter</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.WarehouseStock__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>fxWarehouse</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <description
+  >26-10-16 재고 저장 전: 위치의 서비스센터와 "유형 = 창고" 여부를 재고에 복사(값이 위치와 다를 때만). 재고 공유 규칙(조건 기준) 근거 by Edwin</description>
+    <environments>Default</environments>
+    <formulas>
+        <name>fxCenter</name>
+        <dataType>String</dataType>
+        <expression>TEXT({!$Record.Location.ServiceCenter__c})</expression>
+    </formulas>
+    <formulas>
+        <name>fxWarehouse</name>
+        <dataType>Boolean</dataType>
+        <expression
+    >ISPICKVAL({!$Record.Location.LocationType}, &apos;Warehouse&apos;)</expression>
+    </formulas>
+    <interviewLabel
+  >재고 위치 정보 채우기 {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>재고 저장 전 - 위치 센터·창고 여부 채우기</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Copy_From_Location</targetReference>
+        </connector>
+        <filterFormula
+    >OR(TEXT({!$Record.ServiceCenter__c}) &lt;&gt; TEXT({!$Record.Location.ServiceCenter__c}), {!$Record.WarehouseStock__c} &lt;&gt; ISPICKVAL({!$Record.Location.LocationType}, &apos;Warehouse&apos;))</filterFormula>
+        <object>ProductItem</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

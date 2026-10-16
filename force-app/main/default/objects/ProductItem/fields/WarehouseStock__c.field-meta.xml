@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>WarehouseStock__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description
+  >26-10-16 위치 유형이 창고이면 true. 저장 전 Flow ProductItem_BeforeSave_FillFromLocation이 채움, 공유 규칙 조건용(공유 규칙은 위치 필드·수식 필드를 조건으로 못 씀) by Edwin</description>
+    <inlineHelpText
+  >창고에 있는 재고이면 체크됩니다(기사 차량 재고는 아님). 자동으로 채워집니다.</inlineHelpText>
+    <label>창고 재고</label>
+    <trackHistory>false</trackHistory>
+    <type>Checkbox</type>
+</CustomField>
