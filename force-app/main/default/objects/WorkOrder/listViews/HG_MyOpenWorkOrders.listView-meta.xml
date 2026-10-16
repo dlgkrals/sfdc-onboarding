@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>HG_MyOpenWorkOrders</fullName>
+    <columns>Name</columns>
+    <columns>Status</columns>
+    <columns>StartDate</columns>
+    <columns>fmSiteName__c</columns>
+    <columns>fmSiteAddress__c</columns>
+    <columns>fmSymptom__c</columns>
+    <filterScope>Mine</filterScope>
+    <filters>
+        <field>Status</field>
+        <operation>equals</operation>
+        <value>Assigned,Accepted,Arrived</value>
+    </filters>
+    <label>내 출동(배정·수락·도착)</label>
+    <sharedTo>
+        <role>HG_ChungcheongTechnician</role>
+        <role>HG_GyeonggiSouthTechnician</role>
+        <role>HG_SeoulTechnician</role>
+    </sharedTo>
+</ListView>

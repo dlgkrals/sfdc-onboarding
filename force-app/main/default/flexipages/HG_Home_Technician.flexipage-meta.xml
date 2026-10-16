@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description
+  >26-10-16 기사 홈: 내 출동(배정·수락·도착)·내 차량 재고 by Edwin</description>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>richTextValue</name>
+                    <value
+          >&lt;p&gt;&lt;b&gt;오늘 갈 출동을 확인하세요.&lt;/b&gt; 출동을 열어 수락 → 도착 → 부품 추가 → 완료 순서로 진행합니다. 50만 원 초과·예외 무상은 [승인 요청].&lt;/p&gt;</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:richText</componentName>
+                <identifier>flexipage_richText_1</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>top</name>
+        <type>Region</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>entityName</name>
+                    <value>WorkOrder</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>filterName</name>
+                    <value>HG_MyOpenWorkOrders</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:filterListCard</componentName>
+                <identifier>flexipage_filterListCard_2</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>bottomLeft</name>
+        <type>Region</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>entityName</name>
+                    <value>ProductItem</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>filterName</name>
+                    <value>HG_MyVanStock</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:filterListCard</componentName>
+                <identifier>flexipage_filterListCard_3</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>bottomRight</name>
+        <type>Region</type>
+    </flexiPageRegions>
+    <masterLabel>HG 홈 - 협력 기사</masterLabel>
+    <template>
+        <name>home:desktopTemplate</name>
+    </template>
+    <type>HomePage</type>
+</FlexiPage>

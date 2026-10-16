@@ -17,6 +17,7 @@
     </filters>
     <label>반복 고장 장비</label>
     <sharedTo>
+        <group>HG_CallCenter</group>
         <role>HG_ChungcheongCenterManager</role>
         <role>HG_GyeonggiSouthCenterManager</role>
         <role>HG_SeoulCenterManager</role>

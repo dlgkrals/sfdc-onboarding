@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>HG_ErpNeedsAttention</fullName>
+    <columns>Name</columns>
+    <columns>Product2</columns>
+    <columns>SourceLocation</columns>
+    <columns>DestinationLocation</columns>
+    <columns>QuantitySent</columns>
+    <columns>ErpSyncStatus__c</columns>
+    <columns>ErpSyncMessage__c</columns>
+    <columns>LastModifiedDate</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>ErpSyncStatus__c</field>
+        <operation>equals</operation>
+        <value>Failed,NeedsReview</value>
+    </filters>
+    <label>ERP 실패·확인 필요(재고 이동)</label>
+    <sharedTo>
+        <role>HG_ServiceOpsManager</role>
+    </sharedTo>
+</ListView>

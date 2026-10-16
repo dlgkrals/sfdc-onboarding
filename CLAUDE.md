@@ -13,7 +13,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - 포맷: Prettier(prettier-plugin-apex, 2칸, XML은 embeddedLanguageFormatting off — 켜 두면 권한 집합 <flow> 값을 JS로 포맷해 망가뜨림). retrieve 후 CRLF·LF가 섞이면 `npx prettier --write "force-app/**/*.{cls,trigger}"`
 - 사용자: 이서연(콜센터 상담원), 김병철(경기남부센터장), 최민호(경기남부 협력 기사, Manager = 김병철), 관리자 "이 학민"(= Edwin, 서비스운영팀장 역할, 시스템 관리자)
 - 역할 계층: 서비스운영팀장 → 콜센터 상담원 / 센터장(경기남부 등) → 각 센터 기사
-- 권한 집합: HG_CallCenter, HG_CenterManager, HG_Technician, HG_Admin. 프로필은 상담원·센터장·기사 모두 Minimum Access - Salesforce(같은 프로필), 관리자는 시스템 관리자
+- 권한 집합: HG_CallCenter, HG_CenterManager, HG_Technician, HG_Admin. 프로필(2026-10-16 분리, 홈 지정용·권한 없음): HG 콜센터 상담원(이서연)·HG 센터장(김병철)·HG 협력 기사(최민호) = Minimum Access 복제 + 권리 읽기 해제, 관리자는 시스템 관리자. 되돌리기 = Minimum Access - Salesforce로
 - 커밋·PR에 Claude 표기(Co-Authored-By 등) 넣지 않음. 답은 한국어
 
 ## 데이터 모델 (V1.1, 표준 우선 · 화면 이름은 objectTranslations 한국어)
@@ -69,6 +69,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - 공통 c/ldsUtils.reduceErrors. 화면 문구는 Custom Label(181개, 기본 언어 en_US에 한국어 값). 원본은 labels/CustomLabels.labels-meta.xml을 직접 편집(예전 생성 스크립트는 세션 임시 폴더라 저장소에 없음). 라벨 파일을 배포해도 저장소에서 지운 라벨은 org에서 안 지워짐(지울 땐 따로 삭제). 컨트롤러는 with sharing + USER_MODE
 - 사용자 라이선스 Salesforce Integration 권한 집합은 오브젝트 권한을 check-only로 받아도 저장하지 않음, 권한 집합 라이선스 Salesforce API Integration 권한 집합은 Apex 클래스 접근 불가 → 연동 사용자 권한은 둘로 나눔
 - CTI 가상 착신 시뮬레이터(2026-10-15 합침): 유틸리티 바 HG_AS_UtilityBar "가상 착신"(callSimulator) → CallIntakeController·CallerMatchService(SOSL IN PHONE FIELDS: 사업장 현장 → 보조 → 고객사 대표 번호, 찾은 범위 안에서만 시리얼 뒤 4자리) → 접수 작성 팝업 caseIntakeModal(LightningModal, 1건 채움·여러 건 후보·없음 검색, 자동 저장 없음, 경로 전화·발신 번호 CallerPhone__c(SuppliedPhone은 웹 접수용·FLS 없음)·증상·제목·설명·장비만 저장). 접수 작성 팝업은 large + 오른쪽 카드 intakeContextCards(고객사 거래 상태·사업장 긴급 용도·장비·진행 중 접수 수) + 고른 장비의 진행 중 접수 경고(BR-11, 종결·취소 제외·완료 포함, 새 탭 열기, 저장은 막지 않음) — IntakeContextService(USER_MODE). 제목 기본값 "{증상} · {사업장} · {시리얼}"(직접 고치면 유지). 모델 없는 장비는 "모델 미지정". 장비 검색 시리얼 클릭 = 장비 요약 팝업 assetSummaryModal ⊃ assetSummary. 실제 운영은 Service Cloud Voice/Open CTI. 클래스 접근 HG_CallCenter·HG_Admin
+- 역할별 홈(2026-10-16): 앱 HangyeolAS 홈 탭, 앱 기본 = HG_Home_Admin, 프로필별 HG_Home_CallCenter·HG_Home_CenterManager·HG_Home_Technician(표준 컴포넌트: 리치 텍스트·목록 보기·리포트 차트·대시보드). 목록 보기 오늘 받은 접수·긴급 접수(진행 중)·승인 대기 출동·내 출동·내 차량 재고·ERP 실패·확인 필요(사용 부품/재고 이동), 리포트 폴더 "센터장 리포트"(센터장 역할 3) HG_CenterCasesByPriority. 출동 탭 앱 내 안내 대상 = 목록(list)
 - 주의: 일반 HTML 요소(option 등)에 불리언 속성을 바인딩할 때 false 대신 null(LWC가 disabled="false"를 남김)
 
 ### ERP 연동 (Mock ERP, docs/interface_definition.md IF-01~07)
@@ -113,7 +114,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - OWD: 접수·출동·위치·재고·재고 이동 비공개, 사업장·사용 부품 부모 따름, 고객사·장비 공개 읽기/쓰기(R3: 고객사가 여러 센터에 걸쳐 유지), ERP 기록 공개 읽기. 공유 규칙 16개(접수 2·출동 4·위치 5·재고 5)
 - ProductConsumed 오브젝트 권한은 org가 받지 않음(부모 WorkOrder 권한을 따름), FLS는 권한 집합에 있음
 - 외부 자격 증명 보안 주체: 주소(HG_JusoPrincipal) = 상담원·센터장·관리자, ERP(HG_ErpPrincipal) = 기사·관리자. 4개 모두 UserExternalCredential 읽기
-- 프로필은 저장소에 최소 파일만(대리점 레이아웃 지정): profiles/Admin·Minimum Access - Salesforce. 전체 프로필 retrieve로 덮어쓰지 말 것
+- 프로필은 저장소에 최소 파일만(고객사 레코드 유형 4·제품 레이아웃 할당, 새 프로필은 권리 읽기 해제): profiles 6개. 프로필마다 제품 레이아웃 할당 필요(없으면 제품 화면 오류). 전체 프로필 retrieve로 덮어쓰지 말 것
 
 ## 작업 원칙
 

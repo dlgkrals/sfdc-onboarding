@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>HG_MyVanStock</fullName>
+    <columns>Product2</columns>
+    <columns>Location</columns>
+    <columns>QuantityOnHand</columns>
+    <columns>QuantityUnitOfMeasure</columns>
+    <filterScope>Mine</filterScope>
+    <label>내 차량 재고</label>
+    <sharedTo>
+        <role>HG_ChungcheongTechnician</role>
+        <role>HG_GyeonggiSouthTechnician</role>
+        <role>HG_SeoulTechnician</role>
+    </sharedTo>
+</ListView>

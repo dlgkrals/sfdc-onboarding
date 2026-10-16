@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionOverrides>
+        <actionName>Tab</actionName>
+        <comment
+    >26-10-16 앱 기본 홈 = 관리자 홈(프로필별 홈은 profileActionOverrides) by Edwin</comment>
+        <content>HG_Home_Admin</content>
+        <formFactor>Large</formFactor>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
+        <pageOrSobjectType>standard-home</pageOrSobjectType>
+    </actionOverrides>
+    <actionOverrides>
         <actionName>View</actionName>
         <comment>26-10-13 SC-04 장비 상세 레코드 페이지 by Edwin</comment>
         <content>HG_AssetRecordPage</content>
@@ -36,6 +46,31 @@
     <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
     <label>한결공조 AS</label>
     <navType>Standard</navType>
+    <profileActionOverrides>
+        <actionName>Tab</actionName>
+        <content>HG_Home_CallCenter</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>standard-home</pageOrSobjectType>
+        <type>Flexipage</type>
+        <profile>HG 콜센터 상담원</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>Tab</actionName>
+        <content>HG_Home_CenterManager</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>standard-home</pageOrSobjectType>
+        <type>Flexipage</type>
+        <profile>HG 센터장</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>Tab</actionName>
+        <content>HG_Home_Technician</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>standard-home</pageOrSobjectType>
+        <type>Flexipage</type>
+        <profile>HG 협력 기사</profile>
+    </profileActionOverrides>
+    <tabs>standard-home</tabs>
     <tabs>standard-Account</tabs>
     <tabs>CustomerSite__c</tabs>
     <tabs>standard-Asset</tabs>
