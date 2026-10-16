@@ -4,7 +4,7 @@
     <isExposed>true</isExposed>
     <masterLabel>출동 누적 청구액 요약</masterLabel>
     <description
-  >26-10-16 장비·고객사·사업장 "최근 출동" 위 요약: 누적 청구액 · 방문 출동 N건(전체 출동 기준) by Edwin</description>
+  >26-10-16 장비·고객사·사업장 "출동 이력" 위 요약: 누적 청구액 · 방문 출동 N건(전체 출동 기준) by Edwin</description>
     <targets>
         <target>lightning__RecordPage</target>
     </targets>
@@ -15,7 +15,7 @@
         type="Integer"
         default="5"
         label="아래 출동 목록 건수"
-        description="요약 아래 출동 목록이 보여 주는 건수(문구 &quot;아래는 최근 N건&quot;)"
+        description="요약 아래 출동 목록이 보여 주는 건수(문구 &quot;이 화면에는 N건까지&quot;)"
       />
             <objects>
                 <object>Asset</object>

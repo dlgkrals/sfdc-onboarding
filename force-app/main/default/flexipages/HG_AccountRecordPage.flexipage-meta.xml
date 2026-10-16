@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
     <description
-  >26-10-16 고객사 레코드 페이지: 관련됨 탭 맨 위에 출동 누적 청구액 요약(전체 출동 기준) → 출동 관련 목록(레이아웃 첫 번째) by Edwin</description>
+  >26-10-16 고객사 레코드 페이지: 관련됨 탭 맨 위에 출동 누적 청구액 요약(전체 출동 기준) → 동적 관련 목록 "출동 이력"(5건) by Edwin</description>
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -37,10 +37,74 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>recentCount</name>
-                    <value>6</value>
+                    <value>5</value>
                 </componentInstanceProperties>
                 <componentName>workOrderChargeSummary</componentName>
                 <identifier>c_workOrderChargeSummary</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>adminFilters</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>maxRecordsToDisplay</name>
+                    <value>5</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>parentFieldApiName</name>
+                    <value>Account.Id</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>relatedListApiName</name>
+                    <value>WorkOrders</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>relatedListDisplayType</name>
+                    <value>ADVGRID</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>relatedListFieldAliases</name>
+                    <valueList>
+                        <valueListItems>
+                            <value>Name</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Asset</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Owner</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Status</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>ArrivalDateTime__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>fmTotalCharge__c</value>
+                        </valueListItems>
+                    </valueList>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>relatedListLabel</name>
+                    <value>출동 이력</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>showActionBar</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>sortFieldAlias</name>
+                    <value>CreatedDate</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>sortFieldOrder</name>
+                    <value>Descending</value>
+                </componentInstanceProperties>
+                <componentName>lst:dynamicRelatedList</componentName>
+                <identifier>lst_dynamicRelatedList_workOrders</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>

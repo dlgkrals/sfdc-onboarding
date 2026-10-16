@@ -94,16 +94,16 @@
         <categories>HG_AssetSearch</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>최근 접수일</shortDescription>
-        <value>최근 접수일</value>
+        <shortDescription>마지막 접수일</shortDescription>
+        <value>마지막 접수일</value>
     </labels>
     <labels>
         <fullName>LABEL_COL_RECENT_CASES</fullName>
         <categories>HG_AssetSearch</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>최근 90일 접수 수</shortDescription>
-        <value>최근 90일 접수 수</value>
+        <shortDescription>90일 내 접수 수</shortDescription>
+        <value>90일 내 접수 수</value>
     </labels>
     <labels>
         <fullName>LABEL_COL_REPEAT</fullName>
@@ -192,8 +192,8 @@
         <categories>HG_AssetDetail</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>최근 접수</shortDescription>
-        <value>최근 접수</value>
+        <shortDescription>접수 이력</shortDescription>
+        <value>접수 이력</value>
     </labels>
     <labels>
         <fullName>LABEL_COL_CASE_NUMBER</fullName>
@@ -240,8 +240,8 @@
         <categories>HG_AssetDetail</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>최근 접수가 없습니다.</shortDescription>
-        <value>최근 접수가 없습니다.</value>
+        <shortDescription>접수 이력이 없습니다.</shortDescription>
+        <value>접수 이력이 없습니다.</value>
     </labels>
     <labels>
         <fullName>LABEL_ADDRESS_SEARCH</fullName>
@@ -1159,8 +1159,8 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription
-    >반복 고장 장비입니다 (최근 90일 접수 {0}건)</shortDescription>
-        <value>반복 고장 장비입니다 (최근 90일 접수 {0}건)</value>
+    >반복 고장 장비입니다 (90일 내 접수 {0}건)</shortDescription>
+        <value>반복 고장 장비입니다 (90일 내 접수 {0}건)</value>
     </labels>
     <labels>
         <fullName>LABEL_APPROVAL_WHY</fullName>
@@ -1400,8 +1400,8 @@
         <categories>HG_CallIntake</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>진행 중 접수</shortDescription>
-        <value>진행 중 접수</value>
+        <shortDescription>종결 전 접수</shortDescription>
+        <value>종결 전 접수</value>
     </labels>
     <labels>
         <fullName>LABEL_URGENT_USAGE</fullName>
@@ -1426,17 +1426,17 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription
-    >이 장비에 진행 중인 접수가 {0}건 있습니다. 같은 고장인지 확인한 뒤 저장하세요.</shortDescription>
+    >이 장비에 종결되지 않은 접수가 {0}건 있습니다. 같은 고장이면 새로 만들지 말고 기존 접수를 열어 주세요.</shortDescription>
         <value
-    >이 장비에 진행 중인 접수가 {0}건 있습니다. 같은 고장인지 확인한 뒤 저장하세요.</value>
+    >이 장비에 종결되지 않은 접수가 {0}건 있습니다. 같은 고장이면 새로 만들지 말고 기존 접수를 열어 주세요.</value>
     </labels>
     <labels>
         <fullName>MSG_OPEN_CASES_MORE</fullName>
         <categories>HG_CallIntake</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>최근 {0}건만 표시합니다.</shortDescription>
-        <value>최근 {0}건만 표시합니다.</value>
+        <shortDescription>{0}건까지 표시합니다.</shortDescription>
+        <value>{0}건까지 표시합니다.</value>
     </labels>
     <labels>
         <fullName>BTN_OPEN_EXISTING_CASE</fullName>
@@ -1535,8 +1535,18 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription
-    >아래는 최근 {0}건, [모두 보기]에서 배정·거절 포함 전체 출동</shortDescription>
+    >이 화면에는 {0}건까지 보입니다. [모두 보기]에서 배정·거절을 포함한 전체 출동을 볼 수 있습니다.</shortDescription>
         <value
-    >아래는 최근 {0}건, [모두 보기]에서 배정·거절 포함 전체 출동</value>
+    >이 화면에는 {0}건까지 보입니다. [모두 보기]에서 배정·거절을 포함한 전체 출동을 볼 수 있습니다.</value>
+    </labels>
+    <labels>
+        <fullName>MSG_CASE_HISTORY_NOTE</fullName>
+        <categories>HG_AssetDetail</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription
+    >이 화면에는 5건까지 보입니다. 전체 접수는 [모두 보기]에서 볼 수 있습니다.</shortDescription>
+        <value
+    >이 화면에는 5건까지 보입니다. 전체 접수는 [모두 보기]에서 볼 수 있습니다.</value>
     </labels>
 </CustomLabels>

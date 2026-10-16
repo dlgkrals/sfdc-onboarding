@@ -1,5 +1,5 @@
 /**
- * @description 장비 요약 — 보증 상태·반복 고장·최근 접수 5건을 짧게 (장비 요약 팝업, 접수 작성 팝업 "장비 요약 보기")
+ * @description 장비 요약 — 보증 상태·반복 고장·접수 이력 5건을 짧게 (장비 요약 팝업, 접수 작성 팝업 "장비 요약 보기")
  * @layer       LWC
  * @author      Edwin
  * @date        2026-10-15
@@ -11,7 +11,7 @@
  * 데이터 방식
  *   - 필드 표시: LDS (lightning-record-view-form) — 권한 없는 필드는 표시되지 않음
  *   - 배지·반복 고장 경고: LDS @wire(getRecord, optionalFields) — 값이 JS에 필요. 읽기 권한 없는 필드는 빠질 뿐 오류 아님
- *   - 최근 접수: 기존 assetRecentCases 재사용 (@wire AssetDetailController)
+ *   - 접수 이력: 기존 assetRecentCases 재사용 (@wire AssetDetailController)
  *   - LightningModal 안에서 또 모달을 열지 않도록(중첩 모달) 내용만 컴포넌트로 분리
  * ----------------------------------------------------------------------------
  * @see assetSummaryModal, caseIntakeModal, assetRecentCases, assetDetail

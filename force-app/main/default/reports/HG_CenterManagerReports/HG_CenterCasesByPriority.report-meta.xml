@@ -35,7 +35,7 @@
         <field>STATUS</field>
     </columns>
     <description
-  >26-10-16 센터장 홈: 최근 30일 진행 중 접수를 센터·중요도(긴급)별로. 보이는 범위는 사용자 공유 기준 by Edwin</description>
+  >26-10-16 센터장 홈: 지난 30일 진행 중 접수를 센터·중요도(긴급)별로. 보이는 범위는 사용자 공유 기준 by Edwin</description>
     <filter>
         <criteriaItems>
             <column>CLOSED</column>
@@ -57,7 +57,7 @@
         <field>PRIORITY</field>
         <sortOrder>Desc</sortOrder>
     </groupingsDown>
-    <name>센터 진행 중 접수·긴급(최근 30일)</name>
+    <name>센터 진행 중 접수·긴급(지난 30일)</name>
     <params>
         <name>units</name>
         <value>h</value>

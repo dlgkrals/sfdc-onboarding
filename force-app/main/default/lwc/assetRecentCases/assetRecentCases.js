@@ -1,5 +1,5 @@
 /**
- * @description SC-04 장비 상세의 자식 — 이 장비의 최근 접수 5건 + 표준 관련 목록 "모두 보기"
+ * @description SC-04 장비 상세의 자식 — 이 장비의 접수 이력 5건 + 표준 관련 목록 "모두 보기"
  * @layer       LWC
  * @author      Edwin
  * @date        2026-10-13
@@ -27,10 +27,10 @@ import LABEL_REPEAT_FLAG from "@salesforce/label/c.LABEL_REPEAT_FLAG";
 import LABEL_COL_CENTER from "@salesforce/label/c.LABEL_COL_CENTER";
 import BTN_VIEW_ALL from "@salesforce/label/c.BTN_VIEW_ALL";
 import MSG_NO_RECENT_CASES from "@salesforce/label/c.MSG_NO_RECENT_CASES";
+import MSG_CASE_HISTORY_NOTE from "@salesforce/label/c.MSG_CASE_HISTORY_NOTE";
 import MSG_LOAD_ERROR from "@salesforce/label/c.MSG_LOAD_ERROR";
 
-// DESC: 컨트롤러 RECENT_CASE_LIMIT과 같게. 이보다 많을 때만 "모두 보기" 표시
-const RECENT_CASE_LIMIT = 5;
+// DESC: 화면에 보이는 건수는 컨트롤러 RECENT_CASE_LIMIT(5). "모두 보기"는 접수가 1건 이상이면 항상 표시 — 안내 문구 MSG_CASE_HISTORY_NOTE와 맞춤(2026-10-16)
 
 const COLUMNS = [
   {
@@ -70,7 +70,12 @@ export default class AssetRecentCases extends NavigationMixin(
 ) {
   @api assetId;
 
-  labels = { LABEL_RECENT_CASES_TITLE, BTN_VIEW_ALL, MSG_NO_RECENT_CASES };
+  labels = {
+    LABEL_RECENT_CASES_TITLE,
+    BTN_VIEW_ALL,
+    MSG_NO_RECENT_CASES,
+    MSG_CASE_HISTORY_NOTE
+  };
   columns = COLUMNS;
   rows = [];
   totalCount = 0;
@@ -110,7 +115,7 @@ export default class AssetRecentCases extends NavigationMixin(
   }
 
   /**
-   * @description 캐시된 최근 접수를 다시 가져옴 (부모가 장비 집계 변화 감지 시 호출, 새로 고침 버튼)
+   * @description 캐시된 접수 이력를 다시 가져옴 (부모가 장비 집계 변화 감지 시 호출, 새로 고침 버튼)
    */
   @api
   refresh() {
@@ -130,7 +135,7 @@ export default class AssetRecentCases extends NavigationMixin(
   }
 
   get showViewAll() {
-    return this.totalCount > RECENT_CASE_LIMIT;
+    return this.totalCount > 0;
   }
 
   handleRefresh() {

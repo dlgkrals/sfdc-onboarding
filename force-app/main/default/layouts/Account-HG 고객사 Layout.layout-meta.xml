@@ -111,18 +111,6 @@
         </platformActionListItems>
     </platformActionList>
     <relatedLists>
-        <excludeButtons>New</excludeButtons>
-        <fields>Name</fields>
-        <fields>Asset</fields>
-        <fields>Owner</fields>
-        <fields>Status</fields>
-        <fields>ArrivalDateTime__c</fields>
-        <fields>fmTotalCharge__c</fields>
-        <relatedList>WorkOrders</relatedList>
-        <sortField>Name</sortField>
-        <sortOrder>Desc</sortOrder>
-    </relatedLists>
-    <relatedLists>
         <fields>NAME</fields>
         <fields>ServiceCenter__c</fields>
         <fields>UsageType__c</fields>

@@ -33,6 +33,9 @@
     </div>
 
     <div lwc:if={showViewAll} slot="footer">
+      <p class="slds-text-body_small slds-text-color_weak">
+        {labels.MSG_CASE_HISTORY_NOTE}
+      </p>
       <lightning-button
         variant="base"
         label={labels.BTN_VIEW_ALL}

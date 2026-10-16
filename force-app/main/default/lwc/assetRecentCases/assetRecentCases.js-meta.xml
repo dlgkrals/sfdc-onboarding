@@ -3,5 +3,5 @@
     <apiVersion>67.0</apiVersion>
     <isExposed>false</isExposed>
     <description
-  >26-10-13 SC-04 장비 상세의 최근 접수 5건 (assetDetail 자식) by Edwin</description>
+  >26-10-13 SC-04 장비 상세의 접수 이력 5건 (assetDetail 자식) by Edwin</description>
 </LightningComponentBundle>

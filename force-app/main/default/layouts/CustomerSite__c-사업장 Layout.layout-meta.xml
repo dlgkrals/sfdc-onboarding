@@ -142,18 +142,6 @@
         </platformActionListItems>
     </platformActionList>
     <relatedLists>
-        <excludeButtons>New</excludeButtons>
-        <fields>Name</fields>
-        <fields>Asset</fields>
-        <fields>Owner</fields>
-        <fields>Status</fields>
-        <fields>ArrivalDateTime__c</fields>
-        <fields>fmTotalCharge__c</fields>
-        <relatedList>WorkOrder.CustomerSite__c</relatedList>
-        <sortField>Name</sortField>
-        <sortOrder>Desc</sortOrder>
-    </relatedLists>
-    <relatedLists>
         <fields>ASSET.SERIAL_NUMBER</fields>
         <fields>PRODUCT2.NAME</fields>
         <fields>ASSET.STATUS</fields>

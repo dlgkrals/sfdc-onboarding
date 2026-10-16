@@ -1,6 +1,6 @@
 /**
- * @description 장비·고객사·사업장 화면 "최근 출동" 목록 위 요약 한 줄 — "누적 청구액 ₩N · 방문 출동 N건"
- *              값은 전체 출동 기준(출동 트리거가 저장한 TotalWorkOrderCharge__c·VisitedWorkOrderCount__c), 목록의 최근 5건 합이 아님
+ * @description 장비·고객사·사업장 화면 "출동 이력" 목록 위 요약 한 줄 — "누적 청구액 ₩N · 방문 출동 N건"
+ *              값은 전체 출동 기준(출동 트리거가 저장한 TotalWorkOrderCharge__c·VisitedWorkOrderCount__c), 목록에 보이는 5건의 합이 아님
  * @layer       LWC
  * @author      Edwin
  * @date        2026-10-16
