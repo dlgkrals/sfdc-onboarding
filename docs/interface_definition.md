@@ -25,7 +25,7 @@
 | 6   | IF-06  | IF_ERP_TRANSFER_0001 | 재고 이동 → ERP (창고 → 기사 차량 보충, ProductTransfer 수령 시) | Salesforce | ERP (Mock)                | 송신(Outbound)                                              | REST(HTTPS POST, JSON, x-api-key)                                                       | Online(Queueable 비동기) + 재전송 Batch                           | 재고 이동 수령 시 · 매시 재전송                    | **구현 완료** (6번: 수령 시 트리거 → Queueable, 200건 = 콜아웃 1번, 기사 수령 테스트 포함. 실제 연동 확인은 9번 리허설, 재전송 Batch는 7번) |
 | 7   | IF-07  | IF_JUSO_ADDRESS_0001 | 도로명주소 검색 (사업장·고객사 주소 입력, 사업장 센터 자동 지정) | Salesforce | 행정안전부 도로명주소 API | 송신(Outbound)                                              | REST(HTTPS POST, form-urlencoded → JSON)                                                | Online                                                            | 사용자 검색 시                                     | **구현 완료** (2026-10-13, 실제 호출 확인)                                                                                                  |
 
-- IF-01(수신): 이번 온보딩 범위 밖, 초기 이관으로 대신함. IF-02(수신) 상세는 3절
+- IF-01(수신): 이번 온보딩 범위 밖, 초기 이관으로 대신함. **단가 원천은 ERP**이고, 이번 범위는 초기 이관값을 Salesforce 제품 `ErpUnitPrice__c`(+ 가격표 항목)에 둠. ERP Mock에는 부품 마스터·단가가 없음(재고·이력만). 부품 마스터 동기화(IF-01)는 다음 단계 (2026-10-16 단가 현실화 때 결정, decision-log 18) IF-02(수신) 상세는 3절
 - IF-03·IF-06 상세(요청·응답 매핑)는 ERP 연동 구현 후 추가
 
 ## 2. IF-07 도로명주소 검색
