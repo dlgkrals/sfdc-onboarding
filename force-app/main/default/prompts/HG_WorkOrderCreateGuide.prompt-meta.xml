@@ -15,10 +15,10 @@
         <masterLabel>출동 생성 안내</masterLabel>
         <publishedDate>2026-10-16</publishedDate>
         <shouldDisplayActionButton>false</shouldDisplayActionButton>
-        <shouldIgnoreGlobalDelay>false</shouldIgnoreGlobalDelay>
+        <shouldIgnoreGlobalDelay>true</shouldIgnoreGlobalDelay>
         <startDate>2026-10-16</startDate>
         <targetPageKey1>WorkOrder</targetPageKey1>
-        <targetPageKey2>home</targetPageKey2>
+        <targetPageKey2>list</targetPageKey2>
         <targetPageType>standard__objectPage</targetPageType>
         <timesToDisplay>3</timesToDisplay>
         <title>출동은 [기사 배정]으로 만듭니다</title>
