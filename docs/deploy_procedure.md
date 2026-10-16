@@ -37,6 +37,19 @@ sf project retrieve start -o devorg -m GlobalValueSet:ServiceCenter -m CustomObj
 - 프로필은 전체 retrieve로 덮어쓰지 않는다(저장소에는 대리점 레이아웃 지정만 있는 최소 파일)
 - retrieve 후 `npx prettier --write "force-app/**/*.{cls,trigger}"`(줄바꿈 정리), 저장소 = org 비교(내용 비교 스크립트, decision-log CTI 합치기 참고)
 
+**2026-10-16 실행 결과 (커밋 d2206cc)**: 위 표 전부 받음. 오브젝트는 정의 단위로 16개(Account·Asset·Case·WorkOrder·Location·Product2·ProductItem·ProductConsumed·ProductTransfer·CustomerSite__c·ErpInboundLog__c·ErpSyncState__c·ServiceSetting__mdt·WarrantyPolicy__mdt·ServiceCenterMapping__mdt·TriggerSetting__mdt)를 받아 OWD·레코드 유형·검증 규칙 17·목록 보기가 함께 들어옴. 역할은 HG\_ 8개만, 외부 클라이언트 앱은 정의(`HG_ERP_Mock.eca-meta.xml`)만이고 OAuth 설정·키는 받지 않음(키 없음 확인). 기존 파일 186개는 retrieve가 요소 순서·줄 포맷을 바꾼 것(내용 변화 없음)
+
+### 1-1-1. 저장소만으로 check-only 배포 (2026-10-16, 대상 dev org)
+
+| 범위                     | 명령                                                                                          | 결과                                                                                                                                                          |
+| ------------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 저장소 전체(`force-app`) | `sf project deploy validate --source-dir force-app --test-level RunLocalTests`                | **실패**: Apex 클래스 54개 모두 "보류 중이거나 진행 중인 작업이 있습니다"(dev org의 예약 작업 3개가 참조하는 클래스와 그 의존 클래스). 메타데이터 오류는 아님 |
+| Apex·트리거 제외 전체    | `sf project deploy start --dry-run -d <classes·triggers 외 폴더 전부> --test-level NoTestRun` | **성공: 843 / 843**, 오류 0                                                                                                                                   |
+| Apex 54 · 트리거 4       | (같은 org에서 예약 해제 후 검증 필요)                                                         | 미검증. 코드는 org와 같고 2026-10-15 RunLocalTests 214건 Pass                                                                                                 |
+
+- 결론: 메타데이터는 저장소만으로 배포 가능. Apex는 **예약 작업이 없는 org(새 샌드박스·운영 첫 배포)에서는 막히지 않고**, 예약이 있는 org에서는 check-only(validate)도 막힌다 → 1-3의 예약 해제를 validate 전에 한다
+- `deploy validate`는 `NoTestRun`을 받지 않음(RunLocalTests 등 필수). 테스트 없이 확인할 때는 `deploy start --dry-run --test-level NoTestRun`(운영에서는 불가)
+
 ### 1-2. 품질 기준 확인
 
 | 항목              | 기준                    | 2026-10-15 결과                               |
@@ -48,7 +61,7 @@ sf project retrieve start -o devorg -m GlobalValueSet:ServiceCenter -m CustomObj
 
 ### 1-3. 배포를 막는 예약 작업
 
-예약 작업이 참조하는 클래스(와 그 의존 클래스)는 "보류 중인 작업" 오류로 배포가 거부된다. 대상 org에 이미 예약이 있으면 배포 전에 해제하고 배포 후 다시 예약한다. ("Apex 작업이 있어도 배포 허용" 설정은 켜지 않는다)
+예약 작업이 참조하는 클래스(와 그 의존 클래스)는 "보류 중인 작업" 오류로 배포가 거부된다. **check-only(validate)도 같다**. 클래스 전체를 한 번에 배포하면 예약과 무관한 클래스까지 모두 거부된다(2026-10-16 dev org 확인, 1-1-1). 대상 org에 이미 예약이 있으면 validate 전에 해제하고 배포 후 다시 예약한다. ("Apex 작업이 있어도 배포 허용" 설정은 켜지 않는다)
 
 | 예약 이름                                  | 실행 클래스                                                    | 막히는 배포 대상                                        | 다시 예약                                                 |
 | ------------------------------------------ | -------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------- |
