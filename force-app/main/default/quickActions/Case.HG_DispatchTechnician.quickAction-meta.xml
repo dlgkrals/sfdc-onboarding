@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<QuickAction xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description
+  >26-10-16 접수에서 기사를 골라 출동 생성(화면 Flow Case_Screen_DispatchTechnician) by Edwin</description>
+    <flowDefinition>Case_Screen_DispatchTechnician</flowDefinition>
+    <label>기사 배정</label>
+    <optionsCreateFeedItem>false</optionsCreateFeedItem>
+    <type>Flow</type>
+</QuickAction>

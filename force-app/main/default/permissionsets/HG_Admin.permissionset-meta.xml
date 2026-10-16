@@ -25,12 +25,20 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>DispatchService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>WorkOrderPartsController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <customPermissions>
         <enabled>true</enabled>
         <name>HG_BypassValidation</name>
+    </customPermissions>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>HG_DispatchWorkOrder</name>
     </customPermissions>
     <description
   >관리자(서비스운영팀장): 한결공조 오브젝트 전체 필드 접근 · 한결공조 AS 권한 매트릭스 V1.1</description>
@@ -570,11 +578,6 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
-        <field>ProductConsumed.fmErpRemainingQty__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
         <editable>true</editable>
         <field>ProductConsumed.InventoryMismatch__c</field>
         <readable>true</readable>
@@ -602,6 +605,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>ProductConsumed.fmAmount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>ProductConsumed.fmErpRemainingQty__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -650,16 +658,6 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
-        <field>ProductTransfer.fmErpDestinationRemainingQty__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>ProductTransfer.fmErpSourceRemainingQty__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
         <editable>true</editable>
         <field>ProductTransfer.InventoryMismatch__c</field>
         <readable>true</readable>
@@ -667,6 +665,16 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>ProductTransfer.IsReceived</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>ProductTransfer.fmErpDestinationRemainingQty__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>ProductTransfer.fmErpSourceRemainingQty__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

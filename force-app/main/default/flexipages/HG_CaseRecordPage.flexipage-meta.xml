@@ -1,13 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
     <description
-  >26-10-14 접수 레코드 페이지: 세부 사항 중심 배치 by Edwin</description>
+  >26-10-14 접수 레코드 페이지: 세부 사항 중심 배치 / 26-10-16 [기사 배정] 첫 버튼(사용자 지정 권한 HG_DispatchWorkOrder일 때만) by Edwin</description>
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>
                     <name>actionNames</name>
                     <valueList>
+                        <valueListItems>
+                            <value>Case.HG_DispatchTechnician</value>
+                            <visibilityRule>
+                                <criteria>
+                                    <leftValue
+                  >{!$Permission.CustomPermission.HG_DispatchWorkOrder}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>true</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
                         <valueListItems>
                             <value>Edit</value>
                         </valueListItems>
@@ -41,7 +52,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>numVisibleActions</name>
-                    <value>3</value>
+                    <value>4</value>
                 </componentInstanceProperties>
                 <componentName>force:highlightsPanel</componentName>
                 <identifier>force_highlightsPanel</identifier>

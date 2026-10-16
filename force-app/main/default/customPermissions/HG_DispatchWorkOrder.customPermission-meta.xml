@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomPermission xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description
+  >26-10-16 접수 [기사 배정]으로 출동 생성(센터장·관리자). DispatchService가 확인 by Edwin</description>
+    <isLicensed>false</isLicensed>
+    <label>기사 배정</label>
+</CustomPermission>
