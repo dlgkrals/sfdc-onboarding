@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>Copy_Case_Asset</name>
+        <label>접수의 장비 복사</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.AssetId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$Record.Case.AssetId</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <description
+  >26-10-16 출동 저장 전: 장비가 비어 있고 접수가 있으면 접수의 장비를 복사(이미 있으면 그대로). 장비 누적 청구액·최근 출동 목록이 장비 기준이라 출동에 장비가 꼭 필요 by Edwin</description>
+    <environments>Default</environments>
+    <interviewLabel>출동 장비 채우기 {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>출동 저장 전 - 장비 채우기</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Copy_Case_Asset</targetReference>
+        </connector>
+        <filterFormula
+    >AND(ISBLANK({!$Record.AssetId}), NOT(ISBLANK({!$Record.CaseId})))</filterFormula>
+        <object>WorkOrder</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

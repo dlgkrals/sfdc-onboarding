@@ -55,7 +55,9 @@ export default class AssetDetail extends LightningElement {
     "TotalCaseCount__c",
     "LastCaseDate__c",
     "RecentCaseCount__c",
-    "RepeatFailure__c"
+    "RepeatFailure__c",
+    // DESC: 방문한 출동의 총 청구액 합계 (출동 트리거가 계산, 읽기 전용)
+    "TotalWorkOrderCharge__c"
   ];
   warrantyFields = [
     "fmWarrantyStartDate__c",

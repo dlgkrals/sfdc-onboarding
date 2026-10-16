@@ -28,12 +28,14 @@
 | 목적           | 접수 전에 장비의 보증 상태·부품별 만료일·최근 접수 이력을 한 화면에서 확인                                                                                                                                                                                                     |
 | 배치           | Asset 레코드 페이지 (`recordId` 자동 전달)                                                                                                                                                                                                                                     |
 | 컴포넌트       | `assetDetail`(부모, `@api recordId`) ⊃ `lightning-record-view-form`(기본 정보·보증) · `assetRecentCases`(자식, 최근 접수 목록)                                                                                                                                                 |
-| 기본 정보      | 시리얼 · 모델 · 고객사 · 사업장 · 설치일 · 판매 경로 · 누적 접수 · 최근 접수일 · 최근 90일 접수 · 반복 고장 장비 (`lightning-output-field`, 읽기 전용)                                                                                                                         |
+| 기본 정보      | 시리얼 · 모델 · 고객사 · 사업장 · 설치일 · 판매 경로 · 누적 접수 · 최근 접수일 · 최근 90일 접수 · 반복 고장 장비 · **누적 청구액**(2026-10-16, 방문한 출동의 총 청구액 합계) (`lightning-output-field`, 읽기 전용)                                                             |
 | 보증           | 보증 상태 배지(`fmWarrantyStatus__c`: 보증 중/부분 보증/보증 만료/미확정) · 시작일 · 기본/압축기/연장 만료일 (Formula 3개)                                                                                                                                                     |
 | 데이터         | 기본 정보·보증: **LDS** (`record-view-form`) — 캐시·레코드 변경 시 자동 갱신, Apex 불필요. 최근 접수: **@wire** `AssetDetailController.getRecentCases(Id assetId)` (`cacheable=true`, 컨트롤러 상수 `RECENT_CASE_LIMIT = 5`) — `recordId`에 반응해 자동 조회, 사용자 동작 없음 |
 | 최근 접수      | `lightning-datatable` **최근 5건**: 접수번호 · 접수일 · 증상 · 상태 · 반복 고장(접수 시점 표시) · 센터. 정렬 접수일 내림차순. 새 접수 저장 후 `refreshApex`                                                                                                                    |
 | 모두 보기      | 카드 아래 "모두 보기"(`BTN_VIEW_ALL`) → `NavigationMixin` `standard__recordRelationshipPage` (`recordId`, `relationshipApiName: 'Cases'`, `actionName: 'view'`)로 **표준 관련 목록** 이동. 전체 이력의 필터·정렬·내보내기는 표준 화면에 맡김. 접수가 5건 이하이면 버튼 숨김    |
 | 빈 결과 / 오류 | 접수 0건: "최근 접수가 없습니다."(`MSG_NO_RECENT_CASES`) / 오류: 카드 안에 오류 문구 + 토스트 / 권한 없음(기사 등): 컴포넌트를 페이지 가시성 규칙으로 숨김                                                                                                                     |
+
+- **2026-10-16 추가**: 카드 아래 "최근 출동" = 표준 동적 관련 목록 - 단일(최근 5건, 출동 번호 · 담당 기사(소유자) · 상태 · 도착 일시 · 총 청구액, 모두 보기). 최근 접수와 달리 화면 규칙이 없어 표준 사용(decision-log 장비 화면 5)
 
 ## SC-xx 출동 사용 부품 (D8 스케치)
 
