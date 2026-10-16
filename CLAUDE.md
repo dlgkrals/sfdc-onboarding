@@ -94,7 +94,7 @@ Windmillsoft Salesforce 개발자 온보딩(2026.10.1~19) 개인 프로젝트. �
 - 테스트 214개 통과, org 커버리지 96%(2026-10-15, 피드백 개선 5가지 후)
 - 삭제됨: CaseRejectPracticeTest(저장소·org), AccountController(저장소·org), 루트 schema.sql
 - 문서: docs/decision-log.md, docs/interface_definition.md(IF-01~07: 구현 02·03·06·07, 범위 밖 01·04·05), docs/d8_security_review.md(보안 결과표, 남은 위험 R2·R4·R6), docs/d8_lwc_memo.md, docs/d7_lwc_memo.md, docs/d6_screen_design.md(SC-01~10), docs/d6_test_report.md, docs/d6_config_externalization.md, docs/d5_*.md, docs/org_inventory.md(10/6 점검)
-- 산출물(요건서·권한 매트릭스 V1.1 → V2.0, ERD 재작성 중, 배포 절차 미작성)은 저장소 밖(다운로드·바탕 화면)
+- 산출물(회사 양식): docs/산출물/ — 03 기능 및 화면 설계서(pptx), 06 인터페이스 정의서, 07 단위 테스트 시나리오, 09 통합 테스트 결과서, 11 Cut Over 사전 점검, 19 소스 이관 목록(2026-10-16). 배포 절차 docs/deploy_procedure.md(샌드박스 → 운영 가정, 저장소에 없는 메타데이터 목록 1-1). V2.0 요건서·권한 매트릭스용 사실 정리 docs/handoff/v2_facts.md. 요건서·권한 매트릭스 V1.1 원본·ERD는 저장소 밖(다운로드 d8_실습/참고_현재본)
 
 ### 대기 중인 일
 
