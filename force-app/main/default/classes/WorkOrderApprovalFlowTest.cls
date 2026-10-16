@@ -9,6 +9,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-15    Edwin     최초 작성 (피드백 개선 ⑤ 승인 요청 Screen Flow)
+ * 1.1    2026-10-16    Edwin     제출 코멘트·ApprovalSummary__c = 승인 요청 요약(이유·부품·사유·동의·메모)
  * ----------------------------------------------------------------------------
  * @see flows/WorkOrder_Sub_SubmitApproval, flows/WorkOrder_Screen_RequestApproval, WorkOrderApprovalTest
  */
@@ -111,15 +112,26 @@ private class WorkOrderApprovalFlowTest {
       item.ActorId,
       '승인자 = 센터장'
     );
+    String comment = [
+      SELECT Comments
+      FROM ProcessInstanceStep
+      WHERE ProcessInstance.TargetObjectId = :woId AND StepStatus = 'Started'
+    ]
+    .Comments;
+    // DESC: 제출 코멘트 = 승인 요청 요약(1.1). 사용 부품 없음 → [부품] 줄 없음
+    String expected =
+      '[승인 필요 이유] 청구 ₩500,001 (기준 ₩500,000 초과)\n' +
+      '[사유] ' +
+      REASON +
+      ' / 고객 동의: 예\n' +
+      '[메모] ' +
+      MEMO;
+    Assert.areEqual(expected, comment, '제출 코멘트 = 요약');
     Assert.areEqual(
-      MEMO,
-      [
-        SELECT Comments
-        FROM ProcessInstanceStep
-        WHERE ProcessInstance.TargetObjectId = :woId AND StepStatus = 'Started'
-      ]
-      .Comments,
-      '센터장 메모 = 제출 코멘트'
+      expected,
+      [SELECT ApprovalSummary__c FROM WorkOrder WHERE Id = :woId]
+      .ApprovalSummary__c,
+      '같은 요약을 출동에 저장(메일 템플릿용)'
     );
   }
 
@@ -158,5 +170,56 @@ private class WorkOrderApprovalFlowTest {
 
     Assert.isFalse((Boolean) interview.getVariableValue('isSubmitted'));
     Assert.areEqual('Accepted', getWorkOrder().Status);
+  }
+
+  // 정상: 사용 부품이 있으면 부품마다 한 줄([부품] 이름 ×수량 유상·무상 ₩금액), 메모가 없으면 [메모] 줄 없음
+  @isTest
+  static void normalSummaryHasPartLines() {
+    Id woId = getWorkOrder().Id;
+    ProductItem item = TestDataFactory.createVanStock(
+        TestDataFactory.createProducts(),
+        10
+      )
+      .get('General');
+    insert TestDataFactory.buildPart(woId, item.Id);
+
+    Test.startTest();
+    Flow.Interview interview = Flow.Interview.createInterview(
+      SUBMIT_FLOW,
+      new Map<String, Object>{
+        'recordId' => woId,
+        'requestReason' => REASON,
+        'customerConsent' => true,
+        'submitterComment' => ''
+      }
+    );
+    System.runAs(getUser('HG_Technician')) {
+      interview.start();
+    }
+    Test.stopTest();
+
+    Assert.isTrue(
+      (Boolean) interview.getVariableValue('isSubmitted'),
+      '' + interview.getVariableValue('errorMessage')
+    );
+    String summary = [SELECT ApprovalSummary__c FROM WorkOrder WHERE Id = :woId]
+    .ApprovalSummary__c;
+    List<String> lines = summary.split('\n');
+    Assert.areEqual(
+      3,
+      lines.size(),
+      '이유·부품 1줄·사유 (메모 없음): ' + summary
+    );
+    Assert.isTrue(lines[0].startsWith('[승인 필요 이유] 청구 ₩'), lines[0]);
+    Assert.isTrue(
+      lines[1].startsWith('[부품] ') && lines[1].contains(' ×1 '),
+      lines[1]
+    );
+    Assert.isTrue(
+      lines[1].contains('유상 ₩') || lines[1].contains('무상 ₩'),
+      lines[1]
+    );
+    Assert.isTrue(lines[2].startsWith('[사유] '), lines[2]);
+    Assert.isFalse(summary.contains('[메모]'), '메모 없음');
   }
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ApprovalSummary__c</fullName>
+    <description
+  >26-10-16 승인 요청 요약(승인 필요 이유·부품별 줄·사유·고객 동의·메모). 승인 요청 Flow WorkOrder_Sub_SubmitApproval이 제출 때 저장, 제출 코멘트·승인 요청 메일에 사용. 기사 권한으로 실행되는 Flow가 저장하므로 기사·관리자 수정 권한(레이아웃에는 읽기 전용) by Edwin</description>
+    <externalId>false</externalId>
+    <inlineHelpText
+  >승인 요청 때 자동으로 만들어지는 요약입니다.</inlineHelpText>
+    <label>승인 요청 요약</label>
+    <length>4000</length>
+    <trackHistory>false</trackHistory>
+    <type>LongTextArea</type>
+    <visibleLines>6</visibleLines>
+</CustomField>

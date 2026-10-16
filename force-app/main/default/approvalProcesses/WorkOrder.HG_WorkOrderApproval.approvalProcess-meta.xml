@@ -6,14 +6,19 @@
         <type>owner</type>
     </allowedSubmitters>
     <approvalPageFields>
-        <field>fmSiteName__c</field>
-        <field>fmTotalCharge__c</field>
-        <field>HasExceptionFree__c</field>
-        <field>CustomerConsent__c</field>
-        <field>ApprovalRequestReason__c</field>
-        <field>ApprovalRejectReason__c</field>
         <field>Name</field>
+        <field>Case</field>
+        <field>Account</field>
+        <field>CustomerSite__c</field>
+        <field>Asset</field>
+        <field>fmWarrantyStatus__c</field>
+        <field>fmTotalCharge__c</field>
+        <field>ruPaidPartsTotal__c</field>
+        <field>ruExceptionFreeCount__c</field>
+        <field>ApprovalRequestReason__c</field>
+        <field>CustomerConsent__c</field>
         <field>Owner</field>
+        <field>ApprovalRejectReason__c</field>
     </approvalPageFields>
     <approvalStep>
         <allowDelegate>true</allowDelegate>

@@ -23,13 +23,19 @@
         <inputParameters>
             <name>comment</name>
             <value>
-                <elementReference>submitterComment</elementReference>
+                <elementReference>fxComment</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
             <name>processDefinitionNameOrId</name>
             <value>
                 <stringValue>HG_WorkOrderApproval</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>submitterId</name>
+            <value>
+                <elementReference>submitterId</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -42,6 +48,38 @@
     </actionCalls>
     <apiVersion>67.0</apiVersion>
     <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>Add_Memo</name>
+        <label>메모 줄 추가</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>varSummary</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>ttMemoLine</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Save_Summary</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>Add_PartLine</name>
+        <label>부품 줄 추가</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>varPartLines</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>ttPartLine</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Loop_Parts</targetReference>
+        </connector>
+    </assignments>
     <assignments>
         <name>Assign_Error</name>
         <label>실패 결과</label>
@@ -75,14 +113,111 @@
             </value>
         </assignmentItems>
     </assignments>
+    <assignments>
+        <name>Build_Summary</name>
+        <label>요약 합치기</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>varSummary</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>ttSummary</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Has_Memo</targetReference>
+        </connector>
+    </assignments>
+    <decisions>
+        <name>Has_Memo</name>
+        <label>메모가 있는가</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>Save_Summary</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>메모 없음</defaultConnectorLabel>
+        <rules>
+            <name>Has_Memo_Yes</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>submitterComment</leftValueReference>
+                <operator>IsBlank</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Add_Memo</targetReference>
+            </connector>
+            <label>메모 있음</label>
+        </rules>
+    </decisions>
     <description
-  >26-10-15 출동 승인 요청: 사유·고객 동의 저장 → 승인 프로세스 HG_WorkOrderApproval 제출(메모 = 제출 코멘트). 진입 조건 판단은 승인 프로세스. 실패 시 저장 되돌림은 호출한 화면 Flow가 Roll Back Records로(자동 실행 Flow는 롤백 요소 불가). 화면 WorkOrder_Screen_RequestApproval이 호출, Apex 테스트 WorkOrderApprovalFlowTest by Edwin</description>
+  >26-10-15 출동 승인 요청: 사유·고객 동의 저장 → 승인 프로세스 HG_WorkOrderApproval 제출. 진입 조건 판단은 승인 프로세스. 실패 시 저장 되돌림은 호출한 화면 Flow가 Roll Back Records로(자동 실행 Flow는 롤백 요소 불가). / 26-10-16 제출 코멘트 = 승인 요청 요약(승인 필요 이유·부품별 줄·사유·고객 동의·메모, 기준값 ServiceSetting ApprovalAmount, 승인 코멘트 한도 4000자 → 3900자에서 자름), 같은 요약을 출동 ApprovalSummary__c에 저장(메일 템플릿용). 선택 입력 submitterId(관리자가 소유 기사 이름으로 제출할 때, 비우면 실행 사용자). 화면 WorkOrder_Screen_RequestApproval이 호출, Apex 테스트 WorkOrderApprovalFlowTest by Edwin</description>
     <environments>Default</environments>
+    <formulas>
+        <name>fxComment</name>
+        <dataType>String</dataType>
+        <expression
+    >IF(LEN({!varSummary}) &gt; 3900, LEFT({!varSummary}, 3900) &amp; &quot;…(이하 생략)&quot;, {!varSummary})</expression>
+    </formulas>
+    <formulas>
+        <name>fxConsent</name>
+        <dataType>String</dataType>
+        <expression
+    >IF({!customerConsent}, &quot;예&quot;, &quot;아니오&quot;)</expression>
+    </formulas>
+    <formulas>
+        <name>fxNeedReason</name>
+        <dataType>String</dataType>
+        <expression
+    >IF(BLANKVALUE({!Get_WorkOrder.ruExceptionFreeCount__c}, 0) &gt; 0, &quot;예외 무상 &quot; &amp; TEXT(BLANKVALUE({!Get_WorkOrder.ruExceptionFreeCount__c}, 0)) &amp; &quot;건&quot;, &quot;&quot;) &amp; IF(AND(BLANKVALUE({!Get_WorkOrder.ruExceptionFreeCount__c}, 0) &gt; 0, BLANKVALUE({!Get_WorkOrder.fmTotalCharge__c}, 0) &gt; BLANKVALUE({!Get_Threshold.Value__c}, 500000)), &quot; / &quot;, &quot;&quot;) &amp; IF(BLANKVALUE({!Get_WorkOrder.fmTotalCharge__c}, 0) &gt; BLANKVALUE({!Get_Threshold.Value__c}, 500000), &quot;청구 ₩&quot; &amp; {!fxTotalText} &amp; &quot; (기준 ₩&quot; &amp; {!fxThresholdText} &amp; &quot; 초과)&quot;, IF(BLANKVALUE({!Get_WorkOrder.ruExceptionFreeCount__c}, 0) &gt; 0, &quot;&quot;, &quot;청구 ₩&quot; &amp; {!fxTotalText} &amp; &quot; (기준 ₩&quot; &amp; {!fxThresholdText} &amp; &quot; 이하)&quot;))</expression>
+    </formulas>
+    <formulas>
+        <name>fxPartAmountText</name>
+        <dataType>String</dataType>
+        <expression
+    >IF(ROUND(BLANKVALUE({!Loop_Parts.fmAmount__c}, 0),0) &gt;= 1000000, TEXT(FLOOR(ROUND(BLANKVALUE({!Loop_Parts.fmAmount__c}, 0),0)/1000000)) &amp; &quot;,&quot; &amp; RIGHT(&quot;000&quot; &amp; TEXT(FLOOR(MOD(ROUND(BLANKVALUE({!Loop_Parts.fmAmount__c}, 0),0),1000000)/1000)), 3) &amp; &quot;,&quot; &amp; RIGHT(&quot;000&quot; &amp; TEXT(MOD(ROUND(BLANKVALUE({!Loop_Parts.fmAmount__c}, 0),0),1000)), 3), IF(ROUND(BLANKVALUE({!Loop_Parts.fmAmount__c}, 0),0) &gt;= 1000, TEXT(FLOOR(ROUND(BLANKVALUE({!Loop_Parts.fmAmount__c}, 0),0)/1000)) &amp; &quot;,&quot; &amp; RIGHT(&quot;000&quot; &amp; TEXT(MOD(ROUND(BLANKVALUE({!Loop_Parts.fmAmount__c}, 0),0),1000)), 3), TEXT(ROUND(BLANKVALUE({!Loop_Parts.fmAmount__c}, 0),0))))</expression>
+    </formulas>
+    <formulas>
+        <name>fxPartLine</name>
+        <dataType>String</dataType>
+        <expression
+    >&quot;[부품] &quot; &amp; {!Loop_Parts.ProductName} &amp; &quot; ×&quot; &amp; TEXT({!Loop_Parts.QuantityConsumed}) &amp; &quot; &quot; &amp; IF(TEXT({!Loop_Parts.ChargeType__c}) = &quot;Paid&quot;, &quot;유상&quot;, &quot;무상&quot;) &amp; &quot; ₩&quot; &amp; {!fxPartAmountText}</expression>
+    </formulas>
+    <formulas>
+        <name>fxThresholdText</name>
+        <dataType>String</dataType>
+        <expression
+    >IF(ROUND(BLANKVALUE({!Get_Threshold.Value__c}, 500000),0) &gt;= 1000000, TEXT(FLOOR(ROUND(BLANKVALUE({!Get_Threshold.Value__c}, 500000),0)/1000000)) &amp; &quot;,&quot; &amp; RIGHT(&quot;000&quot; &amp; TEXT(FLOOR(MOD(ROUND(BLANKVALUE({!Get_Threshold.Value__c}, 500000),0),1000000)/1000)), 3) &amp; &quot;,&quot; &amp; RIGHT(&quot;000&quot; &amp; TEXT(MOD(ROUND(BLANKVALUE({!Get_Threshold.Value__c}, 500000),0),1000)), 3), IF(ROUND(BLANKVALUE({!Get_Threshold.Value__c}, 500000),0) &gt;= 1000, TEXT(FLOOR(ROUND(BLANKVALUE({!Get_Threshold.Value__c}, 500000),0)/1000)) &amp; &quot;,&quot; &amp; RIGHT(&quot;000&quot; &amp; TEXT(MOD(ROUND(BLANKVALUE({!Get_Threshold.Value__c}, 500000),0),1000)), 3), TEXT(ROUND(BLANKVALUE({!Get_Threshold.Value__c}, 500000),0))))</expression>
+    </formulas>
+    <formulas>
+        <name>fxTotalText</name>
+        <dataType>String</dataType>
+        <expression
+    >IF(ROUND(BLANKVALUE({!Get_WorkOrder.fmTotalCharge__c}, 0),0) &gt;= 1000000, TEXT(FLOOR(ROUND(BLANKVALUE({!Get_WorkOrder.fmTotalCharge__c}, 0),0)/1000000)) &amp; &quot;,&quot; &amp; RIGHT(&quot;000&quot; &amp; TEXT(FLOOR(MOD(ROUND(BLANKVALUE({!Get_WorkOrder.fmTotalCharge__c}, 0),0),1000000)/1000)), 3) &amp; &quot;,&quot; &amp; RIGHT(&quot;000&quot; &amp; TEXT(MOD(ROUND(BLANKVALUE({!Get_WorkOrder.fmTotalCharge__c}, 0),0),1000)), 3), IF(ROUND(BLANKVALUE({!Get_WorkOrder.fmTotalCharge__c}, 0),0) &gt;= 1000, TEXT(FLOOR(ROUND(BLANKVALUE({!Get_WorkOrder.fmTotalCharge__c}, 0),0)/1000)) &amp; &quot;,&quot; &amp; RIGHT(&quot;000&quot; &amp; TEXT(MOD(ROUND(BLANKVALUE({!Get_WorkOrder.fmTotalCharge__c}, 0),0),1000)), 3), TEXT(ROUND(BLANKVALUE({!Get_WorkOrder.fmTotalCharge__c}, 0),0))))</expression>
+    </formulas>
     <interviewLabel
   >출동 승인 요청 제출 {!$Flow.CurrentDateTime}</interviewLabel>
     <isAdditionalPermissionRequiredToRun
   >true</isAdditionalPermissionRequiredToRun>
     <label>출동 승인 요청 제출</label>
+    <loops>
+        <name>Loop_Parts</name>
+        <label>사용 부품마다</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <collectionReference>Get_Parts</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Add_PartLine</targetReference>
+        </nextValueConnector>
+        <noMoreValuesConnector>
+            <targetReference>Build_Summary</targetReference>
+        </noMoreValuesConnector>
+    </loops>
     <processMetadataValues>
         <name>BuilderType</name>
         <value>
@@ -102,13 +237,124 @@
         </value>
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_Parts</name>
+        <label>사용 부품</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound
+    >false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Loop_Parts</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Error</targetReference>
+        </faultConnector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>WorkOrderId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>ProductConsumed</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>ProductName</queriedFields>
+        <queriedFields>QuantityConsumed</queriedFields>
+        <queriedFields>ChargeType__c</queriedFields>
+        <queriedFields>fmAmount__c</queriedFields>
+        <sortField>CreatedDate</sortField>
+        <sortOrder>Asc</sortOrder>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Threshold</name>
+        <label>승인 기준액</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound
+    >false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Get_WorkOrder</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>ApprovalAmount</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>ServiceSetting__mdt</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Value__c</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_WorkOrder</name>
+        <label>출동 금액</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound
+    >false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Get_Parts</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Error</targetReference>
+        </faultConnector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>WorkOrder</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>fmTotalCharge__c</queriedFields>
+        <queriedFields>ruExceptionFreeCount__c</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <name>Save_Summary</name>
+        <label>승인 요청 요약 저장</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Submit_Approval</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Error</targetReference>
+        </faultConnector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>ApprovalSummary__c</field>
+            <value>
+                <elementReference>fxComment</elementReference>
+            </value>
+        </inputAssignments>
+        <object>WorkOrder</object>
+    </recordUpdates>
     <recordUpdates>
         <name>Update_WorkOrder</name>
         <label>사유·고객 동의 저장</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>Submit_Approval</targetReference>
+            <targetReference>Get_Threshold</targetReference>
         </connector>
         <faultConnector>
             <targetReference>Assign_Error</targetReference>
@@ -143,6 +389,24 @@
         </connector>
     </start>
     <status>Active</status>
+    <textTemplates>
+        <name>ttMemoLine</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>{!varSummary}
+[메모] {!submitterComment}</text>
+    </textTemplates>
+    <textTemplates>
+        <name>ttPartLine</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>{!varPartLines}
+{!fxPartLine}</text>
+    </textTemplates>
+    <textTemplates>
+        <name>ttSummary</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>[승인 필요 이유] {!fxNeedReason}{!varPartLines}
+[사유] {!requestReason} / 고객 동의: {!fxConsent}</text>
+    </textTemplates>
     <variables>
         <name>customerConsent</name>
         <dataType>Boolean</dataType>
@@ -189,6 +453,27 @@
         <dataType>String</dataType>
         <isCollection>false</isCollection>
         <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>submitterId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>varPartLines</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>varSummary</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
         <isOutput>false</isOutput>
     </variables>
 </Flow>

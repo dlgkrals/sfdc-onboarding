@@ -2,7 +2,7 @@
 <EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
     <available>true</available>
     <description
-  >26-10-07 출동 승인 요청을 센터장에게 알림 by Edwin</description>
+  >26-10-07 출동 승인 요청을 센터장에게 알림 / 26-10-16 본문 = 승인 요청 요약(ApprovalSummary__c) + 출동 링크 by Edwin</description>
     <encodingKey>UTF-8</encodingKey>
     <name>출동 승인 요청</name>
     <style>none</style>
