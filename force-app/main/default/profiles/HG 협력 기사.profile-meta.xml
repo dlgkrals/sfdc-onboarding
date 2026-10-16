@@ -2,7 +2,7 @@
 <Profile xmlns="http://soap.sforce.com/2006/04/metadata">
     <custom>true</custom>
     <description
-  >26-10-16 역할별 홈 페이지 지정용(권한은 권한 집합) by Edwin</description>
+  >26-10-16 역할별 홈 페이지 지정용(권한은 권한 집합). 리포트·대시보드 탭 숨김(기사는 리포트 실행 권한 없음, 권한 집합은 탭을 숨길 수 없어 프로필에서) by Edwin</description>
     <layoutAssignments>
         <layout>Account-HG 고객사 Layout</layout>
         <recordType>Account.Corporation</recordType>
@@ -42,5 +42,13 @@
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
+    <tabVisibilities>
+        <tab>standard-Dashboard</tab>
+        <visibility>Hidden</visibility>
+    </tabVisibilities>
+    <tabVisibilities>
+        <tab>standard-report</tab>
+        <visibility>Hidden</visibility>
+    </tabVisibilities>
     <userLicense>Salesforce</userLicense>
 </Profile>
