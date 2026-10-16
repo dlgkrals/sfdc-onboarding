@@ -8,6 +8,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 6번)
+ * 1.1    2026-10-16    Edwin     단위 자동 채우기 Flow 테스트(출발 재고 단위 복사)
  * ----------------------------------------------------------------------------
  * @see ProductTransferTriggerHandler, ErpInventoryService
  */
@@ -406,6 +407,36 @@ private class ProductTransferTriggerHandlerTest {
       VAN_QUANTITY + 4,
       getItem(VAN_CODE).QuantityOnHand,
       '기사 차량 +4'
+    );
+  }
+
+  // 정상: 단위를 비워 두면 저장 전 Flow가 출발 재고의 단위를 복사 (ProductTransfer_BeforeSave_FillUnit)
+  @isTest
+  static void normalUnitCopiedFromSourceItem() {
+    update new ProductItem(
+      Id = getItem(WAREHOUSE_CODE).Id,
+      QuantityUnitOfMeasure = 'kg'
+    );
+    // DESC: 플랫폼 규칙 — 재고 이동 단위는 도착 재고의 단위와 같아야 함
+    update new ProductItem(
+      Id = getItem(VAN_CODE).Id,
+      QuantityUnitOfMeasure = 'kg'
+    );
+    ProductTransfer transfer = buildTransfer(1);
+
+    Test.startTest();
+    insert transfer;
+    Test.stopTest();
+
+    Assert.areEqual(
+      'kg',
+      [
+        SELECT QuantityUnitOfMeasure
+        FROM ProductTransfer
+        WHERE Id = :transfer.Id
+      ]
+      .QuantityUnitOfMeasure,
+      '출발 재고 단위 복사'
     );
   }
 }

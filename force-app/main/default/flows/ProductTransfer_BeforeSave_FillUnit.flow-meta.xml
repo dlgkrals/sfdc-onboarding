@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>Copy_Unit</name>
+        <label>단위 복사</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.QuantityUnitOfMeasure</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>fxUnit</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <description
+  >26-10-16 재고 이동 저장 전: 수량 단위가 비어 있으면 출발 재고의 단위 → 없으면 제품(재고 이동의 제품 → 출발 재고의 제품)의 단위를 복사. 이미 있으면 그대로 by Edwin</description>
+    <environments>Default</environments>
+    <formulas>
+        <name>fxUnit</name>
+        <dataType>String</dataType>
+        <expression
+    >IF(NOT(ISBLANK(TEXT({!$Record.SourceProductItem.QuantityUnitOfMeasure}))), TEXT({!$Record.SourceProductItem.QuantityUnitOfMeasure}),
+IF(NOT(ISBLANK(TEXT({!$Record.Product2.QuantityUnitOfMeasure}))), TEXT({!$Record.Product2.QuantityUnitOfMeasure}),
+TEXT({!$Record.SourceProductItem.Product2.QuantityUnitOfMeasure})))</expression>
+    </formulas>
+    <interviewLabel
+  >재고 이동 단위 채우기 {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>재고 이동 저장 전 - 단위 채우기</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Copy_Unit</targetReference>
+        </connector>
+        <filterFormula
+    >ISBLANK(TEXT({!$Record.QuantityUnitOfMeasure}))</filterFormula>
+        <object>ProductTransfer</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>
