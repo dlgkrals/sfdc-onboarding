@@ -947,7 +947,7 @@ form.op{display:flex;flex-wrap:wrap;gap:8px;align-items:end} form.op label{displ
 <main>${maintenance === "on" ? '<div class="warn">점검(장애) 모드: API가 503으로 응답합니다.</div>' : ""}
 <div class="grid">${locHtml || '<p class="muted">위치가 없습니다. 초기 재고를 적재하세요.</p>'}</div>
 <section class="card" style="margin-top:16px"><h2>ERP 입고 · 재고 조정 (시연용)</h2>
-<p class="muted" style="margin:0 0 8px;font-size:12px">ERP에서만 생기는 변동입니다. Salesforce가 15분마다 이력을 가져가 변동량만큼 재고를 조정합니다(IF-02). 시연용 화면이라 로그인 없이 입력합니다.</p>
+<p class="muted" style="margin:0 0 8px;font-size:12px">ERP에서만 생기는 변동입니다. 입력하면 즉시 Salesforce로 보내고(푸시), 놓친 건 매시 30분에 가져와 맞춥니다(안전망). 시연용 화면이라 로그인 없이 입력합니다.</p>
 <form class="op" id="opForm"><label>작업<select id="opKind"><option value="receive">입고 (+)</option><option value="adjust">조정 (±)</option></select></label>
 <label>위치<select id="opLoc">${locs.map((l) => `<option value="${esc(l.code)}">${esc(l.name)} (${esc(l.code)})</option>`).join("")}</select></label>
 <label>부품 코드<input id="opPart" required placeholder="예: RFG-404A" size="12"></label>
@@ -966,7 +966,7 @@ document.getElementById("opForm").addEventListener("submit", async (e) => {
   try {
     const res = await fetch("/ui/stock/" + kind, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const data = await res.json();
-    if (res.ok && data.status === "OK") { const p = data.push || {}; const sf = p.status === "SENT" ? (p.result === "APPLIED" ? "즉시 반영됨" : p.result + " " + (p.message || "")) : p.status === "DISABLED" ? "푸시 꺼짐(1시간 안에 가져오기)" : "실패(1시간 안에 가져오기) " + (p.message || ""); out.textContent = "반영됨: 남은 수량 " + data.remainingQty + " · 이력 #" + data.movementId + " · Salesforce: " + sf; setTimeout(() => location.reload(), 4000); }
+    if (res.ok && data.status === "OK") { const p = data.push || {}; const sf = p.status === "SENT" ? (p.result === "APPLIED" ? "즉시 반영됨" : p.result + " " + (p.message || "")) : p.status === "DISABLED" ? "푸시 꺼짐(매시 30분에 가져오기)" : "실패(매시 30분에 가져오기) " + (p.message || ""); out.textContent = "반영됨: 남은 수량 " + data.remainingQty + " · 이력 #" + data.movementId + " · Salesforce: " + sf; setTimeout(() => location.reload(), 4000); }
     else { out.textContent = "거부: " + (data.message || data.error || res.status); }
   } catch (err) { out.textContent = "오류: " + err.message; }
 });
