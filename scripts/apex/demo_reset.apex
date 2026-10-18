@@ -5,7 +5,7 @@
 //  - 연습 중 생긴 출동·사용 부품·재고 이동, 연습 사용자(이서연·김병철·최민호)가 만든 일반 접수(가상 착신 연습)
 //  - 승인 대기는 회수(Removed). 지난 승인 이력(ProcessInstance)은 지울 수 없어 출동 "승인 내역"에 남음
 //  - 처음부터 있던 출동·접수는 상태·소유자·승인 필드를 시나리오 시작 값으로
-//  - 최민호 차량·경기남부 창고 재고 = 아래 기준값(기준값에 없는 재고는 0)
+//  - 최민호 차량·경기남부 창고 재고 = 아래 기준값(기준값에 없는 재고는 0), 차량 재고 소유자 = 차량 위치 소유자(기사, 재고 비공개라 기사에게 보이려면 필요)
 // WARN: 사용 부품 삭제 규칙(대기·완료 삭제 거부)은 이 실행에서만 우회(TriggerHandler.bypassedHandlers). 종결 접수 되돌리기는 실행 사용자에게 HG_BypassValidation 필요(HG_Admin)
 Boolean APPLY = false;
 Datetime BASELINE = Datetime.newInstanceGmt(2026, 10, 18, 1, 48, 0);
@@ -85,12 +85,13 @@ for (Case c : demoCases) {
 // DESC: 재고 → 기준값
 List<ProductItem> stockRestores = new List<ProductItem>();
 List<String> stockDiffs = new List<String>();
-for (ProductItem p : [SELECT Id, Location.ErpLocationCode__c, Product2.ErpPartCode__c, QuantityOnHand FROM ProductItem WHERE Location.ErpLocationCode__c IN ('VAN-GS-001', 'WH-GS-001')]) {
+for (ProductItem p : [SELECT Id, Location.ErpLocationCode__c, Location.LocationType, Location.OwnerId, OwnerId, Product2.ErpPartCode__c, QuantityOnHand FROM ProductItem WHERE Location.ErpLocationCode__c IN ('VAN-GS-001', 'WH-GS-001')]) {
   String key = p.Location.ErpLocationCode__c + '|' + p.Product2.ErpPartCode__c;
   Decimal target = baselineStock.containsKey(key) ? baselineStock.get(key) : 0;
-  if (p.QuantityOnHand != target) {
+  Boolean ownerWrong = p.Location.LocationType == 'Van' && p.OwnerId != p.Location.OwnerId;
+  if (p.QuantityOnHand != target || ownerWrong) {
     stockRestores.add(new ProductItem(Id = p.Id, QuantityOnHand = target));
-    stockDiffs.add(key + ' ' + p.QuantityOnHand + '→' + target);
+    stockDiffs.add(key + ' ' + p.QuantityOnHand + '→' + target + (ownerWrong ? ' (소유자→기사)' : ''));
   }
 }
 
@@ -135,10 +136,15 @@ for (Case c : [SELECT Id, Subject, Status, OwnerId, CancelReason__c FROM Case WH
 update caseFinal;
 // 5) 재고 기준값 (표준 되돌림 이후 값을 다시 읽어 맞춤)
 List<ProductItem> stockFinal = new List<ProductItem>();
-for (ProductItem p : [SELECT Id, Location.ErpLocationCode__c, Product2.ErpPartCode__c, QuantityOnHand FROM ProductItem WHERE Location.ErpLocationCode__c IN ('VAN-GS-001', 'WH-GS-001')]) {
+for (ProductItem p : [SELECT Id, Location.ErpLocationCode__c, Location.LocationType, Location.OwnerId, OwnerId, Product2.ErpPartCode__c, QuantityOnHand FROM ProductItem WHERE Location.ErpLocationCode__c IN ('VAN-GS-001', 'WH-GS-001')]) {
   String key = p.Location.ErpLocationCode__c + '|' + p.Product2.ErpPartCode__c;
   Decimal target = baselineStock.containsKey(key) ? baselineStock.get(key) : 0;
-  if (p.QuantityOnHand != target) { stockFinal.add(new ProductItem(Id = p.Id, QuantityOnHand = target)); }
+  Boolean ownerWrong = p.Location.LocationType == 'Van' && p.OwnerId != p.Location.OwnerId;
+  if (p.QuantityOnHand != target || ownerWrong) {
+    ProductItem fixItem = new ProductItem(Id = p.Id, QuantityOnHand = target);
+    if (ownerWrong) { fixItem.OwnerId = p.Location.OwnerId; }
+    stockFinal.add(fixItem);
+  }
 }
 update stockFinal;
 System.debug(LoggingLevel.WARN, 'RESET 완료 · 회수 ' + removals.size() + ' · 삭제 부품 ' + practiceParts.size() + '/출동 ' + practiceWos.size() + '/접수 ' + practiceCases.size() + '/이동 ' + (practiceTransfers.size() - transferFailed) + (transferFailed > 0 ? ' (이동 삭제 실패 ' + transferFailed + ' — 재고는 기준값으로 맞춤)' : '') + ' · 출동 ' + woRestores.size() + ' · 접수 ' + caseFinal.size() + ' · 재고 ' + stockFinal.size() + ' → 다음: d7_erp_seed.apex');

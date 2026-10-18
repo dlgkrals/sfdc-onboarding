@@ -13,6 +13,7 @@
  * 1.0    2026-10-08    Edwin     최초 작성 (D5 실습: 핸들러 패턴 공통 부모)
  * 1.1    2026-10-11    Edwin     filterUnprocessed 사용 주의 추가 (같은 트랜잭션의 별도 DML도 건너뜀)
  * 1.2    2026-10-12    Edwin     filterUnprocessed 삭제 (Id 기준 재귀 방지가 같은 트랜잭션의 별도 update까지 막는 결함 원인, 사용처 없음)
+ * 1.3    2026-10-18    Edwin     사용자 지정 오브젝트 스위치: 레코드 이름 = API 이름에서 __c를 뗀 이름 (Custom Metadata 이름에 __ 불가)
  * ----------------------------------------------------------------------------
  * @see CaseTriggerHandler, ProductConsumedTriggerHandler, TriggerSetting__mdt
  */
@@ -80,7 +81,7 @@ public virtual class TriggerHandler {
 
   /**
    * @description 오브젝트의 트리거 스위치 확인. 레코드가 없으면 활성으로 간주
-   * @param sObjectName 오브젝트 API 이름 (= TriggerSetting__mdt.DeveloperName)
+   * @param sObjectName 오브젝트 API 이름 (TriggerSetting__mdt.DeveloperName = 이 이름에서 __c를 뗀 것, 예: CustomerSite__c → CustomerSite)
    * @return 실행해야 하면 true
    */
   public static Boolean isTriggerActive(String sObjectName) {
@@ -88,7 +89,10 @@ public virtual class TriggerHandler {
       return activeOverridesByObject.get(sObjectName);
     }
     // DESC: Custom Metadata getInstance()는 SOQL 한도를 쓰지 않음
-    TriggerSetting__mdt setting = TriggerSetting__mdt.getInstance(sObjectName);
+    // WARN: Custom Metadata 레코드 이름에는 __를 쓸 수 없어 사용자 지정 오브젝트는 __c를 뗀 이름으로 찾음
+    TriggerSetting__mdt setting = TriggerSetting__mdt.getInstance(
+      sObjectName.removeEnd('__c')
+    );
     return setting == null || setting.IsActive__c;
   }
 

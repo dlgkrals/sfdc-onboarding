@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>HG_NeedsReassignmentCases</fullName>
+    <columns>CASES.CASE_NUMBER</columns>
+    <columns>CASES.PRIORITY</columns>
+    <columns>CASES.SUBJECT</columns>
+    <columns>SymptomType__c</columns>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>CustomerSite__c</columns>
+    <columns>ServiceCenter__c</columns>
+    <columns>OpenWorkOrderCount__c</columns>
+    <columns>CASES.CREATED_DATE</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>CASES.STATUS</field>
+        <operation>equals</operation>
+        <value>InProgress</value>
+    </filters>
+    <filters>
+        <field>OpenWorkOrderCount__c</field>
+        <operation>equals</operation>
+        <value>0</value>
+    </filters>
+    <label>재배정 필요 접수</label>
+    <sharedTo>
+        <role>HG_ChungcheongCenterManager</role>
+        <role>HG_GyeonggiSouthCenterManager</role>
+        <role>HG_SeoulCenterManager</role>
+    </sharedTo>
+</ListView>

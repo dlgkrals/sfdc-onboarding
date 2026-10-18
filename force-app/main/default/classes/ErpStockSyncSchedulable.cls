@@ -1,5 +1,6 @@
 /**
- * @description ERP 재고 역방향 동기화 Batch를 예약 실행 (15분마다: 00·15·30·45분에 예약 4개, scripts/apex/d7_erp_inbound_schedule.apex)
+ * @description ERP 재고 역방향 동기화 Batch를 예약 실행 — 매시 30분 1개, 푸시(IF-02-P)의 안전망
+ *              예약 이름 "HG ERP 재고 동기화 :30 (매시, 푸시 안전망)", scripts/apex/d7_erp_inbound_schedule.apex
  * @layer       Schedulable
  * @author      Edwin
  * @date        2026-10-13
@@ -7,6 +8,7 @@
  * 변경 이력
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 IF-02 역방향)
+ * 1.1    2026-10-18    Edwin     주석: 예약 15분마다 4개 → 매시 30분 1개(2026-10-15 푸시 도입 후 org 기준)
  * ----------------------------------------------------------------------------
  * @see ErpStockSyncBatch
  */

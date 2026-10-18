@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
     <description
-  >26-10-16 센터장 홈: 안내 → 배정 대기 접수 → 재배정 필요 → 승인할 항목(표준) → 종결 대기 접수 → 센터 접수 차트(한 줄, 비어 있어도 모두 표시) by Edwin</description>
+  >26-10-16 센터장 홈: 안내 → 배정 대기 접수 → 재배정 필요 → 승인할 항목(표준) → 종결 대기 접수 → 센터 접수 차트(한 줄, 비어 있어도 모두 표시) by Edwin / 26-10-18 재배정 필요 = 접수 목록(처리 중 · 열린 출동 0) by Edwin</description>
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -52,11 +52,11 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>entityName</name>
-                    <value>WorkOrder</value>
+                    <value>Case</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>filterName</name>
-                    <value>HG_NeedsReassignment</value>
+                    <value>HG_NeedsReassignmentCases</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>hideActionBar</name>

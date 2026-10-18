@@ -129,7 +129,16 @@ if (!refillDone) {
     t.QuantityReceived = t.QuantitySent;
   }
   update transfers;
-  System.debug(LoggingLevel.WARN, 'SETUP 차량 보충 이동 ' + transfers.size() + '건 수령');
+  // DESC: 수령으로 새로 생긴 차량 재고는 실행 사용자(관리자) 소유 → 재고가 비공개라 기사에게 안 보이고 [부품 추가]에도 없음(2026-10-18 연습 중 발견)
+  //       차량 재고 소유자 = 차량 위치 소유자(기사)
+  List<ProductItem> vanItems = new List<ProductItem>();
+  for (ProductItem p : [SELECT Id, OwnerId, Location.OwnerId FROM ProductItem WHERE LocationId = :vanLoc.Id]) {
+    if (p.OwnerId != p.Location.OwnerId) {
+      vanItems.add(new ProductItem(Id = p.Id, OwnerId = p.Location.OwnerId));
+    }
+  }
+  update vanItems;
+  System.debug(LoggingLevel.WARN, 'SETUP 차량 보충 이동 ' + transfers.size() + '건 수령 · 차량 재고 소유자 맞춤 ' + vanItems.size());
 }
 
 // 2) 이름 맞추기 (기존 출동 제목도 같이)

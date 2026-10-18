@@ -78,4 +78,18 @@ private class TriggerHandlerTest {
     Assert.isFalse(caseActive, '대체값 false가 우선');
     Assert.isTrue(unknownActive, '설정 레코드가 없으면 활성');
   }
+
+  // 정상: 사용자 지정 오브젝트는 __c를 뗀 이름의 레코드로 찾음 (CustomerSite__c → CustomerSite)
+  @isTest
+  static void normalCustomObjectSettingWithoutSuffix() {
+    Test.startTest();
+    TriggerSetting__mdt setting = TriggerSetting__mdt.getInstance(
+      'CustomerSite'
+    );
+    Boolean siteActive = TriggerHandler.isTriggerActive('CustomerSite__c');
+    Test.stopTest();
+
+    Assert.isNotNull(setting, '사업장 스위치 레코드 있음');
+    Assert.areEqual(setting.IsActive__c, siteActive, '레코드 값을 따름');
+  }
 }
