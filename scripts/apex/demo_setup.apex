@@ -39,8 +39,9 @@ List<List<String>> specs = new List<List<String>>{
   new List<String>{ '기사 거절', '2', 'HG-HAC300-2412-0057', 'Noise', 'InProgress', 'Assigned', null },
   new List<String>{ '재고 부족', '1', 'HG-HAC800-2407-0034', 'Leak', 'InProgress', 'Arrived', null },
   new List<String>{ '재고 부족', '2', 'HG-HAC800-2504-0062', 'Leak', 'InProgress', 'Arrived', null },
-  new List<String>{ '중복 접수', '1', 'HG25CH500-0001', 'Noise', 'InProgress', null, '00001976' },
-  new List<String>{ '중복 접수', '2', 'HG-HAC800-2212-0042', 'Noise', 'InProgress', null, null },
+  // DESC: 중복 접수 = 처리 중 + 출동 배정(2026-10-18 A안, 출동 없는 처리 중은 "재배정 필요 접수"에 뜸). 1벌(기존 접수)의 출동은 이름 맞추기 뒤 [기사 배정]으로 따로 붙임
+  new List<String>{ '중복 접수', '1', 'HG25CH500-0001', 'Noise', 'InProgress', 'Assigned', '00001976' },
+  new List<String>{ '중복 접수', '2', 'HG-HAC800-2212-0042', 'Noise', 'InProgress', 'Assigned', null },
   new List<String>{ '종결 대기', '1', 'HG-HAC800-2502-0026', 'NoCooling', 'Completed', 'Completed', null },
   new List<String>{ '종결 대기', '2', 'HG-HAC300-2607-0060', 'NoCooling', 'Completed', 'Completed', null }
 };
