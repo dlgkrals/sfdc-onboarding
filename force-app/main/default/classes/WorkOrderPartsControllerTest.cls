@@ -10,6 +10,7 @@
  * 1.1    2026-10-14    Edwin     빈 재고 비활성·저장 거부, 기사 runAs 자기 차량만·빈 재고 거부 (D8 화면 개선)
  * 1.2    2026-10-14    Edwin     남은 수량 초과 거부(불허)·정확히 남은 수량 허용(경계)
  * 1.3    2026-10-15    Edwin     커버리지 보강: 출동 없이·다른 Id로 호출 시 빈 결과
+ * 1.4    2026-10-19    Edwin     판정 변경(사유 필수)·삭제(ERP 미반영 건만)·잠김(승인 대기·완료) — 기사 runAs
  * ----------------------------------------------------------------------------
  * @see WorkOrderPartsController
  */
@@ -432,5 +433,226 @@ private class WorkOrderPartsControllerTest {
 
     Assert.areEqual(200, view.rows.size(), '200행');
     Assert.isTrue(queries <= 3, '200건이어도 조회 몇 번: ' + queries);
+  }
+
+  // DESC: 기사 소유 출동 + 기사 차량 재고 + 사용 부품 1건 (실제 org처럼 차량·재고는 기사 소유)
+  private static ProductConsumed createTechnicianPart(User technician) {
+    WorkOrder wo = getWorkOrder();
+    wo.OwnerId = technician.Id;
+    update wo;
+    Schema.Location van = new Schema.Location(
+      Name = '기사 차량',
+      LocationType = 'Van',
+      IsInventoryLocation = true,
+      OwnerId = technician.Id
+    );
+    insert van;
+    ProductItem item = new ProductItem(
+      LocationId = van.Id,
+      Product2Id = getItem('General').Product2Id,
+      QuantityOnHand = 10,
+      OwnerId = technician.Id
+    );
+    insert item;
+    ProductConsumed pc = new ProductConsumed(
+      WorkOrderId = wo.Id,
+      ProductItemId = item.Id,
+      QuantityConsumed = 1
+    );
+    insert pc;
+    return [
+      SELECT Id, WorkOrderId, ProductItemId, AutoChargeType__c, ChargeType__c
+      FROM ProductConsumed
+      WHERE Id = :pc.Id
+    ];
+  }
+
+  private static String otherChargeOf(String chargeType) {
+    return chargeType == 'Paid' ? 'Free' : 'Paid';
+  }
+
+  // 정상: 기사가 최종 판정을 자동 판정과 다르게 + 변경 사유 → 저장, 목록에 사유·자동 판정이 보이고 수정 가능
+  @isTest
+  static void normalTechnicianChangesChargeWithReason() {
+    User technician = getUser('HG_Technician');
+    ProductConsumed pc = createTechnicianPart(technician);
+    String target = otherChargeOf(pc.AutoChargeType__c);
+    WorkOrderPartsController.PartsView before;
+    WorkOrderPartsController.PartsView after;
+
+    Test.startTest();
+    System.runAs(technician) {
+      before = WorkOrderPartsController.getParts(pc.WorkOrderId);
+      WorkOrderPartsController.updateChargeType(
+        pc.Id,
+        target,
+        '장기 거래처 예외'
+      );
+      after = WorkOrderPartsController.getParts(pc.WorkOrderId);
+    }
+    Test.stopTest();
+
+    Assert.isTrue(before.canEdit, '기사 판정 변경 가능');
+    Assert.isFalse(before.locked, '진행 중 출동은 잠기지 않음');
+    Assert.areEqual(2, before.chargeOptions.size(), '유상·무상 선택지');
+    ProductConsumed saved = [
+      SELECT ChargeType__c, OverrideReason__c
+      FROM ProductConsumed
+      WHERE Id = :pc.Id
+    ];
+    Assert.areEqual(target, saved.ChargeType__c);
+    Assert.areEqual('장기 거래처 예외', saved.OverrideReason__c);
+    Assert.areEqual(target, after.rows[0].chargeType);
+    Assert.areEqual('장기 거래처 예외', after.rows[0].overrideReason);
+    Assert.areEqual(pc.AutoChargeType__c, after.rows[0].autoChargeType);
+  }
+
+  // 불허: 자동 판정과 다르게 바꾸면서 사유가 없으면 검증 규칙(OverrideReason_Required) 문구로 거부, 값은 그대로
+  @isTest
+  static void rejectChangeWithoutReason() {
+    User technician = getUser('HG_Technician');
+    ProductConsumed pc = createTechnicianPart(technician);
+    String message;
+
+    Test.startTest();
+    System.runAs(technician) {
+      try {
+        WorkOrderPartsController.updateChargeType(
+          pc.Id,
+          otherChargeOf(pc.AutoChargeType__c),
+          '  '
+        );
+      } catch (AuraHandledException e) {
+        message = e.getMessage();
+      }
+    }
+    Test.stopTest();
+
+    Assert.isNotNull(message, '사유 없이 변경 거부');
+    Assert.areEqual(
+      pc.ChargeType__c,
+      [SELECT ChargeType__c FROM ProductConsumed WHERE Id = :pc.Id]
+      .ChargeType__c,
+      '판정 그대로'
+    );
+  }
+
+  // 불허: 승인 대기·완료 출동은 잠김 — 목록은 잠김 안내, 추가·판정 변경·삭제 모두 거부
+  @isTest
+  static void rejectLockedWhenPendingApprovalOrCompleted() {
+    User technician = getUser('HG_Technician');
+    ProductConsumed pc = createTechnicianPart(technician);
+    update new ProductConsumed(Id = pc.Id, ErpSyncStatus__c = 'Failed');
+    update new WorkOrder(Id = pc.WorkOrderId, Status = 'PendingApproval');
+    WorkOrderPartsController.PartsView pendingView;
+    WorkOrderPartsController.PartsView completedView;
+    String changeMessage;
+    String deleteMessage;
+    String addMessage;
+    String completedMessage;
+
+    Test.startTest();
+    System.runAs(technician) {
+      pendingView = WorkOrderPartsController.getParts(pc.WorkOrderId);
+      try {
+        WorkOrderPartsController.updateChargeType(pc.Id, 'Free', '사유');
+      } catch (AuraHandledException e) {
+        changeMessage = e.getMessage();
+      }
+      try {
+        WorkOrderPartsController.deletePart(pc.Id);
+      } catch (AuraHandledException e) {
+        deleteMessage = e.getMessage();
+      }
+      try {
+        WorkOrderPartsController.addPart(pc.WorkOrderId, pc.ProductItemId, 1);
+      } catch (AuraHandledException e) {
+        addMessage = e.getMessage();
+      }
+    }
+    update new WorkOrder(
+      Id = pc.WorkOrderId,
+      Status = 'Completed',
+      ArrivalDateTime__c = Datetime.now().addHours(-1)
+    );
+    System.runAs(technician) {
+      completedView = WorkOrderPartsController.getParts(pc.WorkOrderId);
+      try {
+        WorkOrderPartsController.updateChargeType(pc.Id, 'Free', '사유');
+      } catch (AuraHandledException e) {
+        completedMessage = e.getMessage();
+      }
+    }
+    Test.stopTest();
+
+    Assert.isTrue(pendingView.locked);
+    Assert.isFalse(pendingView.canAdd, '부품 추가 숨김');
+    Assert.isFalse(pendingView.canEdit, '판정 변경 숨김');
+    Assert.isFalse(pendingView.rows[0].canDelete, '삭제 숨김');
+    Assert.areEqual(
+      System.Label.MSG_PART_LOCKED_APPROVAL,
+      pendingView.lockMessage
+    );
+    Assert.areEqual(System.Label.MSG_PART_LOCKED_APPROVAL, changeMessage);
+    Assert.areEqual(System.Label.MSG_PART_LOCKED_APPROVAL, deleteMessage);
+    Assert.areEqual(System.Label.MSG_PART_LOCKED_APPROVAL, addMessage);
+    Assert.areEqual(
+      System.Label.MSG_PART_LOCKED_COMPLETED,
+      completedView.lockMessage
+    );
+    Assert.areEqual(System.Label.MSG_PART_LOCKED_COMPLETED, completedMessage);
+    Assert.areEqual(
+      1,
+      [SELECT COUNT() FROM ProductConsumed WHERE Id = :pc.Id],
+      '삭제 안 됨'
+    );
+  }
+
+  // 정상·불허: ERP 실패 건은 기사가 삭제, ERP 완료 건은 삭제 버튼 없음·서버도 거부
+  @isTest
+  static void normalDeleteFailedPartRejectSynced() {
+    User technician = getUser('HG_Technician');
+    ProductConsumed failed = createTechnicianPart(technician);
+    update new ProductConsumed(Id = failed.Id, ErpSyncStatus__c = 'Failed');
+    ProductConsumed synced = new ProductConsumed(
+      WorkOrderId = failed.WorkOrderId,
+      ProductItemId = failed.ProductItemId,
+      QuantityConsumed = 1
+    );
+    insert synced;
+    update new ProductConsumed(Id = synced.Id, ErpSyncStatus__c = 'Synced');
+    WorkOrderPartsController.PartsView view;
+    String syncedMessage;
+
+    Test.startTest();
+    System.runAs(technician) {
+      view = WorkOrderPartsController.getParts(failed.WorkOrderId);
+      WorkOrderPartsController.deletePart(failed.Id);
+      try {
+        WorkOrderPartsController.deletePart(synced.Id);
+      } catch (AuraHandledException e) {
+        syncedMessage = e.getMessage();
+      }
+    }
+    Test.stopTest();
+
+    for (WorkOrderPartsController.PartRow row : view.rows) {
+      Assert.areEqual(
+        row.id == failed.Id,
+        row.canDelete,
+        '실패 건만 삭제 가능'
+      );
+    }
+    Assert.areEqual(
+      0,
+      [SELECT COUNT() FROM ProductConsumed WHERE Id = :failed.Id],
+      '실패 건 삭제'
+    );
+    Assert.areEqual(System.Label.MSG_ERP_DELETE_BLOCKED, syncedMessage);
+    Assert.areEqual(
+      1,
+      [SELECT COUNT() FROM ProductConsumed WHERE Id = :synced.Id],
+      '완료 건 유지'
+    );
   }
 }

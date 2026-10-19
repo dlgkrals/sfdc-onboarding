@@ -316,16 +316,6 @@
         </platformActionListItems>
     </platformActionList>
     <relatedLists>
-        <excludeButtons>New</excludeButtons>
-        <fields>Name</fields>
-        <fields>Product2</fields>
-        <fields>QuantityConsumed</fields>
-        <fields>fmUnit__c</fields>
-        <fields>ChargeType__c</fields>
-        <fields>fmAmount__c</fields>
-        <relatedList>ProductsConsumed</relatedList>
-    </relatedLists>
-    <relatedLists>
         <fields>CreatedDate</fields>
         <fields>StepStatus</fields>
         <fields>OriginalActor</fields>

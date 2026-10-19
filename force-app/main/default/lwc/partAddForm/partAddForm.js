@@ -61,6 +61,14 @@ export default class PartAddForm extends LightningElement {
   isSaving = false;
   wiredStockResult;
 
+  // DESC: 부모가 사용 부품을 삭제·변경한 뒤 차량 재고(남은 수량) 선택지를 다시 읽게 함
+  @api
+  async refreshStock() {
+    if (this.wiredStockResult) {
+      await refreshApex(this.wiredStockResult);
+    }
+  }
+
   @wire(getVanStock, { workOrderId: "$workOrderId" })
   wiredStock(result) {
     this.wiredStockResult = result;

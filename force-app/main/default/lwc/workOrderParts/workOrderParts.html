@@ -43,6 +43,19 @@
       </div>
     </div>
 
+    <div
+      lwc:if={lockMessage}
+      class="slds-m-horizontal_medium slds-m-bottom_small slds-notify slds-notify_alert slds-alert_warning"
+      role="alert"
+    >
+      <lightning-icon
+        icon-name="utility:lock"
+        size="x-small"
+        class="slds-m-right_x-small"
+      ></lightning-icon>
+      <span>{lockMessage}</span>
+    </div>
+
     <div class="table-area">
       <lightning-spinner
         lwc:if={isLoading}
@@ -56,6 +69,7 @@
         columns={columns}
         hide-checkbox-column
         column-widths-mode="auto"
+        onrowaction={handleRowAction}
       ></lightning-datatable>
       <p lwc:if={isEmpty} class="slds-p-horizontal_medium slds-text-color_weak">
         {labels.MSG_NO_PARTS}
@@ -66,6 +80,53 @@
       >
         {errorMessage}
       </p>
+    </div>
+
+    <div
+      lwc:if={editingRow}
+      class="slds-m-top_small slds-p-around_medium slds-border_top edit-area"
+    >
+      <p class="slds-text-heading_small slds-m-bottom_x-small">{editTitle}</p>
+      <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
+        {labels.LABEL_COL_AUTO_CHARGE}: {editingRow.autoChargeTypeLabel} ·
+        {labels.MSG_OVERRIDE_REASON_HINT}
+      </p>
+      <div class="slds-grid slds-wrap slds-gutters_small">
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+          <lightning-combobox
+            label={labels.LABEL_FINAL_CHARGE}
+            value={editChargeType}
+            options={chargeOptions}
+            onchange={handleEditChargeChange}
+            required
+          ></lightning-combobox>
+        </div>
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
+          <lightning-input
+            label={labels.LABEL_COL_OVERRIDE_REASON}
+            value={editReason}
+            max-length="255"
+            onchange={handleEditReasonChange}
+          ></lightning-input>
+        </div>
+      </div>
+      <p lwc:if={editError} class="slds-m-top_x-small slds-text-color_error">
+        {editError}
+      </p>
+      <div class="slds-m-top_small">
+        <lightning-button
+          label={labels.BTN_CANCEL}
+          onclick={handleEditCancel}
+          disabled={isSaving}
+        ></lightning-button>
+        <lightning-button
+          class="slds-m-left_x-small"
+          variant="brand"
+          label={labels.BTN_SAVE}
+          onclick={handleEditSave}
+          disabled={isSaving}
+        ></lightning-button>
+      </div>
     </div>
 
     <div lwc:if={canAdd} class="slds-m-top_small slds-border_top">
