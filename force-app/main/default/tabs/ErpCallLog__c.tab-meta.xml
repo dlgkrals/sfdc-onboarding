@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customObject>true</customObject>
+    <description>26-10-19 ERP 통신 기록 탭(관리자) by Edwin</description>
+    <motif>Custom55: Phone</motif>
+</CustomTab>

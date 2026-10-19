@@ -15,6 +15,7 @@
  * 버전    날짜          작성자    내용
  * 1.0    2026-10-15    Edwin     최초 작성 (IF-02 Pull → Push + Pull)
  * 1.1    2026-10-15    Edwin     without sharing (연동 사용자가 위치를 못 찾던 결함)
+ * 1.2    2026-10-19    Edwin     ERP 통신 기록(ErpCallLogger): 받은 본문·돌려준 본문·상태·처리 시간 (Authorization 헤더는 기록 안 함)
  * ----------------------------------------------------------------------------
  * @see ErpStockSyncService.applyPushed, erp-mock/src/index.js, docs/interface_definition.md IF-02
  */
@@ -54,8 +55,13 @@ global without sharing class ErpMovementResource {
   private class BadRequestException extends Exception {
   }
 
+  // DESC: 통신 기록용 (respond에서 한 줄로 남김)
+  private static Long startedAt;
+  private static List<String> movementIds = new List<String>();
+
   @HttpPost
   global static void receive() {
+    startedAt = System.currentTimeMillis();
     RestResponse res = RestContext.response;
     res.addHeader('Content-Type', 'application/json; charset=utf-8');
     List<Object> items;
@@ -70,6 +76,11 @@ global without sharing class ErpMovementResource {
     List<Object> slots = new List<Object>();
     List<ErpStockSyncService.Movement> valid = new List<ErpStockSyncService.Movement>();
     for (Integer i = 0; i < items.size(); i++) {
+      if (items[i] instanceof Map<String, Object>) {
+        movementIds.add(
+          String.valueOf(((Map<String, Object>) items[i]).get('id'))
+        );
+      }
       Object parsed = toMovement(items[i], i);
       slots.add(parsed);
       if (parsed instanceof ErpStockSyncService.Movement) {
@@ -295,5 +306,54 @@ global without sharing class ErpMovementResource {
   private static void respond(RestResponse res, Integer status, Object body) {
     res.statusCode = status;
     res.responseBody = Blob.valueOf(JSON.serialize(body, true));
+    logCall(status, body, res.responseBody.toString());
+  }
+
+  // DESC: 받기(푸시) 통신 기록 1줄. 요청 본문만(헤더의 토큰 없음). 기록 실패는 응답에 영향 없음
+  private static void logCall(
+    Integer status,
+    Object body,
+    String responseText
+  ) {
+    try {
+      ErpCallLogger.Entry log = new ErpCallLogger.Entry();
+      log.direction = ErpCallLogger.DIRECTION_PUSH;
+      log.interfaceCode = 'IF-02-P';
+      log.endpoint = '/services/apexrest/hg/erp/movements';
+      log.method = 'POST';
+      RestRequest req = RestContext.request;
+      log.requestBody = req != null &&
+        req.requestBody != null
+        ? req.requestBody.toString()
+        : null;
+      log.responseBody = responseText;
+      log.statusCode = status;
+      log.durationMs = startedAt == null
+        ? null
+        : System.currentTimeMillis() - startedAt;
+      log.itemCount = movementIds.size();
+      log.refIds.addAll(movementIds);
+      Map<String, Object> m = (Map<String, Object>) body;
+      if (status != 200) {
+        log.result = ErpCallLogger.RESULT_FAILED;
+        Map<String, Object> error = (Map<String, Object>) m.get('error');
+        log.errorMessage = error == null
+          ? null
+          : '[' + error.get('code') + '] ' + error.get('message');
+      } else {
+        Integer problems =
+          (Integer) m.get('errors') + (Integer) m.get('invalid');
+        log.result = problems == 0
+          ? ErpCallLogger.RESULT_SUCCESS
+          : ErpCallLogger.RESULT_REJECTED;
+        log.errorMessage = problems == 0
+          ? null
+          : '오류 ' + m.get('errors') + ' · 형식 오류 ' + m.get('invalid');
+      }
+      ErpCallLogger.add(log);
+      ErpCallLogger.flush();
+    } catch (Exception e) {
+      System.debug(LoggingLevel.WARN, '푸시 통신 기록 실패: ' + e.getMessage());
+    }
   }
 }

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Result__c</fullName>
+    <description
+  >26-10-19 성공(모두 처리) / 거부 포함(업무 거부 건 있음) / 실패(HTTP 오류·연결 실패·응답 해석 불가) by Edwin</description>
+    <label>결과</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Success</fullName>
+                <default>false</default>
+                <label>성공</label>
+            </value>
+            <value>
+                <fullName>Rejected</fullName>
+                <default>false</default>
+                <label>거부 포함</label>
+            </value>
+            <value>
+                <fullName>Failed</fullName>
+                <default>false</default>
+                <label>실패</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

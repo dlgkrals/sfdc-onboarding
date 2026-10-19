@@ -103,6 +103,7 @@
     <tabs>standard-Product2</tabs>
     <tabs>standard-report</tabs>
     <tabs>standard-Dashboard</tabs>
+    <tabs>ErpCallLog__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>HG_AS_UtilityBar</utilityBar>
 </CustomApplication>

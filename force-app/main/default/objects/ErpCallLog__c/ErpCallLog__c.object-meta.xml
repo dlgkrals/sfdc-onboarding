@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description
+  >26-10-19 ERP 통신 기록: 호출 1번 = 1줄(보내기 IF-03·06 / 받기 푸시 IF-02-P / 가져오기 IF-02-R), 요청·응답 JSON 원문. 헤더(API 키·토큰)는 기록하지 않음. 업무 기록·중복 방지는 ErpInboundLog__c by Edwin</description>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableLicensing>false</enableLicensing>
+    <enableReports>true</enableReports>
+    <enableSearch>false</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <externalSharingModel>Private</externalSharingModel>
+    <label>ERP 통신 기록</label>
+    <nameField>
+        <displayFormat>EC-{000000}</displayFormat>
+        <label>기록 번호</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>ERP 통신 기록</pluralLabel>
+    <searchLayouts />
+    <sharingModel>Private</sharingModel>
+    <visibility>Public</visibility>
+</CustomObject>

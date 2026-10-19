@@ -19,6 +19,7 @@
  * 1.0    2026-10-13    Edwin     최초 작성 (D7 ERP 연동 IF-02 역방향)
  * 1.1    2026-10-15    Edwin     푸시 반영(applyPushed) 추가, 이미 기록된 이력 번호 건너뜀(중복), 기록 메시지에 경로(푸시·가져오기)
  * 1.2    2026-10-15    Edwin     with sharing → inherited sharing (연동 사용자 푸시에서 위치를 못 찾던 결함: SYSTEM_MODE도 공유는 클래스 선언을 따름)
+ * 1.3    2026-10-19    Edwin     ERP 통신 기록(ErpCallLogger): 가져오기 GET 1번 = 1줄(0건·실패 포함), syncNextPage finally에서 저장
  * ----------------------------------------------------------------------------
  * @see ErpMovementResource, ErpStockSyncBatch, ErpStockSyncSchedulable, erp-mock/src/index.js getMovements, docs/interface_definition.md IF-02
  */
@@ -137,6 +138,15 @@ public inherited sharing class ErpStockSyncService {
    * @return 실행 결과. 기준점이 없으면 아무것도 하지 않음
    */
   public static SyncResult syncNextPage() {
+    try {
+      return syncNextPageInner();
+    } finally {
+      // DESC: 가져오기 통신 기록(0건 호출·실패 포함). 실패로 되돌린 뒤에도 남도록 finally (Batch가 예외를 잡음)
+      ErpCallLogger.flush();
+    }
+  }
+
+  private static SyncResult syncNextPageInner() {
     SyncResult result = new SyncResult();
     Long after = getLastMovementId();
     if (after == null) {
@@ -174,6 +184,14 @@ public inherited sharing class ErpStockSyncService {
    * @description 미리 보기: 반영하지 않고 가져올 변동 건수만 셈 (실제 org 첫 실행 전 확인용, 최대 10쪽)
    */
   public static SyncResult preview() {
+    try {
+      return previewInner();
+    } finally {
+      ErpCallLogger.flush();
+    }
+  }
+
+  private static SyncResult previewInner() {
     SyncResult total = new SyncResult();
     Long after = getLastMovementId();
     total.fromId = after;
@@ -265,8 +283,12 @@ public inherited sharing class ErpStockSyncService {
    * @description ERP의 가장 최근 이력 번호 (기준점 스크립트용)
    */
   public static Long fetchLatestId() {
-    Map<String, Object> body = fetch(0, 1);
-    return toLong(body.get('latestId'));
+    try {
+      Map<String, Object> body = fetch(0, 1);
+      return toLong(body.get('latestId'));
+    } finally {
+      ErpCallLogger.flush();
+    }
   }
 
   private static Map<String, Object> fetch(Long after) {
@@ -280,22 +302,69 @@ public inherited sharing class ErpStockSyncService {
     );
     request.setMethod('GET');
     request.setTimeout(TIMEOUT_MS);
+    // DESC: 가져오기 통신 기록 (GET이라 요청 본문 없음 → 조회 조건을 요청 칸에)
+    ErpCallLogger.Entry log = new ErpCallLogger.Entry();
+    log.direction = ErpCallLogger.DIRECTION_PULL;
+    log.interfaceCode = 'IF-02-R';
+    log.endpoint = request.getEndpoint();
+    log.method = 'GET';
+    log.requestBody = '{"after":' + after + ',"limit":' + limitRows + '}';
+    Long startedAt = System.currentTimeMillis();
     HttpResponse response;
     try {
       response = new Http().send(request);
     } catch (Exception e) {
+      logPull(log, startedAt, null, null, 0, '[CONNECTION] ' + e.getMessage());
       throw new ErpSyncException('[CONNECTION] ' + e.getMessage());
     }
-    if (response.getStatusCode() != 200) {
-      throw new ErpSyncException(
-        '[HTTP_' + response.getStatusCode() + '] ' + response.getBody()
+    Integer status = response.getStatusCode();
+    if (status != 200) {
+      logPull(
+        log,
+        startedAt,
+        status,
+        response.getBody(),
+        0,
+        '[HTTP_' + status + ']'
       );
+      throw new ErpSyncException('[HTTP_' + status + '] ' + response.getBody());
     }
+    Map<String, Object> body;
     try {
-      return (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
+      body = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
     } catch (Exception e) {
+      logPull(log, startedAt, status, response.getBody(), 0, '[BAD_RESPONSE]');
       throw new ErpSyncException('[BAD_RESPONSE] ERP 응답을 읽을 수 없습니다.');
     }
+    List<Object> items = body.get('items') instanceof List<Object>
+      ? (List<Object>) body.get('items')
+      : new List<Object>();
+    for (Object raw : items) {
+      if (raw instanceof Map<String, Object>) {
+        log.refIds.add(String.valueOf(((Map<String, Object>) raw).get('id')));
+      }
+    }
+    logPull(log, startedAt, status, response.getBody(), items.size(), null);
+    return body;
+  }
+
+  private static void logPull(
+    ErpCallLogger.Entry log,
+    Long startedAt,
+    Integer status,
+    String responseBody,
+    Integer itemCount,
+    String failure
+  ) {
+    log.durationMs = System.currentTimeMillis() - startedAt;
+    log.statusCode = status;
+    log.responseBody = responseBody;
+    log.itemCount = itemCount;
+    log.result = failure == null
+      ? ErpCallLogger.RESULT_SUCCESS
+      : ErpCallLogger.RESULT_FAILED;
+    log.errorMessage = failure;
+    ErpCallLogger.add(log);
   }
 
   private static List<Movement> parse(

@@ -18,6 +18,7 @@
  * 1.1    2026-10-13    Edwin     restoreStockForDeleted 추가 (삭제 시 재고 되돌림, decision-log 11 A안)
  * 1.2    2026-10-13    Edwin     재고 이동 → ERP(IF-06) 추가, getMaxRetry 공개(재전송 Batch), 전송·결과·재시도 공통화, 콜아웃과 저장 분리(build*·save)
  * 1.3    2026-10-16    Edwin     restoreStockForDeleted 제거 (표준도 재고를 되돌려 이중 증가, R6 · decision-log 19)
+ * 1.4    2026-10-19    Edwin     ERP 통신 기록(ErpCallLogger): 묶음 호출 1번 = 1줄, 요청·응답 JSON, save()에서 저장
  * ----------------------------------------------------------------------------
  * @see ErpSyncQueueable, ProductConsumedTriggerHandler, ProductTransferTriggerHandler, erp-mock/src/index.js, docs/interface_definition.md IF-03·IF-06
  */
@@ -118,6 +119,8 @@ public with sharing class ErpInventoryService {
     if (updates != null && !updates.isEmpty()) {
       Database.update(updates, false, AccessLevel.SYSTEM_MODE);
     }
+    // DESC: 콜아웃이 모두 끝난 뒤라 통신 기록도 여기서 저장 (1.4)
+    ErpCallLogger.flush();
   }
 
   /**
@@ -382,16 +385,34 @@ public with sharing class ErpInventoryService {
     request.setBody(
       JSON.serialize(new Map<String, Object>{ 'items' => chunk })
     );
+    ErpCallLogger.Entry log = newLog(endpoint, request.getBody(), chunk);
+    Long startedAt = System.currentTimeMillis();
 
     HttpResponse response;
     try {
       response = new Http().send(request);
     } catch (Exception e) {
       // DESC: 시간 초과·연결 실패 → 일시적 실패
+      finishLog(
+        log,
+        startedAt,
+        null,
+        null,
+        ErpCallLogger.RESULT_FAILED,
+        '[CONNECTION] ' + e.getMessage()
+      );
       return chunkWith(chunk, STATUS_FAILED, '[CONNECTION] ' + e.getMessage());
     }
     Integer status = response.getStatusCode();
     if (status != 200) {
+      finishLog(
+        log,
+        startedAt,
+        status,
+        response.getBody(),
+        ErpCallLogger.RESULT_FAILED,
+        '[HTTP_' + status + ']'
+      );
       // DESC: 400(요청 형식)은 다시 보내도 같으므로 확인 필요, 그 외(401·5xx 등)는 일시적 실패
       return chunkWith(
         chunk,
@@ -409,13 +430,85 @@ public with sharing class ErpInventoryService {
         resultsByRefId.put((String) r.get('refId'), r);
       }
     } catch (Exception e) {
+      finishLog(
+        log,
+        startedAt,
+        status,
+        response.getBody(),
+        ErpCallLogger.RESULT_FAILED,
+        '[BAD_RESPONSE]'
+      );
       return chunkWith(
         chunk,
         STATUS_FAILED,
         '[BAD_RESPONSE] ERP 응답을 읽을 수 없습니다.'
       );
     }
+    // DESC: 건별 거부가 있으면 "거부 포함" + 첫 거부 사유
+    Integer rejected = 0;
+    String firstRejection;
+    for (Map<String, Object> r : resultsByRefId.values()) {
+      if ((String) r.get('status') != 'OK') {
+        rejected++;
+        if (firstRejection == null) {
+          firstRejection = '[' + r.get('code') + '] ' + r.get('message');
+        }
+      }
+    }
+    finishLog(
+      log,
+      startedAt,
+      status,
+      response.getBody(),
+      rejected == 0
+        ? ErpCallLogger.RESULT_SUCCESS
+        : ErpCallLogger.RESULT_REJECTED,
+      rejected == 0
+        ? null
+        : firstRejection + (rejected > 1 ? ' 외 ' + (rejected - 1) + '건' : '')
+    );
     return resultsByRefId;
+  }
+
+  // DESC: 통신 기록 — 요청 본문·건수·관련 번호(출동 번호·재고 이동 번호)·refId (헤더 없음)
+  private static ErpCallLogger.Entry newLog(
+    String endpoint,
+    String body,
+    List<Map<String, Object>> chunk
+  ) {
+    ErpCallLogger.Entry log = new ErpCallLogger.Entry();
+    log.direction = ErpCallLogger.DIRECTION_OUTBOUND;
+    log.interfaceCode = endpoint == TRANSFER_ENDPOINT ? 'IF-06' : 'IF-03';
+    log.endpoint = endpoint;
+    log.method = 'POST';
+    log.requestBody = body;
+    log.itemCount = chunk.size();
+    for (Map<String, Object> item : chunk) {
+      log.refIds.add(String.valueOf(item.get('refId')));
+      Object relatedNumber = item.containsKey('workOrderNumber')
+        ? item.get('workOrderNumber')
+        : item.get('reference');
+      log.relatedNumbers.add(
+        relatedNumber == null ? null : String.valueOf(relatedNumber)
+      );
+    }
+    return log;
+  }
+
+  private static void finishLog(
+    ErpCallLogger.Entry log,
+    Long startedAt,
+    Integer status,
+    String responseBody,
+    String result,
+    String message
+  ) {
+    log.durationMs = System.currentTimeMillis() - startedAt;
+    log.statusCode = status;
+    log.responseBody = responseBody;
+    log.result = result;
+    log.errorMessage = message;
+    ErpCallLogger.add(log);
   }
 
   private static Map<String, Map<String, Object>> chunkWith(

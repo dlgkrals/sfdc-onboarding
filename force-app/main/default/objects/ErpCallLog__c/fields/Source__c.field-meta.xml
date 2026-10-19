@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Source__c</fullName>
+    <description>26-10-19 어느 실행에서 호출했나 by Edwin</description>
+    <label>호출 위치</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Queueable</fullName>
+                <default>false</default>
+                <label>Queueable(저장 직후)</label>
+            </value>
+            <value>
+                <fullName>RetryBatch</fullName>
+                <default>false</default>
+                <label>재전송 Batch</label>
+            </value>
+            <value>
+                <fullName>ApexRest</fullName>
+                <default>false</default>
+                <label>Apex REST(푸시 입구)</label>
+            </value>
+            <value>
+                <fullName>PullBatch</fullName>
+                <default>false</default>
+                <label>가져오기 Batch</label>
+            </value>
+            <value>
+                <fullName>Manual</fullName>
+                <default>false</default>
+                <label>수동(스크립트)</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
